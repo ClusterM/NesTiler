@@ -8,22 +8,26 @@
  * 
  */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace ManyTilesConverter
 {
     partial class Program
     {
-        static Dictionary<uint, Color> NesPalette = new Dictionary<uint, Color>();
+        //static Dictionary<byte, Color> NesPalette = new Dictionary<byte, Color>();
 
         static void Main(string[] args)
         {
+            string paletteFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"palette.json");
             var imageFiles = new string[] { "opening.png", "0.png", "1.png", "2.png", "3.png", "4.png", "clouds.png" };
 
+            /*
             NesPalette[0x00] = Color.FromArgb(0x48, 0x48, 0x48);
             NesPalette[0x01] = Color.FromArgb(0x00, 0x08, 0x58);
             NesPalette[0x02] = Color.FromArgb(0x00, 0x08, 0x78);
@@ -91,6 +95,14 @@ namespace ManyTilesConverter
             NesPalette[0x3D] = Color.FromArgb(0xA8, 0xA8, 0xA8);
             //NesPalette[0x3E] = Color.FromArgb(0x00, 0x00, 0x00);
             //NesPalette[0x3F] = Color.FromArgb(0x00, 0x00, 0x00);
+            */
+
+            var paletteJson = File.ReadAllText(paletteFile);
+            var nesPaletteStr = JsonConvert.DeserializeObject<Dictionary<string, string>>(paletteJson);
+            var NesPalette = nesPaletteStr.Select(kv => new KeyValuePair<byte, Color>(
+                    kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
+                    ColorTranslator.FromHtml(kv.Value)
+                )).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             try
             {
@@ -264,14 +276,14 @@ namespace ManyTilesConverter
                     {
                         for (int tileX = 0; tileX < image.Width / 16; tileX++)
                         {
-                            long minDifference = long.MaxValue;
+                            double minDifference = double.MaxValue;
                             Palette bestPalette = null;
                             byte bestPaletteIndex = 0;
                             // Пробуем каждую палитру
                             for (byte paletteIndex = 0; paletteIndex < palettes.Count; paletteIndex++)
                             {
                                 if (palettes[paletteIndex] == null) continue;
-                                long difference = 0;
+                                double difference = 0;
                                 for (int y = 0; y < 16; y++)      // И применяем к каждому пикселю
                                     for (int x = 0; x < 16; x++)
                                     {
@@ -405,9 +417,9 @@ namespace ManyTilesConverter
             }
         }
 
-        static uint findSimilarColor(Dictionary<uint, Color> colors, Color color)
+        static byte findSimilarColor(Dictionary<byte, Color> colors, Color color)
         {
-            uint result = uint.MaxValue;
+            byte result = byte.MaxValue;
             int minDelta = int.MaxValue;
             if (color.R == 0xFF && color.G == 0xFF && color.B == 0xFF)
                 color = Color.FromArgb(0xF8, 0xF8, 0xF8);
@@ -425,8 +437,8 @@ namespace ManyTilesConverter
                     result = index;
                 }
             }
-            if (result == uint.MaxValue)
-                throw new Exception("Invalid color: " + color.ToString());
+            if (result == byte.MaxValue)
+                throw new KeyNotFoundException("Invalid color: " + color.ToString());
             return result;
         }
 
@@ -453,7 +465,7 @@ namespace ManyTilesConverter
         static Color findSimilarColor(IEnumerable<Color> colors, Color color)
         {
             Color result = Color.Black;
-            int minDelta = int.MaxValue;
+            double minDelta = int.MaxValue;
             foreach (var c in colors)
             {
                 var color1 = color;
@@ -468,12 +480,15 @@ namespace ManyTilesConverter
             return result;
         }
 
-        static int getColorDifference(Color color1, Color color2)
+        static double getColorDifference(Color color1, Color color2)
         {
+            /*
             var deltaR = Math.Abs((int)color1.R - (int)color2.R);
             var deltaG = Math.Abs((int)color1.G - (int)color2.G);
             var deltaB = Math.Abs((int)color1.B - (int)color2.B);
             var delta = deltaR + deltaG + deltaB;
+            */
+            var delta = Math.Sqrt(Math.Pow(color1.R - color2.R, 2) + Math.Pow(color1.G - color2.G, 2) + Math.Pow(color1.B - color2.B, 2));
             return delta;
         }
     }
