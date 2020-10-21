@@ -25,6 +25,11 @@ namespace com.clusterrr.Famicom.NesTiler
         }
         public int Count { get => colors.Where(c => c.HasValue).Count(); }
 
+        public Palette()
+        {
+            // Empty palette
+        }
+
         public Palette(Image image, int leftX, int topY, int width, int height, Color bgColor)
         {
             Dictionary<Color, int> colorCounter = new Dictionary<Color, int>();

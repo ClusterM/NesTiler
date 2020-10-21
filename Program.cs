@@ -237,8 +237,15 @@ namespace com.clusterrr.Famicom.NesTiler
                         }
                         else
                         {
-                            palettes[i] = top4.First();
-                            top4.RemoveAt(0);
+                            if (top4.Any())
+                            {
+                                palettes[i] = top4.First();
+                                top4.RemoveAt(0);
+                            }
+                            else
+                            {
+                                palettes[i] = new Palette();
+                            }
                         }
 
                         Console.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i].Select(p => ColorTranslator.ToHtml(p)))}");
