@@ -46,7 +46,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 var outNameTable = new Dictionary<int, string>();
                 var outAttributeTable = new Dictionary<int, string>();
 
-                var paramRegex = new Regex(@"--?(?<param>[a-zA-Z-]*?)(?<index>[0-9]*)");
+                var paramRegex = new Regex(@"--*(?<param>[a-zA-Z-]+)(?<index>[0-9]*)");
                 for (int i = 0; i < args.Length; i++)
                 {
                     var match = paramRegex.Match(args[i]);
@@ -91,6 +91,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             break;
                         case "pattern-offset":
                             patternTableStartOffsets[indexNum] = int.Parse(value);
+                            i++;
                             break;
                         case "colors":
                             colorsFile = value;
@@ -100,7 +101,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             bgColor = ColorTranslator.FromHtml(value);
                             i++;
                             break;
-                        case "palettes":
+                        case "enable-palettes":
                             {
                                 var enabled = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                                 for (int p = 0; p < paletteEnabled.Length; p++)
@@ -108,6 +109,35 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
+                        case "palette":
+                            {
+                                var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c => ColorTranslator.FromHtml(c));
+                                fixedPalettes[indexNum] = new Palette(colors);
+                            }
+                            i++;
+                            break;
+                        case "out-preview":
+                            outPreview[indexNum] = value;
+                            i++;
+                            break;
+                        case "out-palette":
+                            outPalette[indexNum] = value;
+                            i++;
+                            break;
+                        case "out-pattern-table":
+                            outPatternTable[indexNum] = value;
+                            i++;
+                            break;
+                        case "out-name-table":
+                            outNameTable[indexNum] = value;
+                            i++;
+                            break;
+                        case "out-attribute-table":
+                            outAttributeTable[indexNum] = value;
+                            i++;
+                            break;
+                        default:
+                            throw new ArgumentException($"Unknown argement: {args[i]}");
                     }
                 }
 
@@ -215,11 +245,14 @@ namespace com.clusterrr.Famicom.NesTiler
                     {
                         foreach (var p in sortedKeys)
                         {
-                            if ((paletteCounter[p] > 0) && (p.Count + t.Count <= 3))
+                            if (p != t && (paletteCounter[p] > 0) && (p.Count + t.Count <= 3))
                             {
-                                foreach (var c in p) t.Add(c);
-                                paletteCounter[t] += paletteCounter[p];
+                                var count1 = paletteCounter[t];
+                                var count2 = paletteCounter[p];
+                                paletteCounter[t] = 0;
                                 paletteCounter[p] = 0;
+                                foreach (var c in p) t.Add(c);
+                                paletteCounter[t] = count1 + count2;
                             }
                         }
                     }
@@ -235,7 +268,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         {
                             palettes[i] = fixedPalettes[i];
                         }
-                        else
+                        else if (top4.Any())
                         {
                             if (top4.Any())
                             {
@@ -248,7 +281,8 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                         }
 
-                        Console.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i].Select(p => ColorTranslator.ToHtml(p)))}");
+                        if (palettes[i] != null)
+                            Console.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i].Select(p => ColorTranslator.ToHtml(p)))}");
                     }
                 }
 
@@ -262,7 +296,9 @@ namespace com.clusterrr.Famicom.NesTiler
                         paletteRaw[0] = bgColorId;
                         for (int c = 1; c <= 3; c++)
                         {
-                            if (palettes[p][c].HasValue)
+                            if (palettes[p] == null)
+                                paletteRaw[c] = 0;
+                            else if (palettes[p][c].HasValue)
                                 paletteRaw[c] = findSimilarColor(nesColors, palettes[p][c].Value);
                         }
                         File.WriteAllBytes(outPalette[p], paletteRaw);
@@ -362,9 +398,9 @@ namespace com.clusterrr.Famicom.NesTiler
                                 var tile = new Tile(tileData);
                                 // Добавляем его в список, если его там ещё нет
                                 var existsTile = patternTable.Where(kv => kv.Value.Equals(tile));
-                                if (patternTable.Any())
+                                if (existsTile.Any())
                                 {
-                                    var id = patternTable.First().Key;
+                                    var id = existsTile.First().Key;
                                     nameTable.Add(id);
                                 }
                                 else
@@ -406,6 +442,12 @@ namespace com.clusterrr.Famicom.NesTiler
                         }
                         File.WriteAllBytes(outPatternTable[imageNum], patternTableRaw.ToArray());
                         Console.WriteLine($"Pattern table #{imageNum} saved to {outPatternTable[imageNum]}");
+                    }
+
+                    if (outNameTable.ContainsKey(imageNum))
+                    {
+                        File.WriteAllBytes(outNameTable[imageNum], nameTable.Select(i => (byte)i).ToArray());
+                        Console.WriteLine($"Name table #{imageNum} saved to {outPatternTable[imageNum]}");
                     }
                 }
 
@@ -461,14 +503,13 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (outAttributeTable.ContainsKey(imageNum))
                     {
                         File.WriteAllBytes(outAttributeTable[imageNum], attributeTableRaw.ToArray());
-                        Console.WriteLine($"Attribute table #{imageNum} saved to {outPreview[imageNum]}");
+                        Console.WriteLine($"Attribute table #{imageNum} saved to {outAttributeTable[imageNum]}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message + ex.StackTrace);
-                Console.ReadLine();
                 Environment.Exit(1);
             }
         }

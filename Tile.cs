@@ -18,5 +18,18 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (pixels[x, y] != other.pixels[x, y]) return false;
             return true;
         }
+
+        public override int GetHashCode()
+        {
+            int hash = 0;
+            for (int y = 0; y < pixels.Length; y++)
+                for (int x = 0; x < pixels.Length; x++)
+                {
+                    hash ^= hash >> 28;
+                    hash <<= 4;
+                    hash ^= pixels[x, y];
+                }
+            return hash;
+        }
     }
 }

@@ -55,6 +55,7 @@ namespace com.clusterrr.Famicom.NesTiler
             if (Count == 0) this[1] = color;
             else if (Count == 1) this[2] = color;
             else if (Count == 2) this[3] = color;
+            else throw new IndexOutOfRangeException();
         }
 
         public Palette(IEnumerable<Color> colors)
