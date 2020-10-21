@@ -1,58 +1,130 @@
-﻿/*
- *  Конвертер изображений в NES формат
- * 
- *  Автор: Авдюхин Алексей / clusterrr@clusterrr.com / http://clusterrr.com
- *  Специально для BBDO Group
- * 
- */
-
-
-
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace ManyTilesConverter
+namespace com.clusterrr.Famicom.NesTiler
 {
-    partial class Program
+    class Palette : IEquatable<Palette>, IEnumerable<Color>
     {
-        class Palette : IEquatable<Palette>
+        private Color?[] colors = new Color?[3];
+
+        public Color? this[int i]
         {
-            public List<Color> Colors;
-            public Palette(IEnumerable<Color> colors)
+            get
             {
-                Colors = new List<Color>();
-                var bgColor = colors.First<Color>();
-                var colorsList = new List<Color>();
-                colorsList.AddRange(colors);
-                colorsList.Sort((x, y) => (x.ToArgb() == y.ToArgb() ? 0 : (x.ToArgb() > y.ToArgb() ? 1 : -1)));
-                colorsList.Remove(bgColor);
-                colorsList.Insert(0, bgColor);
-                foreach (var color in colorsList)
-                {
-                    Colors.Add(color);
-                    if (Colors.Count == 4) break;
+                if (i < 1 || i > 3) throw new IndexOutOfRangeException("Color index must be between 1 and 3");
+                return colors[i - 1];
+            }
+            set
+            {
+                if (i < 1 || i > 3) throw new IndexOutOfRangeException("Color index must be between 1 and 3");
+                colors[i - 1] = value;
+            }
+        }
+        public int Count { get => colors.Where(c => c.HasValue).Count(); }
+
+        public Palette(Image image, int leftX, int topY, int width, int height, Color bgColor)
+        {
+            Dictionary<Color, int> colorCounter = new Dictionary<Color, int>();
+            colorCounter[bgColor] = 0;
+            for (int y = topY; y < topY + height; y++)
+            {
+                for (int x = leftX; x < leftX + width; x++)
+                { 
+                    var color = ((Bitmap)image).GetPixel(x, y);
+                    if (!colorCounter.ContainsKey(color)) colorCounter[color] = 0;
+                    colorCounter[color]++;
                 }
             }
 
-            public bool Equals(Palette other)
-            {
-                if (Colors.Count != other.Colors.Count) return false;
-                for (int i = 0; i < Colors.Count; i++)
-                    if (Colors[i] != other.Colors[i]) return false;
-                return true;
-            }
+            var sortedColors = colorCounter.Where(kv => kv.Key != bgColor).OrderByDescending(kv => kv.Value).ToList();
+            if (sortedColors.Count >= 1) this[1] = sortedColors[0].Key;
+            if (sortedColors.Count >= 2) this[2] = sortedColors[1].Key;
+            if (sortedColors.Count >= 3) this[3] = sortedColors[2].Key;
+        }
 
-            public bool Contains(Palette other)
+        public void Add(Color color)
+        {
+            if (Count == 0) this[1] = color;
+            else if (Count == 1) this[2] = color;
+            else if (Count == 2) this[3] = color;
+        }
+
+        public Palette(IEnumerable<Color> colors)
+        {
+            var colorsList = colors.ToList();
+            if (colorsList.Count >= 1) this[1] = colorsList[0];
+            if (colorsList.Count >= 2) this[2] = colorsList[1];
+            if (colorsList.Count >= 3) this[3] = colorsList[2];
+        }
+
+        public double GetTileDelta(Image image, int leftX, int topY, int width, int height, Color bgColor)
+        {
+            double delta = 0;
+            for (int y = topY; y < topY + height; y++)
             {
-                foreach (var color in other.Colors)
+                for (int x = leftX; x < leftX + width; x++)
                 {
-                    if (!Colors.Contains(color))
-                        return false;
+                    var color = ((Bitmap)image).GetPixel(x, y);
+                    delta += GetMinDelta(color, bgColor).delta;
                 }
-                return true;
             }
+            return delta;
+        }
+
+        private (Color color, double delta) GetMinDelta(Color color, Color bgColor)
+        {
+            var ac = Enumerable.Concat(colors.Where(c => c.HasValue).Select(c => c.Value), new Color[] { bgColor });
+            var result = ac.OrderBy(c => c.GetDelta(color)).First();
+            return (result, result.GetDelta(color));
+        }
+
+        public bool Equals(Palette other)
+        {
+            var colors1 = colors.Where(c => c.HasValue)
+                .OrderBy(c => c.Value.ToArgb())
+                .Select(c => c.Value)
+                .ToArray();
+            var colors2 = new Color?[] { other[1], other[2], other[3] }
+                .Where(c => c.HasValue)
+                .OrderBy(c => c.Value.ToArgb())
+                .Select(c => c.Value)
+                .ToArray();
+            return Enumerable.SequenceEqual<Color>(colors1, colors2);
+        }
+
+        public bool Contains(Palette other)
+        {
+            var thisColors = colors.Where(c => c.HasValue);
+            var otherColors = new Color?[] { other[1], other[2], other[3] }.Where(c => c.HasValue).Select(c => c.Value);
+
+            foreach (var color in otherColors)
+            {
+                if (!thisColors.Contains(color))
+                    return false;
+            }
+            return true;
+        }
+
+        public IEnumerator<Color> GetEnumerator()
+        {
+            return colors.Where(c => c.HasValue).Select(c => c.Value).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public override string ToString() => string.Join(", ", colors.Where(c => c.HasValue).Select(c => ColorTranslator.ToHtml(c.Value)));
+
+        public override int GetHashCode()
+        {
+            return (this[1]?.R ?? 0) + (this[2]?.R ?? 0) + (this[3]?.R ?? 0)
+                | (((this[1]?.G ?? 0) + (this[2]?.G ?? 0) + (this[3]?.G ?? 0)) << 10)
+                | (((this[1]?.B ?? 0) + (this[2]?.B ?? 0) + (this[3]?.B ?? 0)) << 20);
         }
     }
 }

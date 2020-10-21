@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManyTilesConverter", "ManyTilesConverter.csproj", "{9CAA1868-07BD-4C76-B211-0E314E15F253}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NesTiler", "NesTiler.csproj", "{9CAA1868-07BD-4C76-B211-0E314E15F253}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4BD51097-491A-41F2-B1EC-34900D886C2E}
 	EndGlobalSection
 EndGlobal

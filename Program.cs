@@ -1,418 +1,467 @@
-﻿/*
- *  Конвертер изображений в NES формат
- * 
- *  Автор: Авдюхин Алексей / clusterrr@clusterrr.com / http://clusterrr.com
- *  Специально для BBDO Group
- 
- *  2018г.
- * 
- */
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
-namespace ManyTilesConverter
+namespace com.clusterrr.Famicom.NesTiler
 {
-    partial class Program
+    class Program
     {
-        //static Dictionary<byte, Color> NesPalette = new Dictionary<byte, Color>();
+        public enum TilesMode
+        {
+            Backgrounds,
+            Sprites,
+            Sprites8x16
+        }
 
         static void Main(string[] args)
         {
-            string paletteFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"palette.json");
-            var imageFiles = new string[] { "opening.png", "0.png", "1.png", "2.png", "3.png", "4.png", "clouds.png" };
-
-            /*
-            NesPalette[0x00] = Color.FromArgb(0x48, 0x48, 0x48);
-            NesPalette[0x01] = Color.FromArgb(0x00, 0x08, 0x58);
-            NesPalette[0x02] = Color.FromArgb(0x00, 0x08, 0x78);
-            NesPalette[0x03] = Color.FromArgb(0x00, 0x08, 0x70);
-            NesPalette[0x04] = Color.FromArgb(0x38, 0x00, 0x50);
-            NesPalette[0x05] = Color.FromArgb(0x58, 0x00, 0x10);
-            NesPalette[0x06] = Color.FromArgb(0x58, 0x00, 0x00);
-            NesPalette[0x07] = Color.FromArgb(0x40, 0x00, 0x00);
-            NesPalette[0x08] = Color.FromArgb(0x10, 0x00, 0x00);
-            NesPalette[0x09] = Color.FromArgb(0x00, 0x18, 0x00);
-            NesPalette[0x0A] = Color.FromArgb(0x00, 0x1E, 0x00);
-            NesPalette[0x0B] = Color.FromArgb(0x00, 0x1E, 0x00);
-            NesPalette[0x0C] = Color.FromArgb(0x00, 0x18, 0x20);
-            NesPalette[0x0D] = Color.FromArgb(0x00, 0x00, 0x00);
-            NesPalette[0x0E] = Color.FromArgb(0x00, 0x00, 0x00);
-            NesPalette[0x0F] = Color.FromArgb(0x00, 0x00, 0x00);
-
-            NesPalette[0x10] = Color.FromArgb(0xA0, 0xA0, 0xA0);
-            NesPalette[0x11] = Color.FromArgb(0x00, 0x48, 0xB8);
-            NesPalette[0x12] = Color.FromArgb(0x08, 0x30, 0xE0);
-            NesPalette[0x13] = Color.FromArgb(0x58, 0x18, 0xD8);
-            NesPalette[0x14] = Color.FromArgb(0xA0, 0x08, 0xA8);
-            NesPalette[0x15] = Color.FromArgb(0xD0, 0x00, 0x58);
-            NesPalette[0x16] = Color.FromArgb(0xD0, 0x10, 0x00);
-            NesPalette[0x17] = Color.FromArgb(0xA0, 0x20, 0x00);
-            NesPalette[0x18] = Color.FromArgb(0x60, 0x40, 0x00);
-            NesPalette[0x19] = Color.FromArgb(0x08, 0x58, 0x00);
-            NesPalette[0x1A] = Color.FromArgb(0x00, 0x68, 0x00);
-            NesPalette[0x1B] = Color.FromArgb(0x00, 0x68, 0x10);
-            NesPalette[0x1C] = Color.FromArgb(0x00, 0x60, 0x70);
-            //NesPalette[0x1D] = Color.FromArgb(0x00, 0x00, 0x00);
-            //NesPalette[0x1E] = Color.FromArgb(0x00, 0x00, 0x00);
-            //NesPalette[0x1F] = Color.FromArgb(0x00, 0x00, 0x00);
-
-            //NesPalette[0x20] = Color.FromArgb(0xF8, 0xF8, 0xF8);
-            NesPalette[0x21] = Color.FromArgb(0x20, 0xA0, 0xF8);
-            NesPalette[0x22] = Color.FromArgb(0x50, 0x78, 0xF8);
-            NesPalette[0x23] = Color.FromArgb(0x98, 0x68, 0xF8);
-            NesPalette[0x24] = Color.FromArgb(0xF8, 0x68, 0xF8);
-            NesPalette[0x25] = Color.FromArgb(0xF8, 0x70, 0xB0);
-            NesPalette[0x26] = Color.FromArgb(0xF8, 0x70, 0x68);
-            NesPalette[0x27] = Color.FromArgb(0xF8, 0x80, 0x18);
-            NesPalette[0x28] = Color.FromArgb(0xC0, 0x98, 0x00);
-            NesPalette[0x29] = Color.FromArgb(0x70, 0xB0, 0x00);
-            NesPalette[0x2A] = Color.FromArgb(0x28, 0xC0, 0x20);
-            NesPalette[0x2B] = Color.FromArgb(0x00, 0xC8, 0x70);
-            NesPalette[0x2C] = Color.FromArgb(0x00, 0xC0, 0xD0);
-            NesPalette[0x2D] = Color.FromArgb(0x28, 0x28, 0x28);
-            NesPalette[0x2E] = Color.FromArgb(0x00, 0x00, 0x00);
-            //NesPalette[0x2F] = Color.FromArgb(0x00, 0x00, 0x00);
-
-            NesPalette[0x30] = Color.FromArgb(0xF8, 0xF8, 0xF8);
-            NesPalette[0x31] = Color.FromArgb(0xA0, 0xD8, 0xF8);
-            NesPalette[0x32] = Color.FromArgb(0xB0, 0xC0, 0xF8);
-            NesPalette[0x33] = Color.FromArgb(0xD0, 0xB8, 0xF8);
-            NesPalette[0x34] = Color.FromArgb(0xF8, 0xC0, 0xF8);
-            NesPalette[0x35] = Color.FromArgb(0xF8, 0xC0, 0xE0);
-            NesPalette[0x36] = Color.FromArgb(0xF8, 0xC0, 0xC0);
-            NesPalette[0x37] = Color.FromArgb(0xF8, 0xC8, 0xA0);
-            NesPalette[0x38] = Color.FromArgb(0xE8, 0xD8, 0x88);
-            NesPalette[0x39] = Color.FromArgb(0xC8, 0xE0, 0x90);
-            NesPalette[0x3A] = Color.FromArgb(0xA8, 0xE8, 0xA0);
-            NesPalette[0x3B] = Color.FromArgb(0x90, 0xE8, 0xC8);
-            NesPalette[0x3C] = Color.FromArgb(0x90, 0xE0, 0xE8);
-            NesPalette[0x3D] = Color.FromArgb(0xA8, 0xA8, 0xA8);
-            //NesPalette[0x3E] = Color.FromArgb(0x00, 0x00, 0x00);
-            //NesPalette[0x3F] = Color.FromArgb(0x00, 0x00, 0x00);
-            */
-
-            var paletteJson = File.ReadAllText(paletteFile);
-            var nesPaletteStr = JsonConvert.DeserializeObject<Dictionary<string, string>>(paletteJson);
-            var NesPalette = nesPaletteStr.Select(kv => new KeyValuePair<byte, Color>(
-                    kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
-                    ColorTranslator.FromHtml(kv.Value)
-                )).ToDictionary(kv => kv.Key, kv => kv.Value);
-
             try
             {
+                string colorsFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"colors.json");
+                var imageFiles = new Dictionary<int, string>();
+                Color? bgColor = null;
+                var paletteEnabled = new bool[4] { true, true, true, true };
+                var fixedPalettes = new Palette[4] { null, null, null, null };
+                var mode = TilesMode.Backgrounds;
+                int tilePalWidth = 16;
+                int tilePalHeight = 16;
+                var imagesOriginal = new Dictionary<int, Image>();
+                var imagesRecolored = new Dictionary<int, Image>();
+                var palleteIndexes = new Dictionary<int, byte[,]>();
+                var patternTableStartOffsets = new Dictionary<int, int>();
+                var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
+                var nameTables = new Dictionary<int, List<int>>();
 
-                var images = new List<Image>();
-                foreach (var image in imageFiles)
+                // Filenames
+                var outPreview = new Dictionary<int, string>();
+                var outPalette = new Dictionary<int, string>();
+                var outPatternTable = new Dictionary<int, string>();
+                var outNameTable = new Dictionary<int, string>();
+                var outAttributeTable = new Dictionary<int, string>();
+
+                var paramRegex = new Regex(@"--?(?<param>[a-zA-Z-]*?)(?<index>[0-9]*)");
+                for (int i = 0; i < args.Length; i++)
                 {
-                    Console.WriteLine($"Loading {image}...");
-                    images.Add(Image.FromFile(image));
+                    var match = paramRegex.Match(args[i]);
+                    string param = match.Groups["param"].Value;
+                    string indexStr = match.Groups["index"].Value;
+                    int indexNum = 0;
+                    int.TryParse(indexStr, out indexNum);
+                    string value = i < args.Length - 1 ? args[i + 1] : "";
+                    switch (param)
+                    {
+                        case "mode":
+                            switch (value.ToLower())
+                            {
+                                case "sprite":
+                                case "sprites":
+                                    mode = TilesMode.Sprites;
+                                    tilePalWidth = 8;
+                                    tilePalHeight = 8;
+                                    break;
+                                case "sprite8x16":
+                                case "sprites8x16":
+                                    mode = TilesMode.Sprites;
+                                    tilePalWidth = 8;
+                                    tilePalHeight = 16;
+                                    break;
+                                case "bg":
+                                case "background":
+                                case "backgrounds":
+                                    mode = TilesMode.Backgrounds;
+                                    tilePalWidth = 16;
+                                    tilePalHeight = 16;
+                                    break;
+                                default:
+                                    throw new ArgumentException("Invalid mode", "mode");
+                            }
+                            i++;
+                            break;
+                        case "i":
+                        case "input":
+                            imageFiles[indexNum] = value;
+                            i++;
+                            break;
+                        case "pattern-offset":
+                            patternTableStartOffsets[indexNum] = int.Parse(value);
+                            break;
+                        case "colors":
+                            colorsFile = value;
+                            i++;
+                            break;
+                        case "bgcolor":
+                            bgColor = ColorTranslator.FromHtml(value);
+                            i++;
+                            break;
+                        case "palettes":
+                            {
+                                var enabled = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                for (int p = 0; p < paletteEnabled.Length; p++)
+                                    paletteEnabled[p] = enabled.Contains($"{p}");
+                            }
+                            i++;
+                            break;
+                    }
                 }
 
-                var patternTables = new List<PatternTableEntry>[2] { new List<PatternTableEntry>(), new List<PatternTableEntry>() };
-                var paletteGroups = new List<List<Palette>>();
-                for (int imageNum = 0; imageNum < images.Count; imageNum++)
-                {
-                    Console.WriteLine($"Creating palettes for {imageFiles[imageNum]}...");
-                    var image = images[imageNum];
+                // Loading and parsing palette JSON
+                var paletteJson = File.ReadAllText(colorsFile);
+                var nesColorsStr = JsonConvert.DeserializeObject<Dictionary<string, string>>(paletteJson);
+                var nesColors = nesColorsStr.Select(kv => new KeyValuePair<byte, Color>(
+                        kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
+                        ColorTranslator.FromHtml(kv.Value)
+                    )).ToDictionary(kv => kv.Key, kv => kv.Value);
 
+                foreach (var image in imageFiles)
+                {
+                    Console.WriteLine($"Loading {Path.GetFileName(image.Value)}...");
+                    imagesOriginal[image.Key] = Image.FromFile(image.Value);
+                    if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
+                        throw new InvalidDataException("Invalid image size");
+                }
+                if (bgColor.HasValue)
+                    bgColor = nesColors[findSimilarColor(nesColors, bgColor.Value)];
+
+                //var patternTables = new List<PatternTableEntry>[2] { new List<PatternTableEntry>(), new List<PatternTableEntry>() };
+                //var paletteGroups = new List<List<Palette>>();
+
+                // Счётчик использования цветов
+                var colorCounter = new Dictionary<Color, int>();
+                foreach (var imageNum in imagesOriginal.Keys)
+                {
+                    Console.WriteLine($"Adjusting colors for {imageFiles[imageNum]}...");
+                    var image = new Bitmap(imagesOriginal[imageNum]);
+                    imagesRecolored[imageNum] = image;
                     // Приводим все цвета к NES палитре
                     for (int y = 0; y < image.Height; y++)
                     {
                         for (int x = 0; x < image.Width; x++)
                         {
-                            var color = ((Bitmap)image).GetPixel(x, y);
-                            var similarColor = NesPalette[findSimilarColor(NesPalette, color)];
-                            ((Bitmap)image).SetPixel(x, y, similarColor);
+                            var color = image.GetPixel(x, y);
+                            var similarColor = nesColors[findSimilarColor(nesColors, color)];
+                            image.SetPixel(x, y, similarColor);
+                            if (!colorCounter.ContainsKey(similarColor))
+                                colorCounter[similarColor] = 0;
+                            colorCounter[similarColor]++;
                         }
                     }
+                }
 
-                    // Счётчик использования палитр
-                    Dictionary<Palette, int> paletteGroupCounter = new Dictionary<Palette, int>(new PaletteGroupComparer());
-                    Color bgColor = ((Bitmap)image).GetPixel(0, 0);
+                // Определяем самый популярный цвет, если надо
+                if (bgColor == null)
+                {
+                    Console.Write($"Background color autotect... ");
+                    bgColor = colorCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).FirstOrDefault();
+                    Console.WriteLine(ColorTranslator.ToHtml(bgColor.Value));
+                }
 
-                    // Перебираем все тайлы 16*16
-                    for (int tileY = 0; tileY < image.Height / 16; tileY++)
+                // Счётчик использования палитр
+                Dictionary<Palette, int> paletteCounter = new Dictionary<Palette, int>();
+                foreach (var imageNum in imagesOriginal.Keys)
+                {
+                    Console.WriteLine($"Creating palettes for {imageFiles[imageNum]}...");
+                    var image = imagesRecolored[imageNum];
+                    // Перебираем все тайлы 16*16 или 8*8 для спрайтов
+                    for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
                     {
-                        for (int tileX = 0; tileX < image.Width / 16; tileX++)
+                        for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
                         {
                             // Создаём палитру
-                            var palette = createPalette(image, tileX, tileY, bgColor);
+                            var palette = new Palette(
+                                image, tileX * tilePalWidth, tileY * tilePalHeight,
+                                tilePalWidth, tilePalHeight, bgColor.Value);
 
-                            // Считаем количество использования таких палитр
-                            if (!paletteGroupCounter.ContainsKey(palette))
-                                paletteGroupCounter[palette] = 0;
-                            paletteGroupCounter[palette]++;
+                            // Сразу отсеиваем те, которые входят в фиксированные
+                            if (fixedPalettes.Where(p => p != null && p.Contains(palette)).Any())
+                                // Считаем количество использования таких палитр
+                                continue;
+
+                            // Сотируем палитры по популярности
+                            if (!paletteCounter.ContainsKey(palette))
+                                paletteCounter[palette] = 0;
+                            paletteCounter[palette]++;
                         }
                     }
-
-                    // Группируем палитры. Некоторые из них могут содержать все цвета других
-                    var paletteGroupGrouped = new Dictionary<Palette, int>(paletteGroupCounter, new PaletteGroupComparer());
-                    foreach (var palette2 in paletteGroupCounter.Keys)
-                        foreach (var palette1 in paletteGroupCounter.Keys)
-                        {
-                            if (!palette1.Equals(palette2) && paletteGroupGrouped.ContainsKey(palette2) && palette1.Contains(palette2))
-                            {
-                                if (!paletteGroupGrouped.ContainsKey(palette1))
-                                    paletteGroupGrouped[palette1] = 0;
-                                paletteGroupGrouped[palette1] += paletteGroupGrouped[palette2];
-                                paletteGroupGrouped.Remove(palette2);
-                            }
-                        }
-
-                    // Смотрим, какие палитры можно объединить
-                    var paletteGroupMerged = new Dictionary<Palette, int>(paletteGroupGrouped, new PaletteGroupComparer());
-                    foreach (var palette2 in paletteGroupGrouped.Keys)
-                        foreach (var palette1 in paletteGroupGrouped.Keys)
-                        {
-                            if (!palette1.Equals(palette2) && palette1.Colors.Count < 4 && palette2.Colors.Count < 4)
-                            {
-                                var grcol = new List<Color>();
-                                foreach (var color in palette1.Colors)
-                                    if (!grcol.Contains(color))
-                                        grcol.Add(color);
-                                foreach (var color in palette2.Colors)
-                                    if (!grcol.Contains(color))
-                                        grcol.Add(color);
-                                if (grcol.Count <= 4) // Успешно поместились
-                                {
-                                    paletteGroupMerged[new Palette(grcol)] =
-                                        paletteGroupGrouped[palette1] + paletteGroupGrouped[palette2];
-                                    paletteGroupMerged.Remove(palette1);
-                                    paletteGroupMerged.Remove(palette2);
-                                }
-                            }
-                        }
-
-                    // Здесь можно убрать лишние палитры, если их много, не зря же мы их считали. Хотя в нашем случае зря.
-                    var paletteGroup = new List<Palette>((from palette in paletteGroupMerged.Keys
-                                                          orderby paletteGroupMerged[palette] descending
-                                                          select palette).Take(4).ToArray());
-
-                    /*
-                    foreach (var pal in paletteGroup)
-                    {
-                        foreach (var col in pal.Colors)
-                            Console.Write(col + " ");
-                        Console.WriteLine();
-                    }
-                    */
-
-                    paletteGroups.Add(paletteGroup);
                 }
 
-                // Перераспределяем и поглощаем палитры
-                for (int i = 1; i < paletteGroups.Count; i++)
+                Console.WriteLine($"Calculating final palette list...");
+                var sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+                // Группируем палитры. Некоторые из них могут содержать все цвета других
+                foreach (var palette2 in sortedKeys)
+                    foreach (var palette1 in sortedKeys)
+                    {
+                        if ((palette2 != palette1) && (palette2.Count >= palette1.Count) && palette2.Contains(palette1))
+                        {
+                            paletteCounter[palette2] += paletteCounter[palette1];
+                            paletteCounter[palette1] = 0;
+                        }
+                    }
+                // Убираем те, что больше не используются
+                paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+                // Снова сортируем палитры по популярности
+                sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+                // Если есть свободные места в топовых палитрах, добиваем их менее топовыми
+                var top4 = sortedKeys.Take(4).ToList();
+                foreach (var t in top4)
                 {
-                    for (int j = 0; j < i; j++)
+                    if (t.Count < 3)
                     {
-                        var paletteGroup1 = paletteGroups[j];
-                        var paletteGroup2 = paletteGroups[i];
-                        for (int p2 = 0; p2 < paletteGroup2.Count; p2++)
+                        foreach (var p in sortedKeys)
                         {
-                            for (int p1 = 0; p1 < paletteGroup1.Count; p1++)
+                            if ((paletteCounter[p] > 0) && (p.Count + t.Count <= 3))
                             {
-                                var palette1 = paletteGroup1[p1];
-                                var palette2 = paletteGroup2[p2];
-
-                                if (palette1.Contains(palette2) && (p1 <= paletteGroup2.Count))
-                                {
-                                    paletteGroup2.RemoveAt(p2);
-                                    paletteGroup2.Insert(p1, palette1);
-                                }
-                                else if (palette2.Contains(palette1) && (p1 <= paletteGroup2.Count))
-                                {
-                                    paletteGroup2.RemoveAt(p2);
-                                    paletteGroup2.Insert(p1, palette2);
-                                    paletteGroup1.RemoveAt(p1);
-                                    paletteGroup1.Insert(p1, palette2);
-                                }
+                                foreach (var c in p) t.Add(c);
+                                paletteCounter[t] += paletteCounter[p];
+                                paletteCounter[p] = 0;
                             }
                         }
                     }
                 }
 
-                for (int i = 0; i < paletteGroups.Count; i++)
+                // Выбираем итоговые палитры
+                var palettes = new Palette[4] { null, null, null, null };
+                for (var i = 0; i < palettes.Length; i++)
                 {
-                    Console.WriteLine($"Palettes for {imageFiles[i]}:");
-                    var paletteGroup = paletteGroups[i];
-                    foreach (var pal in paletteGroup)
+                    if (paletteEnabled[i])
                     {
-                        foreach (var col in pal.Colors)
-                            Console.Write(col + " ");
-                        Console.WriteLine();
+                        if (fixedPalettes[i] != null)
+                        {
+                            palettes[i] = fixedPalettes[i];
+                        }
+                        else
+                        {
+                            palettes[i] = top4.First();
+                            top4.RemoveAt(0);
+                        }
+
+                        Console.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i].Select(p => ColorTranslator.ToHtml(p)))}");
                     }
                 }
+
+                // Палитра в сыром виде
+                var bgColorId = findSimilarColor(nesColors, bgColor.Value);
+                for (int p = 0; p < palettes.Length; p++)
+                {
+                    if (paletteEnabled[p] && outPalette.ContainsKey(p))
+                    {
+                        var paletteRaw = new byte[4];
+                        paletteRaw[0] = bgColorId;
+                        for (int c = 1; c <= 3; c++)
+                        {
+                            if (palettes[p][c].HasValue)
+                                paletteRaw[c] = findSimilarColor(nesColors, palettes[p][c].Value);
+                        }
+                        File.WriteAllBytes(outPalette[p], paletteRaw);
+                        Console.WriteLine($"Palette #{p} saved to {outPalette[p]}");
+                    }
+                }
+                //File.WriteAllBytes("palette.bin", paletteRaw);
 
                 // Сохраняем и применяем палитры
-                for (int imageNum = 0; imageNum < images.Count; imageNum++)
+                imagesRecolored.Clear();
+                foreach (var imageNum in imagesOriginal.Keys)
                 {
-                    Console.WriteLine($"Mapping colors for {imageFiles[imageNum]}...");
-                    var image = images[imageNum];
-                    // Палитра
-                    var palettes = paletteGroups[imageNum];
-                    var paletteRaw = new byte[16];
-                    paletteRaw[0] = paletteRaw[4] = paletteRaw[8] = paletteRaw[12] =
-                        //paletteRaw[16] = paletteRaw[20] = paletteRaw[24] = paletteRaw[28] =
-                        (byte)findSimilarColor(NesPalette, palettes[0].Colors[0]);
-                    for (int p = 0; p < palettes.Count; p++)
+                    Console.WriteLine($"Mapping palettes for #{imageNum} {imageFiles[imageNum]}...");
+                    var image = imagesOriginal[imageNum];
+                    var imageRecolored = new Bitmap(image);
+                    imagesRecolored[imageNum] = imageRecolored;
+                    // Перебираем все тайлы 16*16 или спрайты 8*8 (8*16)
+                    palleteIndexes[imageNum] = new byte[image.Width / tilePalWidth, image.Height / tilePalHeight];
+                    for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
                     {
-                        if (palettes[p] != null)
-                            for (int c = 1; c < palettes[p].Colors.Count; c++)
-                            {
-                                paletteRaw[p * 4 + c] = (byte)findSimilarColor(NesPalette, palettes[p].Colors[c]);
-                            }
-                    }
-                    File.WriteAllBytes(Path.GetFileNameWithoutExtension(imageFiles[imageNum]) + "_palette.bin", paletteRaw);
-
-                    // Перебираем все тайлы 16*16
-                    var palleteIndexes = new byte[image.Width / 16, image.Height / 16];
-                    for (int tileY = 0; tileY < image.Height / 16; tileY++)
-                    {
-                        for (int tileX = 0; tileX < image.Width / 16; tileX++)
+                        for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
                         {
-                            double minDifference = double.MaxValue;
+                            double minDelta = double.MaxValue;
                             Palette bestPalette = null;
                             byte bestPaletteIndex = 0;
                             // Пробуем каждую палитру
-                            for (byte paletteIndex = 0; paletteIndex < palettes.Count; paletteIndex++)
+                            for (byte paletteIndex = 0; paletteIndex < palettes.Length; paletteIndex++)
                             {
                                 if (palettes[paletteIndex] == null) continue;
-                                double difference = 0;
-                                for (int y = 0; y < 16; y++)      // И применяем к каждому пикселю
-                                    for (int x = 0; x < 16; x++)
-                                    {
-                                        var color = ((Bitmap)image).GetPixel(tileX * 16 + x, tileY * 16 + y);
-                                        var similarColor = findSimilarColor(palettes[paletteIndex].Colors, color);
-                                        // Вычисляем разницу в цвете с макисмально похожим цветом
-                                        var delta = getColorDifference(color, similarColor);
-                                        // И суммируем
-                                        difference += delta;
-                                    }
+                                double delta = palettes[paletteIndex].GetTileDelta(
+                                    image, tileX * tilePalWidth, tileY * tilePalHeight,
+                                    tilePalWidth, tilePalHeight, bgColor.Value);
                                 // Ищем палитру, которая встанет с минимумом изменений
-                                if (difference < minDifference)
+                                if (delta < minDelta)
                                 {
-                                    minDifference = difference;
+                                    minDelta = delta;
                                     bestPalette = palettes[paletteIndex];
                                     bestPaletteIndex = paletteIndex;
                                 }
                             }
-                            if (minDifference > 0)
-                                throw new Exception("Can't match color"); // На всякий случай
-                                                                          // Запоминаем номер палитры
-                            palleteIndexes[tileX, tileY] = bestPaletteIndex;
+                            palleteIndexes[imageNum][tileX, tileY] = bestPaletteIndex;
 
                             // В итоге применяем эту палитру к тайлу
-                            for (int y = 0; y < 16; y++)
+                            for (int y = 0; y < tilePalHeight; y++)
                             {
-                                for (int x = 0; x < 16; x++)
+                                for (int x = 0; x < tilePalWidth; x++)
                                 {
-                                    var color = ((Bitmap)image).GetPixel(tileX * 16 + x, tileY * 16 + y);
-                                    var similarColor = findSimilarColor(bestPalette.Colors, color);
-                                    ((Bitmap)image).SetPixel(tileX * 16 + x, tileY * 16 + y, similarColor);
+                                    var color = ((Bitmap)image).GetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
+                                    var similarColor = findSimilarColor(Enumerable.Concat(bestPalette, new Color[] { bgColor.Value }), color);
+                                    imageRecolored.SetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y, similarColor);
                                 }
                             }
                         } // tileX
                     } // tile Y
 
-                    // Осталось составить базу тайлов, теперь уже размером 8 на 8
-                    var nameTable = new byte[32 * 30];
-                    for (int tileY = 0; tileY < image.Height / 8; tileY++)
+                    if (outPreview.ContainsKey(imageNum))
+                    {
+                        imageRecolored.Save(outPreview[imageNum], ImageFormat.Png);
+                        Console.WriteLine($"Preview #{imageNum} saved to {outPreview[imageNum]}");
+                    }
+                }
+
+                // Осталось составить базу тайлов, теперь уже размером 8 на 8
+                foreach (var imageNum in imagesRecolored.Keys)
+                {
+                    Console.WriteLine($"Creating pattern table for #{imageNum} {Path.GetFileName(imageFiles[imageNum])}...");
+                    var image = imagesRecolored[imageNum];
+                    if (!patternTables.ContainsKey(imageNum)) patternTables[imageNum] = new Dictionary<int, Tile>();
+                    var patternTable = patternTables[imageNum];
+                    if (!nameTables.ContainsKey(imageNum)) nameTables[imageNum] = new List<int>();
+                    var nameTable = nameTables[imageNum];
+                    if (!patternTableStartOffsets.ContainsKey(imageNum))
+                        patternTableStartOffsets[imageNum] = 0;
+                    var tileID = patternTableStartOffsets[imageNum];
+
+                    for (int tileY = 0; tileY < image.Height / 8; tileY += (mode == TilesMode.Sprites8x16 ? 2 : 1))
                     {
                         for (int tileX = 0; tileX < image.Width / 8; tileX++)
                         {
-                            var tileData = new byte[8, 8];
-                            for (int y = 0; y < 8; y++)      // И применяем к каждому пикселю
-                                for (int x = 0; x < 8; x++)
+                            for (int tileYS = 0; tileYS < (mode == TilesMode.Sprites8x16 ? 2 : 1); tileYS++)
+                            {
+                                var tileData = new byte[8, 8];
+                                for (int y = 0; y < 8; y++)      // И применяем к каждому пикселю
+                                    for (int x = 0; x < 8; x++)
+                                    {
+                                        var color = ((Bitmap)image).GetPixel(tileX * 8 + x, (tileY + tileYS) * 8 + y);
+                                        var palette = palettes[palleteIndexes[imageNum][tileX / (tilePalWidth / 8), (tileY + tileYS) / (tilePalHeight / 8)]];
+                                        byte colorIndex = 0;
+                                        if (color != bgColor)
+                                        {
+                                            colorIndex = 1;
+                                            while (palette[colorIndex] != color) colorIndex++;
+                                        }
+                                        tileData[x, y] = colorIndex;
+                                    }
+                                // Создаём тайл на основе массива с номерами цветов (палитра при этом не важна)
+                                var tile = new Tile(tileData);
+                                // Добавляем его в список, если его там ещё нет
+                                var existsTile = patternTable.Where(kv => kv.Value.Equals(tile));
+                                if (patternTable.Any())
                                 {
-                                    var color = ((Bitmap)image).GetPixel(tileX * 8 + x, tileY * 8 + y);
-                                    var palette = palettes[palleteIndexes[tileX / 2, tileY / 2]];
-                                    var colorIndex = (byte)palette.Colors.FindIndex(c => c == color);
-                                    tileData[x, y] = colorIndex;
+                                    var id = patternTable.First().Key;
+                                    nameTable.Add(id);
                                 }
-                            // Создаём тайл на основе массива с номерами цветов (палитра при этом не важна)
-                            var tile = new PatternTableEntry(tileData);
-                            // Добавляем его в список, если его там ещё нет
-                            // Выбираем первый набор для первых трёх картинок и нижней/верхней части, второй - для остального
-                            if ((imageNum == 0 || (imageNum < 4 && tileY < 20) || tileY <= 8) && (imageNum != 6))
-                            {
-                                if (!patternTables[0].Contains(tile))
-                                    patternTables[0].Add(tile);
-                                // Запоминаем номер тайла
-                                nameTable[tileX + tileY * 32] = (byte)patternTables[0].FindIndex(t => t.Equals(tile));
-                            }
-                            else
-                            {
-                                if (!patternTables[1].Contains(tile))
-                                    patternTables[1].Add(tile);
-                                // Запоминаем номер тайла
-                                nameTable[tileX + tileY * 32] = (byte)patternTables[1].FindIndex(t => t.Equals(tile));
+                                else
+                                {
+                                    patternTable[tileID] = tile;
+                                    nameTable.Add(tileID);
+                                    tileID++;
+                                }
                             }
                         }
                     }
+                    if (tileID > patternTableStartOffsets[imageNum])
+                        Console.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
+                    else
+                        Console.WriteLine($"Pattern table is empty");
+                    if (tileID > 256) throw new ArgumentOutOfRangeException("Tiles out of range");
 
-                    // Ну и nametable
-                    var nametableRaw = new byte[1024];
-                    Array.Copy(nameTable, nametableRaw, 30 * 32);
-                    // В которой ещё attribute table
-                    for (int tileY = 0; tileY <= image.Height / 32; tileY++)
+                    // Saving to file
+                    if (outPatternTable.ContainsKey(imageNum))
                     {
-                        for (int tileX = 0; tileX < image.Width / 32; tileX++)
+                        var patternTableRaw = new List<byte>();
+                        for (int t = patternTableStartOffsets[imageNum]; t < tileID; t++)
                         {
-                            var topLeft = palleteIndexes[tileX * 2, tileY * 2];
-                            var topRight = palleteIndexes[tileX * 2 + 1, tileY * 2];
-                            var bottomLeft = tileY < 7 ? palleteIndexes[tileX * 2, tileY * 2 + 1] : 0;
-                            var bottomRight = tileY < 7 ? palleteIndexes[tileX * 2 + 1, tileY * 2 + 1] : 0;
+                            var raw = new byte[16];
+                            var pixels = patternTable[t].pixels;
+                            for (int y = 0; y < 8; y++)
+                            {
+                                raw[y] = 0;
+                                raw[y + 8] = 0;
+                                for (int x = 0; x < 8; x++)
+                                {
+                                    if ((pixels[x, y] & 1) != 0)
+                                        raw[y] |= (byte)(1 << (7 - x));
+                                    if ((pixels[x, y] & 2) != 0)
+                                        raw[y + 8] |= (byte)(1 << (7 - x));
+                                }
+                            }
+                            patternTableRaw.AddRange(raw);
+                        }
+                        File.WriteAllBytes(outPatternTable[imageNum], patternTableRaw.ToArray());
+                        Console.WriteLine($"Pattern table #{imageNum} saved to {outPatternTable[imageNum]}");
+                    }
+                }
 
-                            nametableRaw[0x3C0 + tileY * 8 + tileX] = (byte)
+                // Attribute tables
+                // Осталось составить базу тайлов, теперь уже размером 8 на 8
+                foreach (var imageNum in outAttributeTable.Keys)
+                {
+                    if (mode != TilesMode.Backgrounds)
+                        throw new InvalidOperationException("Attribute table generation available for backgrounds mode only");
+                    Console.WriteLine($"Creating attribute table for #{imageNum} {Path.GetFileName(imageFiles[imageNum])}...");
+                    var image = imagesOriginal[imageNum];
+                    var attributeTableRaw = new List<byte>();
+                    for (int ptileY = 0; ptileY < Math.Ceiling(image.Height / 32.0); ptileY++)
+                    {
+                        for (int ptileX = 0; ptileX < Math.Ceiling(image.Width / 32.0); ptileX++)
+                        {
+                            byte topLeft = 0;
+                            byte topRight = 0;
+                            byte bottomLeft = 0;
+                            byte bottomRight = 0;
+
+                            try
+                            {
+                                topLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2];
+                            }
+                            catch (IndexOutOfRangeException) { }
+                            try
+                            {
+                                topRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
+                            }
+                            catch (IndexOutOfRangeException) { }
+                            try
+                            {
+                                bottomLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2 + 1];
+                            }
+                            catch (IndexOutOfRangeException) { }
+                            try
+                            {
+                                bottomRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2 + 1];
+                            }
+                            catch (IndexOutOfRangeException) { }
+
+                            var atv = (byte)
                                 (topLeft // top left
                                 | (topRight << 2) // top right
                                 | (bottomLeft << 4) // bottom left
                                 | (bottomRight << 6)); // bottom right
+                            attributeTableRaw.Add(atv);
                         }
                     }
-                    File.WriteAllBytes(Path.GetFileNameWithoutExtension(imageFiles[imageNum]) + "_nametable.bin", nametableRaw);
-                }
 
-                // Сохраняем паттерны
-                for (int i = 0; i < 2; i++)
-                    Console.WriteLine($"Tiles count {i + 1}: {patternTables[i].Count}");
-                for (int i = 0; i < 2; i++)
-                {
-                    if (patternTables[i].Count > 256) throw new Exception($"Too many tiles {i + 1}: {patternTables[i].Count}");
-
-                    // Сами тайлы
-                    var patternTableRaw = new byte[0x1000];
-                    for (int p = 0; p < patternTables[i].Count; p++)
+                    // Saving to file
+                    if (outAttributeTable.ContainsKey(imageNum))
                     {
-                        var pixels = patternTables[i][p].pixels;
-
-                        for (int y = 0; y < 8; y++)
-                        {
-                            patternTableRaw[p * 16 + y] = 0;
-                            patternTableRaw[p * 16 + y + 8] = 0;
-                            for (int x = 0; x < 8; x++)
-                            {
-                                if ((pixels[x, y] & 1) != 0)
-                                    patternTableRaw[p * 16 + y] |= (byte)(1 << (7 - x));
-                                if ((pixels[x, y] & 2) != 0)
-                                    patternTableRaw[p * 16 + y + 8] |= (byte)(1 << (7 - x));
-                            }
-                        }
+                        File.WriteAllBytes(outAttributeTable[imageNum], attributeTableRaw.ToArray());
+                        Console.WriteLine($"Attribute table #{imageNum} saved to {outPreview[imageNum]}");
                     }
-                    File.WriteAllBytes($"pattern{i}.bin", patternTableRaw);
                 }
-
-                Console.WriteLine("Done.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message + ex.StackTrace);
+                Console.ReadLine();
                 Environment.Exit(1);
             }
         }
@@ -420,18 +469,13 @@ namespace ManyTilesConverter
         static byte findSimilarColor(Dictionary<byte, Color> colors, Color color)
         {
             byte result = byte.MaxValue;
-            int minDelta = int.MaxValue;
+            double minDelta = double.MaxValue;
             if (color.R == 0xFF && color.G == 0xFF && color.B == 0xFF)
                 color = Color.FromArgb(0xF8, 0xF8, 0xF8);
             foreach (var index in colors.Keys)
             {
-                var color1 = color;
-                var color2 = colors[index];
-                var deltaR = Math.Abs((int)color1.R - (int)color2.R);
-                var deltaG = Math.Abs((int)color1.G - (int)color2.G);
-                var deltaB = Math.Abs((int)color1.B - (int)color2.B);
-                var delta = deltaR + deltaG + deltaB;
-                if (delta == 0 && delta < minDelta)
+                var delta = color.GetDelta(colors[index]);
+                if (delta < minDelta)
                 {
                     minDelta = delta;
                     result = index;
@@ -442,35 +486,13 @@ namespace ManyTilesConverter
             return result;
         }
 
-        static Palette createPalette(Image image, int tileX, int tileY, Color bgColor)
-        {
-            Dictionary<Color, int> colorCounter = new Dictionary<Color, int>();
-            colorCounter[bgColor] = 0;
-            for (int y = 0; y < 16; y++)
-                for (int x = 0; x < 16; x++)
-                {
-                    var color = ((Bitmap)image).GetPixel(tileX * 16 + x, tileY * 16 + y);
-                    if (!colorCounter.ContainsKey(color)) colorCounter[color] = 0;
-                    colorCounter[color]++;
-                }
-
-            if (colorCounter.Count > 4)
-                throw new Exception("Too many colors");
-
-            // Создаём палитру
-            var paletteGroup = new Palette(colorCounter.Keys);
-            return paletteGroup;
-        }
-
         static Color findSimilarColor(IEnumerable<Color> colors, Color color)
         {
             Color result = Color.Black;
-            double minDelta = int.MaxValue;
+            double minDelta = double.MaxValue;
             foreach (var c in colors)
             {
-                var color1 = color;
-                var color2 = c;
-                var delta = getColorDifference(color1, color2);
+                var delta = color.GetDelta(c);
                 if (delta < minDelta)
                 {
                     minDelta = delta;
@@ -478,18 +500,6 @@ namespace ManyTilesConverter
                 }
             }
             return result;
-        }
-
-        static double getColorDifference(Color color1, Color color2)
-        {
-            /*
-            var deltaR = Math.Abs((int)color1.R - (int)color2.R);
-            var deltaG = Math.Abs((int)color1.G - (int)color2.G);
-            var deltaB = Math.Abs((int)color1.B - (int)color2.B);
-            var delta = deltaR + deltaG + deltaB;
-            */
-            var delta = Math.Sqrt(Math.Pow(color1.R - color2.R, 2) + Math.Pow(color1.G - color2.G, 2) + Math.Pow(color1.B - color2.B, 2));
-            return delta;
         }
     }
 }
