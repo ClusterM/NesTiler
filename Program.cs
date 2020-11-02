@@ -38,6 +38,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 var patternTableStartOffsets = new Dictionary<int, int>();
                 var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
                 var nameTables = new Dictionary<int, List<int>>();
+                bool ignoreTilesRange = false;
 
                 // Filenames
                 var outPreview = new Dictionary<int, string>();
@@ -135,6 +136,10 @@ namespace com.clusterrr.Famicom.NesTiler
                         case "out-attribute-table":
                             outAttributeTable[indexNum] = value;
                             i++;
+                            break;
+                        case "ignoretilesrange":
+                        case "ignore-tiles-range":
+                            ignoreTilesRange = true;
                             break;
                         default:
                             throw new ArgumentException($"Unknown argement: {args[i]}");
@@ -416,7 +421,8 @@ namespace com.clusterrr.Famicom.NesTiler
                         Console.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
                         Console.WriteLine($"Pattern table is empty");
-                    if (tileID > 256) throw new ArgumentOutOfRangeException("Tiles out of range");
+                    if (tileID > 256 && !ignoreTilesRange) 
+                        throw new ArgumentOutOfRangeException("Tiles out of range");
 
                     // Saving to file
                     if (outPatternTable.ContainsKey(imageNum))
