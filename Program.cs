@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace com.clusterrr.Famicom.NesTiler
@@ -20,7 +21,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Sprites8x16
         }
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             try
             {
@@ -154,6 +155,31 @@ namespace com.clusterrr.Famicom.NesTiler
                         ColorTranslator.FromHtml(kv.Value)
                     )).ToDictionary(kv => kv.Key, kv => kv.Value);
 
+                /*
+                var img = new Bitmap(16*64, 4*64, PixelFormat.Format32bppPArgb);
+                var cnv = Graphics.FromImage(img);
+                for (int x = 0; x < 16; x++)
+                    for (int y = 0; y < 4; y++)
+                    {
+                        if (nesColors.ContainsKey((byte)(y * 16 + x)))
+                        {
+                            var brush = new SolidBrush(nesColors[(byte)(y * 16 + x)]);
+                            cnv.FillRectangle(brush, x * 64, y * 64, 64, 64);
+                        } else
+                        {
+                            var brush = new SolidBrush(Color.White);
+                            cnv.FillRectangle(brush, x * 64, y * 64, 64, 64);
+                            var red = new SolidBrush(Color.Red);
+                            var pen = new Pen(red, 3);
+                            cnv.DrawLine(pen, x * 64, y * 64, x * 64 + 63, y * 64 + 63);
+                            cnv.DrawLine(pen, x * 64 + 63, y * 64, x * 64, y * 64 + 63);
+                        }
+                    }
+                cnv.Flush();
+                img.Save(@"E:\palette.png", ImageFormat.Png);
+                return 0;
+                */
+                
                 foreach (var image in imageFiles)
                 {
                     Console.WriteLine($"Loading {Path.GetFileName(image.Value)}...");
@@ -310,8 +336,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         Console.WriteLine($"Palette #{p} saved to {outPalette[p]}");
                     }
                 }
-                //File.WriteAllBytes("palette.bin", paletteRaw);
-
+                
                 // Сохраняем и применяем палитры
                 imagesRecolored.Clear();
                 foreach (var imageNum in imagesOriginal.Keys)
@@ -512,11 +537,12 @@ namespace com.clusterrr.Famicom.NesTiler
                         Console.WriteLine($"Attribute table #{imageNum} saved to {outAttributeTable[imageNum]}");
                     }
                 }
+                return 0;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message + ex.StackTrace);
-                Environment.Exit(1);
+                return 1;
             }
         }
 
