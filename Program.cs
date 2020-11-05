@@ -295,8 +295,10 @@ namespace com.clusterrr.Famicom.NesTiler
                             paletteCounter[palette1] = 0;
                         }
                     }
+
                 // Убираем те, что больше не используются
                 paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+
                 // Снова сортируем палитры по популярности
                 sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
                 // Если есть свободные места в топовых палитрах, добиваем их менее топовыми
@@ -307,18 +309,36 @@ namespace com.clusterrr.Famicom.NesTiler
                     {
                         foreach (var p in sortedKeys)
                         {
-                            if (p != t && (paletteCounter[p] > 0) && (p.Count + t.Count <= 3))
+                            var newColors = p.Where(c => !t.Contains(c));
+                            if (p != t && (paletteCounter[p] > 0) && (newColors.Count() + t.Count <= 3))
                             {
                                 var count1 = paletteCounter[t];
                                 var count2 = paletteCounter[p];
                                 paletteCounter[t] = 0;
                                 paletteCounter[p] = 0;
-                                foreach (var c in p) t.Add(c);
+                                foreach (var c in newColors) t.Add(c);
                                 paletteCounter[t] = count1 + count2;
                             }
                         }
                     }
                 }
+
+                // Убираем те, что больше не используются
+                paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+                // Снова группируем палитры. Некоторые из них могут содержать все цвета других
+                foreach (var palette2 in sortedKeys)
+                    foreach (var palette1 in sortedKeys)
+                    {
+                        if ((palette2 != palette1) && (palette2.Count >= palette1.Count) && palette2.Contains(palette1))
+                        {
+                            paletteCounter[palette2] += paletteCounter[palette1];
+                            paletteCounter[palette1] = 0;
+                        }
+                    }
+
+                // Убираем те, что больше не используются
+                paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
 
                 // Выбираем итоговые палитры
                 var palettes = new Palette[4] { null, null, null, null };
