@@ -219,7 +219,38 @@ namespace com.clusterrr.Famicom.NesTiler
                 if (bgColor == null)
                 {
                     Console.Write($"Background color autotect... ");
-                    bgColor = colorCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).FirstOrDefault();
+                    // Счётчик использования цветов
+                    Dictionary<Color, int> colorPerTileCounter = new Dictionary<Color, int>();
+                    foreach (var imageNum in imagesRecolored.Keys)
+                    {
+                        var image = imagesRecolored[imageNum];
+                        // Перебираем все тайлы 16*16 или 8*8 для спрайтов
+                        for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
+                        {
+                            for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
+                            {
+                                var colorsInTile = new List<Color>();
+                                for (int y = 0; y < tilePalHeight; y++)
+                                {
+                                    for (int x = 0; x < tilePalWidth; x++)
+                                    {
+                                        var color = ((Bitmap)image).GetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
+                                        if (!colorsInTile.Contains(color))
+                                            colorsInTile.Add(color);
+                                    }
+                                }
+
+                                // Count each color only once per tile
+                                foreach (var color in colorsInTile)
+                                {
+                                    if (!colorPerTileCounter.ContainsKey(color))
+                                        colorPerTileCounter[color] = 0;
+                                    colorPerTileCounter[color]++;
+                                }
+                            }
+                        }
+                    }
+                    bgColor = colorPerTileCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).FirstOrDefault();
                     Console.WriteLine(ColorTranslator.ToHtml(bgColor.Value));
                 }
 
@@ -541,7 +572,7 @@ namespace com.clusterrr.Famicom.NesTiler
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + ex.Message + ex.StackTrace);
+                Console.WriteLine($"Error {ex.GetType()}: " + ex.Message + ex.StackTrace);
                 return 1;
             }
         }
