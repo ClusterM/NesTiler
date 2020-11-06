@@ -601,8 +601,6 @@ namespace com.clusterrr.Famicom.NesTiler
         {
             byte result = byte.MaxValue;
             double minDelta = double.MaxValue;
-            if (color.R == 0xFF && color.G == 0xFF && color.B == 0xFF)
-                color = Color.FromArgb(0xF8, 0xF8, 0xF8);
             foreach (var index in colors.Keys)
             {
                 var delta = color.GetDelta(colors[index]);
