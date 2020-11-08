@@ -33,8 +33,8 @@ namespace com.clusterrr.Famicom.NesTiler
                 var mode = TilesMode.Backgrounds;
                 int tilePalWidth = 16;
                 int tilePalHeight = 16;
-                var imagesOriginal = new Dictionary<int, Image>();
-                var imagesRecolored = new Dictionary<int, Image>();
+                var imagesOriginal = new Dictionary<int, FastBitmap>();
+                var imagesRecolored = new Dictionary<int, FastBitmap>();
                 var palleteIndexes = new Dictionary<int, byte[,]>();
                 var patternTableStartOffsets = new Dictionary<int, int>();
                 var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
@@ -183,7 +183,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 foreach (var image in imageFiles)
                 {
                     Console.WriteLine($"Loading {Path.GetFileName(image.Value)}...");
-                    imagesOriginal[image.Key] = Image.FromFile(image.Value);
+                    imagesOriginal[image.Key] = FastBitmap.FromFile(image.Value);
                     if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
                         throw new InvalidDataException("Invalid image size");
                 }
@@ -198,7 +198,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 foreach (var imageNum in imagesOriginal.Keys)
                 {
                     Console.WriteLine($"Adjusting colors for {imageFiles[imageNum]}...");
-                    var image = new Bitmap(imagesOriginal[imageNum]);
+                    var image = new FastBitmap(imagesOriginal[imageNum].GetBitmap());
                     imagesRecolored[imageNum] = image;
                     // Приводим все цвета к NES палитре
                     for (int y = 0; y < image.Height; y++)
@@ -234,7 +234,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                 {
                                     for (int x = 0; x < tilePalWidth; x++)
                                     {
-                                        var color = ((Bitmap)image).GetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
+                                        var color = image.GetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
                                         if (!colorsInTile.Contains(color))
                                             colorsInTile.Add(color);
                                     }
@@ -298,11 +298,12 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 // Убираем те, что больше не используются
                 paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
-
                 // Снова сортируем палитры по популярности
                 sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
-                // Если есть свободные места в топовых палитрах, добиваем их менее топовыми
+
+                // Список топовых палитр
                 var top4 = sortedKeys.Take(4).ToList();
+                // Если есть свободные места в топовых палитрах, добиваем их менее топовыми
                 foreach (var t in top4)
                 {
                     if (t.Count < 3)
@@ -325,6 +326,8 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 // Убираем те, что больше не используются
                 paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+                // Снова сортируем палитры по популярности
+                sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
 
                 // Снова группируем палитры. Некоторые из них могут содержать все цвета других
                 foreach (var palette2 in sortedKeys)
@@ -337,9 +340,14 @@ namespace com.clusterrr.Famicom.NesTiler
                         }
                     }
 
+
                 // Убираем те, что больше не используются
                 paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+                // Снова сортируем палитры по популярности
+                sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
 
+                // Обновляем список топовых
+                top4 = sortedKeys.Take(4).ToList();
                 // Выбираем итоговые палитры
                 var palettes = new Palette[4] { null, null, null, null };
                 for (var i = 0; i < palettes.Length; i++)
@@ -394,7 +402,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     Console.WriteLine($"Mapping palettes for #{imageNum} {imageFiles[imageNum]}...");
                     var image = imagesOriginal[imageNum];
-                    var imageRecolored = new Bitmap(image);
+                    var imageRecolored = new FastBitmap(image.GetBitmap());
                     imagesRecolored[imageNum] = imageRecolored;
                     // Перебираем все тайлы 16*16 или спрайты 8*8 (8*16)
                     palleteIndexes[imageNum] = new byte[image.Width / tilePalWidth, image.Height / tilePalHeight];
@@ -403,7 +411,6 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
                         {
                             double minDelta = double.MaxValue;
-                            Palette bestPalette = null;
                             byte bestPaletteIndex = 0;
                             // Пробуем каждую палитру
                             for (byte paletteIndex = 0; paletteIndex < palettes.Length; paletteIndex++)
@@ -416,10 +423,10 @@ namespace com.clusterrr.Famicom.NesTiler
                                 if (delta < minDelta)
                                 {
                                     minDelta = delta;
-                                    bestPalette = palettes[paletteIndex];
                                     bestPaletteIndex = paletteIndex;
                                 }
                             }
+                            Palette bestPalette = palettes[bestPaletteIndex];
                             palleteIndexes[imageNum][tileX, tileY] = bestPaletteIndex;
 
                             // В итоге применяем эту палитру к тайлу
@@ -427,7 +434,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             {
                                 for (int x = 0; x < tilePalWidth; x++)
                                 {
-                                    var color = ((Bitmap)image).GetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
+                                    var color = image.GetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
                                     var similarColor = findSimilarColor(Enumerable.Concat(bestPalette, new Color[] { bgColor.Value }), color);
                                     imageRecolored.SetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y, similarColor);
                                 }
@@ -465,7 +472,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                 for (int y = 0; y < 8; y++)      // И применяем к каждому пикселю
                                     for (int x = 0; x < 8; x++)
                                     {
-                                        var color = ((Bitmap)image).GetPixel(tileX * 8 + x, (tileY + tileYS) * 8 + y);
+                                        var color = image.GetPixel(tileX * 8 + x, (tileY + tileYS) * 8 + y);
                                         var palette = palettes[palleteIndexes[imageNum][tileX / (tilePalWidth / 8), (tileY + tileYS) / (tilePalHeight / 8)]];
                                         byte colorIndex = 0;
                                         if (color != bgColor)
