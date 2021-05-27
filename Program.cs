@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,7 +25,7 @@ namespace com.clusterrr.Famicom.NesTiler
         {
             try
             {
-                string colorsFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"colors.json");
+                string colorsFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), @"colors.json");
                 var imageFiles = new Dictionary<int, string>();
                 Color? bgColor = null;
                 var paletteEnabled = new bool[4] { true, true, true, true };
@@ -149,7 +149,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 // Loading and parsing palette JSON
                 var paletteJson = File.ReadAllText(colorsFile);
-                var nesColorsStr = JsonConvert.DeserializeObject<Dictionary<string, string>>(paletteJson);
+                var nesColorsStr = JsonSerializer.Deserialize<Dictionary<string, string>>(paletteJson);
                 var nesColors = nesColorsStr.Select(kv => new KeyValuePair<byte, Color>(
                         kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
                         ColorTranslator.FromHtml(kv.Value)
