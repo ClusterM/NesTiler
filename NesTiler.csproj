@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>com.clusterrr.Famicom.NesTiler</RootNamespace>
-    <AssemblyName>NesTiler</AssemblyName>
+    <AssemblyName>nestiler</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
