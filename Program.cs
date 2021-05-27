@@ -14,6 +14,8 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     class Program
     {
+        const string DEFAULT_COLORS_FILE = @"coolgirl-colors.json";
+
         public enum TilesMode
         {
             Backgrounds,
@@ -25,7 +27,7 @@ namespace com.clusterrr.Famicom.NesTiler
         {
             try
             {
-                string colorsFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), @"colors.json");
+                string colorsFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), DEFAULT_COLORS_FILE);
                 var imageFiles = new Dictionary<int, string>();
                 Color? bgColor = null;
                 var paletteEnabled = new bool[4] { true, true, true, true };
