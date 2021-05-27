@@ -14,7 +14,7 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     class Program
     {
-        const string DEFAULT_COLORS_FILE = @"coolgirl-colors.json";
+        const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
 
         public enum TilesMode
         {
