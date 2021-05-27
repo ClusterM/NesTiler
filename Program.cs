@@ -27,7 +27,10 @@ namespace com.clusterrr.Famicom.NesTiler
         {
             try
             {
-                string colorsFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), DEFAULT_COLORS_FILE);
+                string colorsFile =
+                    OperatingSystem.IsWindows()
+                        ? Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), DEFAULT_COLORS_FILE)
+                        : Path.Combine("/etc", DEFAULT_COLORS_FILE);
                 var imageFiles = new Dictionary<int, string>();
                 Color? bgColor = null;
                 var paletteEnabled = new bool[4] { true, true, true, true };
@@ -181,7 +184,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 img.Save(@"E:\palette.png", ImageFormat.Png);
                 return 0;
                 */
-                
+
                 foreach (var image in imageFiles)
                 {
                     Console.WriteLine($"Loading {Path.GetFileName(image.Value)}...");
@@ -397,7 +400,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         Console.WriteLine($"Palette #{p} saved to {outPalette[p]}");
                     }
                 }
-                
+
                 // Сохраняем и применяем палитры
                 imagesRecolored.Clear();
                 foreach (var imageNum in imagesOriginal.Keys)
@@ -506,7 +509,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         Console.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
                         Console.WriteLine($"Pattern table is empty");
-                    if (tileID > 256 && !ignoreTilesRange) 
+                    if (tileID > 256 && !ignoreTilesRange)
                         throw new ArgumentOutOfRangeException("Tiles out of range");
 
                     // Saving to file
