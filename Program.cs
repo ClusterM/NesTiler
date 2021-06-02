@@ -39,6 +39,8 @@ namespace com.clusterrr.Famicom.NesTiler
                 int tilePalWidth = 16;
                 int tilePalHeight = 16;
                 var imagesOriginal = new Dictionary<int, FastBitmap>();
+                var vOffsets = new Dictionary<int, int>();
+                var heights = new Dictionary<int, int>();
                 var imagesRecolored = new Dictionary<int, FastBitmap>();
                 var palleteIndexes = new Dictionary<int, byte[,]>();
                 var patternTableStartOffsets = new Dictionary<int, int>();
@@ -94,6 +96,15 @@ namespace com.clusterrr.Famicom.NesTiler
                         case "i":
                         case "input":
                             imageFiles[indexNum] = value;
+                            i++;
+                            break;
+                        case "voffset":
+                        case "v-offset":
+                            vOffsets[indexNum] = int.Parse(value);
+                            i++;
+                            break;
+                        case "height":
+                            heights[indexNum] = int.Parse(value);
                             i++;
                             break;
                         case "pattern-offset":
@@ -187,8 +198,31 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 foreach (var image in imageFiles)
                 {
-                    Console.WriteLine($"Loading {Path.GetFileName(image.Value)}...");
+                    Console.WriteLine($"Loading file #{image.Key} - {Path.GetFileName(image.Value)}...");
                     imagesOriginal[image.Key] = FastBitmap.FromFile(image.Value);
+                    if (vOffsets.ContainsKey(image.Key) || heights.ContainsKey(image.Key))
+                    {
+                        // crop
+                        int offset = 0;
+                        vOffsets.TryGetValue(image.Key, out offset);
+                        vOffsets[image.Key] = offset;
+                        int height = imagesOriginal[image.Key].Height - offset;
+                        heights.TryGetValue(image.Key, out height);
+                        heights[image.Key] = height;
+                        Console.WriteLine($"Cropping it to {offset}:{height}...");
+                        var cropped = new Bitmap(imagesOriginal[image.Key].Width, height);
+                        var gr = Graphics.FromImage(cropped);
+                        gr.DrawImageUnscaledAndClipped(imagesOriginal[image.Key].GetBitmap(),
+                            new Rectangle(0, -offset, imagesOriginal[image.Key].Width, imagesOriginal[image.Key].Height));
+                        gr.Flush();
+                        imagesOriginal[image.Key].Dispose();
+                        imagesOriginal[image.Key] = new FastBitmap(cropped);
+                    }
+                    else
+                    {
+                        vOffsets[image.Key] = 0;
+                        heights[image.Key] = imagesOriginal[image.Key].Height;
+                    }
                     if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
                         throw new InvalidDataException("Invalid image size");
                 }
@@ -202,7 +236,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 var colorCounter = new Dictionary<Color, int>();
                 foreach (var imageNum in imagesOriginal.Keys)
                 {
-                    Console.WriteLine($"Adjusting colors for {imageFiles[imageNum]}...");
+                    Console.WriteLine($"Adjusting colors for file #{imageNum} -  {imageFiles[imageNum]}...");
                     var image = new FastBitmap(imagesOriginal[imageNum].GetBitmap());
                     imagesRecolored[imageNum] = image;
                     // Приводим все цвета к NES палитре
@@ -263,7 +297,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 Dictionary<Palette, int> paletteCounter = new Dictionary<Palette, int>();
                 foreach (var imageNum in imagesOriginal.Keys)
                 {
-                    Console.WriteLine($"Creating palettes for {imageFiles[imageNum]}...");
+                    Console.WriteLine($"Creating palettes for file #{imageNum} - {imageFiles[imageNum]}...");
                     var image = imagesRecolored[imageNum];
                     // Перебираем все тайлы 16*16 или 8*8 для спрайтов
                     for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
@@ -405,7 +439,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 imagesRecolored.Clear();
                 foreach (var imageNum in imagesOriginal.Keys)
                 {
-                    Console.WriteLine($"Mapping palettes for #{imageNum} {imageFiles[imageNum]}...");
+                    Console.WriteLine($"Mapping palettes for file #{imageNum} - {imageFiles[imageNum]}...");
                     var image = imagesOriginal[imageNum];
                     var imageRecolored = new FastBitmap(image.GetBitmap());
                     imagesRecolored[imageNum] = imageRecolored;
@@ -457,7 +491,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 // Осталось составить базу тайлов, теперь уже размером 8 на 8
                 foreach (var imageNum in imagesRecolored.Keys)
                 {
-                    Console.WriteLine($"Creating pattern table for #{imageNum} {Path.GetFileName(imageFiles[imageNum])}...");
+                    Console.WriteLine($"Creating pattern table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
                     var image = imagesRecolored[imageNum];
                     if (!patternTables.ContainsKey(imageNum)) patternTables[imageNum] = new Dictionary<int, Tile>();
                     var patternTable = patternTables[imageNum];
@@ -551,7 +585,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     if (mode != TilesMode.Backgrounds)
                         throw new InvalidOperationException("Attribute table generation available for backgrounds mode only");
-                    Console.WriteLine($"Creating attribute table for #{imageNum} {Path.GetFileName(imageFiles[imageNum])}...");
+                    Console.WriteLine($"Creating attribute table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
                     var image = imagesOriginal[imageNum];
                     var attributeTableRaw = new List<byte>();
                     for (int ptileY = 0; ptileY < Math.Ceiling(image.Height / 32.0); ptileY++)

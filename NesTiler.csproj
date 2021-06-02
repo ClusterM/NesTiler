@@ -29,7 +29,12 @@
   <ItemGroup>
     <None Update="nestiler-colors.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
   </ItemGroup>
+
+  <PropertyGroup>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
 
 </Project>

@@ -94,7 +94,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public void Dispose()
         {
-            Lock();
+            Unlock();
         }
 
         public static FastBitmap FromFile(string filename)
