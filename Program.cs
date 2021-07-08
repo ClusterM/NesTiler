@@ -39,8 +39,6 @@ namespace com.clusterrr.Famicom.NesTiler
                 int tilePalWidth = 16;
                 int tilePalHeight = 16;
                 var imagesOriginal = new Dictionary<int, FastBitmap>();
-                var vOffsets = new Dictionary<int, int>();
-                var heights = new Dictionary<int, int>();
                 var imagesRecolored = new Dictionary<int, FastBitmap>();
                 var palleteIndexes = new Dictionary<int, byte[,]>();
                 var patternTableStartOffsets = new Dictionary<int, int>();
@@ -55,14 +53,19 @@ namespace com.clusterrr.Famicom.NesTiler
                 var outNameTable = new Dictionary<int, string>();
                 var outAttributeTable = new Dictionary<int, string>();
 
-                var paramRegex = new Regex(@"--*(?<param>[a-zA-Z-]+)(?<index>[0-9]*)");
+                var paramRegex = new Regex(@"^--?(?<param>[a-zA-Z-]+)(?<index>[0-9]*)$");
                 for (int i = 0; i < args.Length; i++)
                 {
                     var match = paramRegex.Match(args[i]);
+                    if (!match.Success)
+                        throw new ArgumentException($"Unknown argement: {args[i]}");
                     string param = match.Groups["param"].Value;
+                    if (param[^1] == '-')
+                        param = param[0..^1];
                     string indexStr = match.Groups["index"].Value;
                     int indexNum = 0;
-                    int.TryParse(indexStr, out indexNum);
+                    if (!string.IsNullOrEmpty(indexStr))
+                        indexNum = int.Parse(indexStr);
                     string value = i < args.Length - 1 ? args[i + 1] : "";
                     switch (param)
                     {
@@ -96,15 +99,6 @@ namespace com.clusterrr.Famicom.NesTiler
                         case "i":
                         case "input":
                             imageFiles[indexNum] = value;
-                            i++;
-                            break;
-                        case "voffset":
-                        case "v-offset":
-                            vOffsets[indexNum] = int.Parse(value);
-                            i++;
-                            break;
-                        case "height":
-                            heights[indexNum] = int.Parse(value);
                             i++;
                             break;
                         case "pattern-offset":
@@ -199,16 +193,19 @@ namespace com.clusterrr.Famicom.NesTiler
                 foreach (var image in imageFiles)
                 {
                     Console.WriteLine($"Loading file #{image.Key} - {Path.GetFileName(image.Value)}...");
-                    imagesOriginal[image.Key] = FastBitmap.FromFile(image.Value);
-                    if (vOffsets.ContainsKey(image.Key) || heights.ContainsKey(image.Key))
+                    var offsetRegex = new Regex(@"^(?<filename>.*?)(:(?<offset>[0-9]+)(:(?<height>[0-9]+))?)?$");
+                    var match = offsetRegex.Match(image.Value);
+                    var filename = match.Groups["filename"].Value;
+                    imagesOriginal[image.Key] = FastBitmap.FromFile(filename);
+                    var offsetS = match.Groups["offset"].Value;
+                    var heightS = match.Groups["height"].Value;
+                    if (!string.IsNullOrEmpty(offsetS))
                     {
                         // crop
-                        int offset = 0;
-                        vOffsets.TryGetValue(image.Key, out offset);
-                        vOffsets[image.Key] = offset;
+                        int offset = int.Parse(offsetS);
                         int height = imagesOriginal[image.Key].Height - offset;
-                        heights.TryGetValue(image.Key, out height);
-                        heights[image.Key] = height;
+                        if (!string.IsNullOrEmpty(heightS))
+                            height = int.Parse(heightS);
                         Console.WriteLine($"Cropping it to {offset}:{height}...");
                         var cropped = new Bitmap(imagesOriginal[image.Key].Width, height);
                         var gr = Graphics.FromImage(cropped);
@@ -217,11 +214,6 @@ namespace com.clusterrr.Famicom.NesTiler
                         gr.Flush();
                         imagesOriginal[image.Key].Dispose();
                         imagesOriginal[image.Key] = new FastBitmap(cropped);
-                    }
-                    else
-                    {
-                        vOffsets[image.Key] = 0;
-                        heights[image.Key] = imagesOriginal[image.Key].Height;
                     }
                     if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
                         throw new InvalidDataException("Invalid image size");
