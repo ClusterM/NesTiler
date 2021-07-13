@@ -1,3 +1,6 @@
+commit.txt
+buildtime.txt 
+
 *.exe
 games.asm
 games.deb
