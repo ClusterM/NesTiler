@@ -27,7 +27,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         static void PrintHelp()
         {
-            Console.WriteLine("Usage: nestiler <options>");
+            Console.WriteLine($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} <options>");
             Console.WriteLine();
             Console.WriteLine("Available options:");
             Console.WriteLine(" {0,-30}{1}", "--input-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
