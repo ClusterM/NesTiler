@@ -19,11 +19,30 @@
 
   <ItemGroup>
     <None Remove=".git" />
+    <None Include="..\..\..\..\C#\NesTiler\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ColorMinePortable" Version="2.0.1" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +54,19 @@
 
   <PropertyGroup>
     <DebugType>embedded</DebugType>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Version>0.1.0</Version>
+    <RepositoryUrl>https://github.com/ClusterM/nestiler</RepositoryUrl>
+    <Description>Tool for converting pictures into NES format: generating pattern tables, palettes, name tables</Description>
+    <Company>Alexey "Cluster" Avdyukhin</Company>
+    <Authors>Alexey "Cluster" Avdyukhin</Authors>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Product>NesTiler</Product>
   </PropertyGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="make commit buildtime&#xD;&#xA;" />
+  </Target>
 
 </Project>

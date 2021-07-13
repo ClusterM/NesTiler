@@ -14,7 +14,9 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     class Program
     {
+        private const string REPO_PATH = "https://github.com/ClusterM/nestiler";
         const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
+        private static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
 
         public enum TilesMode
         {
@@ -23,14 +25,46 @@ namespace com.clusterrr.Famicom.NesTiler
             Sprites8x16
         }
 
+        static void PrintHelp()
+        {
+            Console.WriteLine("Usage: nestiler <options>");
+            Console.WriteLine();
+            Console.WriteLine("Available options:");
+            Console.WriteLine(" {0,-30}{1}", "--input-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
+            Console.WriteLine(" {0,-30}{1}", "--colors <file>", $"JSON file with list of available colors (defaukt - {DEFAULT_COLORS_FILE})");
+            Console.WriteLine(" {0,-30}{1}", "--mode bg|sprite8x8|sprite8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
+            Console.WriteLine(" {0,-30}{1}", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
+            Console.WriteLine(" {0,-30}{1}", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
+            Console.WriteLine(" {0,-30}{1}", "--palette-<#>", "comma separated list (up to 3) of colors to use in palette number # (default - autodetected)");
+            Console.WriteLine(" {0,-30}{1}", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
+            Console.WriteLine(" {0,-30}{1}", "--ignore-tiles-range", "option to disable tile ID overflow check");
+            Console.WriteLine(" {0,-30}{1}", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
+            Console.WriteLine(" {0,-30}{1}", "--out-palette-<#> <file>", "output filename for palette number #");
+            Console.WriteLine(" {0,-30}{1}", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
+            Console.WriteLine(" {0,-30}{1}", "--out-name-table-<#> <file>", "output filename for nametable of image number #");
+            Console.WriteLine(" {0,-30}{1}", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
+        }
+
         static int Main(string[] args)
         {
+            Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
+            Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
+#if DEBUG
+            Console.WriteLine($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
+#endif
+            Console.WriteLine("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");
+            Console.WriteLine("");
             try
             {
-                string colorsFile =
-                    OperatingSystem.IsWindows()
-                        ? Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), DEFAULT_COLORS_FILE)
-                        : Path.Combine("/etc", DEFAULT_COLORS_FILE);
+                if (args.Length == 0 || args.Contains("help") || args.Contains("--help"))
+                {
+                    PrintHelp();
+                    return 0;
+                }
+
+                string colorsFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), DEFAULT_COLORS_FILE);
+                if (!File.Exists(colorsFile) && !OperatingSystem.IsWindows())
+                    colorsFile = Path.Combine("/etc", DEFAULT_COLORS_FILE);
                 var imageFiles = new Dictionary<int, string>();
                 Color? bgColor = null;
                 var paletteEnabled = new bool[4] { true, true, true, true };
@@ -58,7 +92,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     var match = paramRegex.Match(args[i]);
                     if (!match.Success)
-                        throw new ArgumentException($"Unknown argement: {args[i]}");
+                        throw new ArgumentException($"Unknown argument: {args[i]}");
                     string param = match.Groups["param"].Value;
                     if (param[^1] == '-')
                         param = param[0..^1];
@@ -69,11 +103,21 @@ namespace com.clusterrr.Famicom.NesTiler
                     string value = i < args.Length - 1 ? args[i + 1] : "";
                     switch (param)
                     {
+                        case "i":
+                        case "input":
+                            imageFiles[indexNum] = value;
+                            i++;
+                            break;
+                        case "colors":
+                            colorsFile = value;
+                            i++;
+                            break;
                         case "mode":
                             switch (value.ToLower())
                             {
                                 case "sprite":
                                 case "sprites":
+                                case "sprites8x8":
                                     mode = TilesMode.Sprites;
                                     tilePalWidth = 8;
                                     tilePalHeight = 8;
@@ -96,20 +140,9 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
-                        case "i":
-                        case "input":
-                            imageFiles[indexNum] = value;
-                            i++;
-                            break;
-                        case "pattern-offset":
-                            patternTableStartOffsets[indexNum] = int.Parse(value);
-                            i++;
-                            break;
-                        case "colors":
-                            colorsFile = value;
-                            i++;
-                            break;
                         case "bgcolor":
+                        case "bg-color":
+                        case "background-color":
                             bgColor = ColorTranslator.FromHtml(value);
                             i++;
                             break;
@@ -128,23 +161,34 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
+                        case "pattern-offset":
+                            patternTableStartOffsets[indexNum] = int.Parse(value);
+                            i++;
+                            break;
                         case "out-preview":
+                        case "output-preview":
                             outPreview[indexNum] = value;
                             i++;
                             break;
                         case "out-palette":
+                        case "output-palette":
                             outPalette[indexNum] = value;
                             i++;
                             break;
                         case "out-pattern-table":
+                        case "output-pattern-table":
                             outPatternTable[indexNum] = value;
                             i++;
                             break;
                         case "out-name-table":
+                        case "output-name-table":
+                        case "out-nametable":
+                        case "output-nametable":
                             outNameTable[indexNum] = value;
                             i++;
                             break;
                         case "out-attribute-table":
+                        case "output-attribute-table":
                             outAttributeTable[indexNum] = value;
                             i++;
                             break;
@@ -153,9 +197,12 @@ namespace com.clusterrr.Famicom.NesTiler
                             ignoreTilesRange = true;
                             break;
                         default:
-                            throw new ArgumentException($"Unknown argement: {args[i]}");
+                            throw new ArgumentException($"Unknown argument: {args[i]}");
                     }
                 }
+
+                if (!imageFiles.Any())
+                    throw new ArgumentException($"Unknown argument: at least one input file required");
 
                 // Loading and parsing palette JSON
                 var paletteJson = File.ReadAllText(colorsFile);
