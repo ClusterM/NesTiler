@@ -30,19 +30,19 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} <options>");
             Console.WriteLine();
             Console.WriteLine("Available options:");
-            Console.WriteLine(" {0,-30}{1}", "--input-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
-            Console.WriteLine(" {0,-30}{1}", "--colors <file>", $"JSON file with list of available colors (defaukt - {DEFAULT_COLORS_FILE})");
-            Console.WriteLine(" {0,-30}{1}", "--mode bg|sprite8x8|sprite8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
-            Console.WriteLine(" {0,-30}{1}", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
-            Console.WriteLine(" {0,-30}{1}", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
-            Console.WriteLine(" {0,-30}{1}", "--palette-<#>", "comma separated list (up to 3) of colors to use in palette number # (default - autodetected)");
-            Console.WriteLine(" {0,-30}{1}", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
-            Console.WriteLine(" {0,-30}{1}", "--ignore-tiles-range", "option to disable tile ID overflow check");
-            Console.WriteLine(" {0,-30}{1}", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
-            Console.WriteLine(" {0,-30}{1}", "--out-palette-<#> <file>", "output filename for palette number #");
-            Console.WriteLine(" {0,-30}{1}", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
-            Console.WriteLine(" {0,-30}{1}", "--out-name-table-<#> <file>", "output filename for nametable of image number #");
-            Console.WriteLine(" {0,-30}{1}", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
+            Console.WriteLine(" {0,-40}{1}", "--input-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
+            Console.WriteLine(" {0,-40}{1}", "--colors <file>", $"JSON file with list of available colors (defaukt - {DEFAULT_COLORS_FILE})");
+            Console.WriteLine(" {0,-40}{1}", "--mode bg|sprite8x8|sprite8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
+            Console.WriteLine(" {0,-40}{1}", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
+            Console.WriteLine(" {0,-40}{1}", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
+            Console.WriteLine(" {0,-40}{1}", "--palette-<#>", "comma separated list of colors to use in palette number # (default - auto)");
+            Console.WriteLine(" {0,-40}{1}", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
+            Console.WriteLine(" {0,-40}{1}", "--ignore-tiles-range", "option to disable tile ID overflow check");
+            Console.WriteLine(" {0,-40}{1}", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
+            Console.WriteLine(" {0,-40}{1}", "--out-palette-<#> <file>", "output filename for palette number #");
+            Console.WriteLine(" {0,-40}{1}", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
+            Console.WriteLine(" {0,-40}{1}", "--out-name-table-<#> <file>", "output filename for nametable of image number #");
+            Console.WriteLine(" {0,-40}{1}", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
         }
 
         static int Main(string[] args)
