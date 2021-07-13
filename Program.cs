@@ -351,6 +351,9 @@ namespace com.clusterrr.Famicom.NesTiler
                                     image, tileX * tilePalWidth, tileY * tilePalHeight,
                                     tilePalWidth, tilePalHeight, bgColor.Value);
 
+                                // Skip tiles with only background color
+                                if (!palette.Any()) continue;
+
                                 // Do not count predefined palettes
                                 if (fixedPalettes.Where(p => p != null && p.Contains(palette)).Any())
                                     // Считаем количество использования таких палитр
@@ -396,7 +399,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             foreach (var p in sortedKeys)
                             {
                                 var newColors = p.Where(c => !t.Contains(c));
-                                if (p != t && (paletteCounter[p] > 0) && (newColors.Count() + t.Count <= 3))
+                                if (p != t && (paletteCounter[t] > 0) && (paletteCounter[p] > 0) && (newColors.Count() + t.Count <= 3))
                                 {
                                     var count1 = paletteCounter[t];
                                     var count2 = paletteCounter[p];
