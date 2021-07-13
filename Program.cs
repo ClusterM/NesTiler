@@ -247,7 +247,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Manually
                     bgColor = nesColors[FindSimilarColor(nesColors, bgColor.Value)];
                 }
-                else 
+                else
                 {
                     // Autodetect most used color
                     Console.Write($"Background color autotect... ");
@@ -507,39 +507,39 @@ namespace com.clusterrr.Famicom.NesTiler
                         patternTableStartOffsets[imageNum] = 0;
                     var tileID = patternTableStartOffsets[imageNum];
 
-                    for (int tileY = 0; tileY < image.Height / 8; tileY += (mode == TilesMode.Sprites8x16 ? 2 : 1))
+                    var tileWidth = 8;
+                    var tileHeight = (mode == TilesMode.Sprites8x16 ? 16 : 8);
+
+                    for (int tileY = 0; tileY < image.Height / tileHeight; tileY++)
                     {
-                        for (int tileX = 0; tileX < image.Width / 8; tileX++)
+                        for (int tileX = 0; tileX < image.Width / tileWidth; tileX++)
                         {
-                            for (int tileYS = 0; tileYS < (mode == TilesMode.Sprites8x16 ? 2 : 1); tileYS++)
-                            {
-                                var tileData = new byte[8, 8];
-                                for (int y = 0; y < 8; y++)
-                                    for (int x = 0; x < 8; x++)
+                            var tileData = new byte[tileWidth, tileHeight];
+                            for (int y = 0; y < tileHeight; y++)
+                                for (int x = 0; x < tileWidth; x++)
+                                {
+                                    var color = image.GetPixel(tileX * tileWidth + x, tileY * tileHeight + y);
+                                    var palette = palettes[palleteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), tileY / (tilePalHeight / tileHeight)]];
+                                    byte colorIndex = 0;
+                                    if (color != bgColor)
                                     {
-                                        var color = image.GetPixel(tileX * 8 + x, (tileY + tileYS) * 8 + y);
-                                        var palette = palettes[palleteIndexes[imageNum][tileX / (tilePalWidth / 8), (tileY + tileYS) / (tilePalHeight / 8)]];
-                                        byte colorIndex = 0;
-                                        if (color != bgColor)
-                                        {
-                                            colorIndex = 1;
-                                            while (palette[colorIndex] != color) colorIndex++;
-                                        }
-                                        tileData[x, y] = colorIndex;
+                                        colorIndex = 1;
+                                        while (palette[colorIndex] != color) colorIndex++;
                                     }
-                                var tile = new Tile(tileData);
-                                var existsTile = patternTable.Where(kv => kv.Value.Equals(tile));
-                                if (existsTile.Any())
-                                {
-                                    var id = existsTile.First().Key;
-                                    nameTable.Add(id);
+                                    tileData[x, y] = colorIndex;
                                 }
-                                else
-                                {
-                                    patternTable[tileID] = tile;
-                                    nameTable.Add(tileID);
-                                    tileID++;
-                                }
+                            var tile = new Tile(tileData);
+                            var existsTile = patternTable.Where(kv => kv.Value.Equals(tile));
+                            if (existsTile.Any())
+                            {
+                                var id = existsTile.First().Key;
+                                nameTable.Add(id);
+                            }
+                            else
+                            {
+                                patternTable[tileID] = tile;
+                                nameTable.Add(tileID);
+                                tileID++;
                             }
                         }
                     }
@@ -547,7 +547,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         Console.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
                         Console.WriteLine($"Pattern table is empty");
-                    if (tileID > 256 && !ignoreTilesRange)
+                    if (tileID > (mode == TilesMode.Sprites8x16 ? 128 : 256) && !ignoreTilesRange)
                         throw new ArgumentOutOfRangeException("Tiles out of range");
 
                     // Save pattern table to file
@@ -556,20 +556,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         var patternTableRaw = new List<byte>();
                         for (int t = patternTableStartOffsets[imageNum]; t < tileID; t++)
                         {
-                            var raw = new byte[16];
-                            var pixels = patternTable[t].pixels;
-                            for (int y = 0; y < 8; y++)
-                            {
-                                raw[y] = 0;
-                                raw[y + 8] = 0;
-                                for (int x = 0; x < 8; x++)
-                                {
-                                    if ((pixels[x, y] & 1) != 0)
-                                        raw[y] |= (byte)(1 << (7 - x));
-                                    if ((pixels[x, y] & 2) != 0)
-                                        raw[y + 8] |= (byte)(1 << (7 - x));
-                                }
-                            }
+                            var raw = patternTable[t].GetRawData();
                             patternTableRaw.AddRange(raw);
                         }
                         File.WriteAllBytes(outPatternTable[imageNum], patternTableRaw.ToArray());
@@ -642,7 +629,11 @@ namespace com.clusterrr.Famicom.NesTiler
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error {ex.GetType()}: " + ex.Message + ex.StackTrace);
+#if DEBUG
+                Console.WriteLine($"Error: {ex.GetType()}: {ex.Message}{ex.StackTrace}");
+#else
+                Console.WriteLine($"Error: {ex.GetType()}: {ex.Message}");
+#endif
                 return 1;
             }
         }
