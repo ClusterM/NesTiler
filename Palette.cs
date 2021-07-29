@@ -37,7 +37,7 @@ namespace com.clusterrr.Famicom.NesTiler
             for (int y = topY; y < topY + height; y++)
             {
                 for (int x = leftX; x < leftX + width; x++)
-                { 
+                {
                     var color = image.GetPixel(x, y);
                     if (!colorCounter.ContainsKey(color)) colorCounter[color] = 0;
                     colorCounter[color]++;
@@ -45,25 +45,24 @@ namespace com.clusterrr.Famicom.NesTiler
             }
 
             var sortedColors = colorCounter.Where(kv => kv.Key != bgColor).OrderByDescending(kv => kv.Value).ToList();
-            if (sortedColors.Count >= 1) this[1] = sortedColors[0].Key;
-            if (sortedColors.Count >= 2) this[2] = sortedColors[1].Key;
-            if (sortedColors.Count >= 3) this[3] = sortedColors[2].Key;
+            for (int i = 0; i < 3; i++)
+                if (sortedColors.Count > i)
+                    this[i + 1] = sortedColors[i].Key;
         }
 
         public void Add(Color color)
         {
-            if (Count == 0) this[1] = color;
-            else if (Count == 1) this[2] = color;
-            else if (Count == 2) this[3] = color;
-            else throw new IndexOutOfRangeException();
+            if (Count < 3)
+                this[Count + 1] = color;
+            else
+                throw new IndexOutOfRangeException();
         }
 
         public Palette(IEnumerable<Color> colors)
         {
             var colorsList = colors.ToList();
-            if (colorsList.Count >= 1) this[1] = colorsList[0];
-            if (colorsList.Count >= 2) this[2] = colorsList[1];
-            if (colorsList.Count >= 3) this[3] = colorsList[2];
+            for (int i = 0; i < 3; i++)
+                if (colorsList.Count > i) this[i + 1] = colorsList[i];
         }
 
         public double GetTileDelta(FastBitmap image, int leftX, int topY, int width, int height, Color bgColor)
