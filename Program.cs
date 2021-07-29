@@ -270,24 +270,6 @@ namespace com.clusterrr.Famicom.NesTiler
                     }
                 }
 
-                // Calculating the amount of each color
-                var colorCounter = new Dictionary<Color, int>();
-                foreach (var imageNum in imagesRecolored.Keys)
-                {
-                    Console.WriteLine($"Adjusting colors for file #{imageNum} -  {imageFiles[imageNum]}...");
-                    var image = new FastBitmap(imagesRecolored[imageNum].GetBitmap());
-                    for (int y = 0; y < image.Height; y++)
-                    {
-                        for (int x = 0; x < image.Width; x++)
-                        {
-                            var color = image.GetPixel(x, y);
-                            if (!colorCounter.ContainsKey(color))
-                                colorCounter[color] = 0;
-                            colorCounter[color]++;
-                        }
-                    }
-                }
-
                 // Detect background color
                 if (bgColor.HasValue)
                 {
