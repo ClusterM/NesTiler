@@ -62,7 +62,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     return 0;
                 }
 
-                string colorsFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), DEFAULT_COLORS_FILE);
+                string colorsFile = Path.Combine(AppContext.BaseDirectory, DEFAULT_COLORS_FILE);
                 if (!File.Exists(colorsFile) && !OperatingSystem.IsWindows())
                     colorsFile = Path.Combine("/etc", DEFAULT_COLORS_FILE);
                 var imageFiles = new Dictionary<int, string>();
