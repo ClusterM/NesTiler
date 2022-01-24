@@ -492,7 +492,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             for (byte paletteIndex = 0; paletteIndex < palettes.Length; paletteIndex++)
                             {
                                 if (palettes[paletteIndex] == null) continue;
-                                double delta = palettes[paletteIndex].Ge tTileDelta(
+                                double delta = palettes[paletteIndex].GetTileDelta(
                                     image, tileX * tilePalWidth, tileY * tilePalHeight,
                                     tilePalWidth, tilePalHeight, bgColor.Value);
                                 // Find palette with most similar colors
