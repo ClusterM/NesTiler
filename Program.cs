@@ -381,7 +381,8 @@ namespace com.clusterrr.Famicom.NesTiler
                             foreach (var p in sortedKeys)
                             {
                                 var newColors = p.Where(c => !t.Contains(c));
-                                if (p != t && (paletteCounter[t] > 0) && (paletteCounter[p] > 0) && (newColors.Count() + t.Count <= 3))
+                                if (p != t && (paletteCounter[t] > 0) && (paletteCounter[p] > 0)
+                                    && (newColors.Count() + t.Count <= 3))
                                 {
                                     var count1 = paletteCounter[t];
                                     var count2 = paletteCounter[p];
@@ -491,7 +492,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             for (byte paletteIndex = 0; paletteIndex < palettes.Length; paletteIndex++)
                             {
                                 if (palettes[paletteIndex] == null) continue;
-                                double delta = palettes[paletteIndex].GetTileDelta(
+                                double delta = palettes[paletteIndex].Ge tTileDelta(
                                     image, tileX * tilePalWidth, tileY * tilePalHeight,
                                     tilePalWidth, tilePalHeight, bgColor.Value);
                                 // Find palette with most similar colors
@@ -511,8 +512,14 @@ namespace com.clusterrr.Famicom.NesTiler
                                 for (int x = 0; x < tilePalWidth; x++)
                                 {
                                     var color = image.GetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
-                                    var similarColor = FindSimilarColor(Enumerable.Concat(bestPalette, new Color[] { bgColor.Value }), color);
-                                    imageRecolored.SetPixel(tileX * tilePalWidth + x, tileY * tilePalHeight + y, similarColor);
+                                    var similarColor = FindSimilarColor(Enumerable.Concat(
+                                            bestPalette,
+                                            new Color[] { bgColor.Value }
+                                        ), color);
+                                    imageRecolored.SetPixel(
+                                        tileX * tilePalWidth + x,
+                                        tileY * tilePalHeight + y,
+                                        similarColor);
                                 }
                             }
                         } // tile X

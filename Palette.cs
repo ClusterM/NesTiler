@@ -44,7 +44,8 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
             }
 
-            var sortedColors = colorCounter.Where(kv => kv.Key != bgColor).OrderByDescending(kv => kv.Value).ToList();
+            var sortedColors = colorCounter.Where(kv => kv.Key != bgColor)
+                .OrderByDescending(kv => kv.Value).ToList();
             for (int i = 0; i < 3; i++)
                 if (sortedColors.Count > i)
                     this[i + 1] = sortedColors[i].Key;
