@@ -62,7 +62,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     return 0;
                 }
 
-                string colorsFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), DEFAULT_COLORS_FILE);
+                string colorsFile = Path.Combine(AppContext.BaseDirectory, DEFAULT_COLORS_FILE);
                 if (!File.Exists(colorsFile) && !OperatingSystem.IsWindows())
                     colorsFile = Path.Combine("/etc", DEFAULT_COLORS_FILE);
                 var imageFiles = new Dictionary<int, string>();
@@ -533,6 +533,62 @@ namespace com.clusterrr.Famicom.NesTiler
                     }
                 }
 
+
+                // Generate attribute tables
+                foreach (var imageNum in outAttributeTable.Keys)
+                {
+                    if (mode != TilesMode.Backgrounds)
+                        throw new InvalidOperationException("Attribute table generation available for backgrounds mode only");
+                    Console.WriteLine($"Creating attribute table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
+                    var image = imagesOriginal[imageNum];
+                    var attributeTableRaw = new List<byte>();
+                    for (int ptileY = 0; ptileY < Math.Ceiling(image.Height / 32.0); ptileY++)
+                    {
+                        for (int ptileX = 0; ptileX < Math.Ceiling(image.Width / 32.0); ptileX++)
+                        {
+                            byte topLeft = 0;
+                            byte topRight = 0;
+                            byte bottomLeft = 0;
+                            byte bottomRight = 0;
+
+                            try
+                            {
+                                topLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2];
+                            }
+                            catch (IndexOutOfRangeException) { }
+                            try
+                            {
+                                topRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
+                            }
+                            catch (IndexOutOfRangeException) { }
+                            try
+                            {
+                                bottomLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2 + 1];
+                            }
+                            catch (IndexOutOfRangeException) { }
+                            try
+                            {
+                                bottomRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2 + 1];
+                            }
+                            catch (IndexOutOfRangeException) { }
+
+                            var atv = (byte)
+                                (topLeft // top left
+                                | (topRight << 2) // top right
+                                | (bottomLeft << 4) // bottom left
+                                | (bottomRight << 6)); // bottom right
+                            attributeTableRaw.Add(atv);
+                        }
+                    }
+
+                    // Save to file
+                    if (outAttributeTable.ContainsKey(imageNum))
+                    {
+                        File.WriteAllBytes(outAttributeTable[imageNum], attributeTableRaw.ToArray());
+                        Console.WriteLine($"Attribute table #{imageNum} saved to {outAttributeTable[imageNum]}");
+                    }
+                }
+
                 // Generate pattern tables and nametables
                 foreach (var imageNum in imagesRecolored.Keys)
                 {
@@ -610,60 +666,6 @@ namespace com.clusterrr.Famicom.NesTiler
                     }
                 }
 
-                // Generate attribute tables
-                foreach (var imageNum in outAttributeTable.Keys)
-                {
-                    if (mode != TilesMode.Backgrounds)
-                        throw new InvalidOperationException("Attribute table generation available for backgrounds mode only");
-                    Console.WriteLine($"Creating attribute table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
-                    var image = imagesOriginal[imageNum];
-                    var attributeTableRaw = new List<byte>();
-                    for (int ptileY = 0; ptileY < Math.Ceiling(image.Height / 32.0); ptileY++)
-                    {
-                        for (int ptileX = 0; ptileX < Math.Ceiling(image.Width / 32.0); ptileX++)
-                        {
-                            byte topLeft = 0;
-                            byte topRight = 0;
-                            byte bottomLeft = 0;
-                            byte bottomRight = 0;
-
-                            try
-                            {
-                                topLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2];
-                            }
-                            catch (IndexOutOfRangeException) { }
-                            try
-                            {
-                                topRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
-                            }
-                            catch (IndexOutOfRangeException) { }
-                            try
-                            {
-                                bottomLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2 + 1];
-                            }
-                            catch (IndexOutOfRangeException) { }
-                            try
-                            {
-                                bottomRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2 + 1];
-                            }
-                            catch (IndexOutOfRangeException) { }
-
-                            var atv = (byte)
-                                (topLeft // top left
-                                | (topRight << 2) // top right
-                                | (bottomLeft << 4) // bottom left
-                                | (bottomRight << 6)); // bottom right
-                            attributeTableRaw.Add(atv);
-                        }
-                    }
-
-                    // Save to file
-                    if (outAttributeTable.ContainsKey(imageNum))
-                    {
-                        File.WriteAllBytes(outAttributeTable[imageNum], attributeTableRaw.ToArray());
-                        Console.WriteLine($"Attribute table #{imageNum} saved to {outAttributeTable[imageNum]}");
-                    }
-                }
                 return 0;
             }
             catch (Exception ex)
