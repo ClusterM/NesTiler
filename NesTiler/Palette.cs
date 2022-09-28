@@ -9,6 +9,7 @@ namespace com.clusterrr.Famicom.NesTiler
     class Palette : IEquatable<Palette>, IEnumerable<Color>
     {
         private Color?[] colors = new Color?[3];
+        private Dictionary<ColorPair, (Color color, double delta)> deltaCache = new();
 
         public Color? this[int i]
         {
@@ -53,10 +54,9 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public void Add(Color color)
         {
-            if (Count < 3)
-                this[Count + 1] = color;
-            else
-                throw new IndexOutOfRangeException();
+            if (Count >= 3) throw new IndexOutOfRangeException();
+            this[Count + 1] = color;
+            deltaCache.Clear();
         }
 
         public Palette(IEnumerable<Color> colors)
@@ -82,9 +82,17 @@ namespace com.clusterrr.Famicom.NesTiler
 
         private (Color color, double delta) GetMinDelta(Color color, Color bgColor)
         {
+            var pair = new ColorPair()
+            {
+                Color1 = color,
+                Color2 = bgColor
+            };
+            if (deltaCache.ContainsKey(pair)) return deltaCache[pair];
             var ac = Enumerable.Concat(colors.Where(c => c.HasValue).Select(c => c.Value), new Color[] { bgColor });
             var result = ac.OrderBy(c => c.GetDelta(color)).First();
-            return (result, result.GetDelta(color));
+            var r = (result, result.GetDelta(color));
+            deltaCache[pair] = r;
+            return r;
         }
 
         public bool Equals(Palette other)

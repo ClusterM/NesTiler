@@ -19,8 +19,6 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public FastBitmap(Bitmap bitmap)
         {
-            //if (bitmap.PixelFormat != PixelFormat.Format32bppArgb)
-            //    throw new FormatException($"Invalid pixel format, only {PixelFormat.Format32bppArgb} is supported");
             this.bitmap = bitmap;
             Lock();
         }
