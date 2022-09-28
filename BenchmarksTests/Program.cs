@@ -139,24 +139,29 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 
         public void DoBenchmark(string imagePath)
         {
-            var suffix = Path.GetFileName(imagePath);
-            var args = new string[] {"-i0", $"{ imagePath }:0:64", "-i1", $"{imagePath}:64:64", "-i2", $"{imagePath}:128:64", "-i3", $"{ imagePath }:192:48", "--enable-palettes", "0,1,2,3",
-                "--out-pattern-table0", $"pattern-table-{suffix}-0.bin",
-                "--out-pattern-table1", $"pattern-table-{suffix}-1.bin",
-                "--out-pattern-table2", $"pattern-table-{suffix}-2.bin",
-                "--out-pattern-table3", $"pattern-table-{suffix}-3.bin",
-                "--out-name-table0", $"name-table-{suffix}-0.bin",
-                "--out-name-table1", $"name-table-{suffix}-1.bin",
-                "--out-name-table2", $"name-table-{suffix}-2.bin",
-                "--out-name-table3", $"name-table-{suffix}-3.bin",
-                "--out-attribute-table0", $"attribute-table-{suffix}-0.bin",
-                "--out-attribute-table1", $"attribute-table-{suffix}-1.bin",
-                "--out-attribute-table2", $"attribute-table-{suffix}-2.bin",
-                "--out-attribute-table3", $"attribute-table-{suffix}-3.bin",
-                "--out-palette0", $"palette-{suffix}-0.bin",
-                "--out-palette1", $"palette-{suffix}-1.bin",
-                "--out-palette2", $"palette-{suffix}-2.bin",
-                "--out-palette3", $"palette-{suffix}-3.bin"
+            var suffix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--enable-palettes", "0,1,2,3",
+                "-i0", $"{imagePath}:0:64",
+                "-i1", $"{imagePath}:64:64",
+                "-i2", $"{imagePath}:128:64",
+                "-i3", $"{imagePath}:192:48",
+                "--out-pattern-table0", $"{suffix}-pattern-table-0.bin",
+                "--out-pattern-table1", $"{suffix}-pattern-table-1.bin",
+                "--out-pattern-table2", $"{suffix}-pattern-table-2.bin",
+                "--out-pattern-table3", $"{suffix}-pattern-table-3.bin",
+                "--out-name-table0", $"{suffix}-name-table-0.bin",
+                "--out-name-table1", $"{suffix}-name-table-1.bin",
+                "--out-name-table2", $"{suffix}-name-table-2.bin",
+                "--out-name-table3", $"{suffix}-name-table-3.bin",
+                "--out-attribute-table0", $"{suffix}-attribute-table-0.bin",
+                "--out-attribute-table1", $"{suffix}-attribute-table-1.bin",
+                "--out-attribute-table2", $"{suffix}-attribute-table-2.bin",
+                "--out-attribute-table3", $"{suffix}-attribute-table-3.bin",
+                "--out-palette0", $"{suffix}-palette-0.bin",
+                "--out-palette1", $"{suffix}-palette-1.bin",
+                "--out-palette2", $"{suffix}-palette-2.bin",
+                "--out-palette3", $"{suffix}-palette-3.bin"
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
