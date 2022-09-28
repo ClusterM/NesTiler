@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace com.clusterrr.Famicom.NesTiler
 {
-    class Program
+    public class Program
     {
         private const string REPO_PATH = "https://github.com/ClusterM/nestiler";
         const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
@@ -45,7 +45,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine(" {0,-40}{1}", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
         }
 
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
             Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
@@ -86,6 +86,8 @@ namespace com.clusterrr.Famicom.NesTiler
                 var outPatternTable = new Dictionary<int, string>();
                 var outNameTable = new Dictionary<int, string>();
                 var outAttributeTable = new Dictionary<int, string>();
+
+                var nesColorsCache = new Dictionary<Color, byte>();
 
                 var paramRegex = new Regex(@"^--?(?<param>[a-zA-Z-]+)(?<index>[0-9]*)$");
                 for (int i = 0; i < args.Length; i++)
@@ -218,7 +220,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (fixedPalettes[i] == null) continue;
                     var colorsInPalette = fixedPalettes[i].ToArray();
                     for (int j = 0; j < colorsInPalette.Length; j++)
-                        colorsInPalette[j] = nesColors[FindSimilarColor(nesColors, colorsInPalette[j])];
+                        colorsInPalette[j] = nesColors[FindSimilarColor(nesColors, colorsInPalette[j], nesColorsCache)];
                     fixedPalettes[i] = new Palette(colorsInPalette);
                 }
 
@@ -264,7 +266,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int x = 0; x < image.Width; x++)
                         {
                             var color = image.GetPixel(x, y);
-                            var similarColor = nesColors[FindSimilarColor(nesColors, color)];
+                            var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
                             image.SetPixel(x, y, similarColor);
                         }
                     }
@@ -274,7 +276,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 if (bgColor.HasValue)
                 {
                     // Manually
-                    bgColor = nesColors[FindSimilarColor(nesColors, bgColor.Value)];
+                    bgColor = nesColors[FindSimilarColor(nesColors, bgColor.Value, nesColorsCache)];
                 }
                 else
                 {
@@ -453,7 +455,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
 
                 // Calculate palette as color indices and save them to files
-                var bgColorId = FindSimilarColor(nesColors, bgColor.Value);
+                var bgColorId = FindSimilarColor(nesColors, bgColor.Value, nesColorsCache);
                 for (int p = 0; p < palettes.Length; p++)
                 {
                     if (paletteEnabled[p] && outPalette.ContainsKey(p))
@@ -465,7 +467,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             if (palettes[p] == null)
                                 paletteRaw[c] = 0;
                             else if (palettes[p][c].HasValue)
-                                paletteRaw[c] = FindSimilarColor(nesColors, palettes[p][c].Value);
+                                paletteRaw[c] = FindSimilarColor(nesColors, palettes[p][c].Value, nesColorsCache);
                         }
                         File.WriteAllBytes(outPalette[p], paletteRaw);
                         Console.WriteLine($"Palette #{p} saved to {outPalette[p]}");
@@ -671,16 +673,21 @@ namespace com.clusterrr.Famicom.NesTiler
             catch (Exception ex)
             {
 #if DEBUG
-                Console.WriteLine($"Error: {ex.GetType()}: {ex.Message}{ex.StackTrace}");
+                Console.Error.WriteLine($"Error: {ex.GetType()}: {ex.Message}{ex.StackTrace}");
 #else
-                Console.WriteLine($"Error: {ex.GetType()}: {ex.Message}");
+                Console.Error.WriteLine($"Error: {ex.GetType()}: {ex.Message}");
 #endif
                 return 1;
             }
         }
 
-        static byte FindSimilarColor(Dictionary<byte, Color> colors, Color color)
+        static byte FindSimilarColor(Dictionary<byte, Color> colors, Color color, Dictionary<Color, byte> cache = null)
         {
+            if (cache != null)
+            {
+                if (cache.ContainsKey(color))
+                    return cache[color];
+            }
             byte result = byte.MaxValue;
             double minDelta = double.MaxValue;
             foreach (var index in colors.Keys)
@@ -694,6 +701,8 @@ namespace com.clusterrr.Famicom.NesTiler
             }
             if (result == byte.MaxValue)
                 throw new KeyNotFoundException("Invalid color: " + color.ToString());
+            if (cache != null)
+                cache[color] = result;
             return result;
         }
 
