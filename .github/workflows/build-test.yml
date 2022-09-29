@@ -25,7 +25,7 @@ jobs:
     runs-on: ${{ matrix.host }}
     env:
       APP_NAME: nestiler
-      PROJECT_PATH: .
+      PROJECT_PATH: ./NesTiler
       OUTPUT_DIR: output
       CONFIGURATION: Release
       OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
