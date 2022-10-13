@@ -72,8 +72,8 @@ namespace com.clusterrr.Famicom.NesTiler
                 var mode = TilesMode.Backgrounds;
                 int tilePalWidth = 16;
                 int tilePalHeight = 16;
-                var imagesOriginal = new Dictionary<int, FastBitmap>();
-                var imagesRecolored = new Dictionary<int, FastBitmap>();
+                var imagesOriginal = new Dictionary<int, Bitmap>();
+                var imagesRecolored = new Dictionary<int, Bitmap>();
                 var palleteIndexes = new Dictionary<int, byte[,]>();
                 var patternTableStartOffsets = new Dictionary<int, int>();
                 var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
@@ -96,8 +96,6 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (!match.Success)
                         throw new ArgumentException($"Unknown argument: {args[i]}");
                     string param = match.Groups["param"].Value;
-                    if (param[^1] == '-')
-                        param = param[0..^1];
                     string indexStr = match.Groups["index"].Value;
                     int indexNum = 0;
                     if (!string.IsNullOrEmpty(indexStr))
@@ -232,7 +230,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     var offsetRegex = new Regex(@"^(?<filename>.*?)(:(?<offset>[0-9]+)(:(?<height>[0-9]+))?)?$");
                     var match = offsetRegex.Match(image.Value);
                     var filename = match.Groups["filename"].Value;
-                    imagesOriginal[image.Key] = FastBitmap.FromFile(filename);
+                    imagesOriginal[image.Key] = Image.FromFile(filename) as Bitmap;
                     var offsetS = match.Groups["offset"].Value;
                     var heightS = match.Groups["height"].Value;
                     // Crop it if need
@@ -245,11 +243,11 @@ namespace com.clusterrr.Famicom.NesTiler
                         Console.WriteLine($"Cropping it to {offset}:{height}...");
                         var cropped = new Bitmap(imagesOriginal[image.Key].Width, height);
                         var gr = Graphics.FromImage(cropped);
-                        gr.DrawImageUnscaledAndClipped(imagesOriginal[image.Key].GetBitmap(),
+                        gr.DrawImageUnscaledAndClipped(imagesOriginal[image.Key],
                             new Rectangle(0, -offset, imagesOriginal[image.Key].Width, imagesOriginal[image.Key].Height));
                         gr.Flush();
                         imagesOriginal[image.Key].Dispose();
-                        imagesOriginal[image.Key] = new FastBitmap(cropped);
+                        imagesOriginal[image.Key] = new Bitmap(cropped);
                     }
                     if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
                         throw new InvalidDataException("Invalid image size");
@@ -260,7 +258,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 foreach (var imageNum in imagesOriginal.Keys)
                 {
                     Console.WriteLine($"Adjusting colors for file #{imageNum} - {imageFiles[imageNum]}...");
-                    var image = new FastBitmap(imagesOriginal[imageNum].GetBitmap());
+                    var image = new Bitmap(imagesOriginal[imageNum]);
                     imagesRecolored[imageNum] = image;
                     for (int y = 0; y < image.Height; y++)
                     {
@@ -481,7 +479,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     Console.WriteLine($"Mapping palettes for file #{imageNum} - {imageFiles[imageNum]}...");
                     var image = imagesOriginal[imageNum];
-                    var imageRecolored = new FastBitmap(image.GetBitmap());
+                    var imageRecolored = new Bitmap(image);
                     imagesRecolored[imageNum] = imageRecolored;
                     palleteIndexes[imageNum] = new byte[image.Width / tilePalWidth, image.Height / tilePalHeight];
                     // For each tile/sprite

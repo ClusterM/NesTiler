@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  tests:
     strategy:
       matrix:
         host: [windows-latest, ubuntu-latest, macos-latest]
