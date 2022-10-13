@@ -1,4 +1,4 @@
-name: Test
+name: Tests
 
 on:
   push:
@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         host: [windows-latest, ubuntu-latest, macos-latest]
-        sc: [no-self-contained, self-contained]
     runs-on: ${{ matrix.host }}
     env:
       TESTS_PATH: ./Tests
@@ -28,6 +27,4 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Tests
-      env:
-        SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
-      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }} -p:PublishSingleFile=true ${{ env.SC_OPS }}
+      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }} -p:PublishSingleFile=true
