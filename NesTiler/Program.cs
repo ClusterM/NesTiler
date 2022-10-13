@@ -30,7 +30,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} <options>");
             Console.WriteLine();
             Console.WriteLine("Available options:");
-            Console.WriteLine(" {0,-40}{1}", "--input-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
+            Console.WriteLine(" {0,-40}{1}", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
             Console.WriteLine(" {0,-40}{1}", "--colors <file>", $"JSON file with list of available colors (defaukt - {DEFAULT_COLORS_FILE})");
             Console.WriteLine(" {0,-40}{1}", "--mode bg|sprite8x8|sprite8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
             Console.WriteLine(" {0,-40}{1}", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
@@ -89,7 +89,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 var nesColorsCache = new Dictionary<Color, byte>();
 
-                var paramRegex = new Regex(@"^--?(?<param>[a-zA-Z-]+)(?<index>[0-9]*)$");
+                var paramRegex = new Regex(@"^--?(?<param>[a-zA-Z-]+?)-?(?<index>[0-9]*)$");
                 for (int i = 0; i < args.Length; i++)
                 {
                     var match = paramRegex.Match(args[i]);
@@ -106,6 +106,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     switch (param)
                     {
                         case "i":
+                        case "in":
                         case "input":
                             imageFiles[indexNum] = value;
                             i++;
