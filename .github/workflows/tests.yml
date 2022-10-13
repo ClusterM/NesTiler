@@ -37,4 +37,4 @@ jobs:
     - name: Tests
       env:
         SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
-      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }} -p:PublishSingleFile=true {{ env.SC_OPS }}
+      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }} -p:PublishSingleFile=true ${{ env.SC_OPS }}
