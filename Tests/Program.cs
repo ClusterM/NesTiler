@@ -5,7 +5,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
     public class Tests
     {
         const string ImagesPath = "Images";
-        const string ReferencesDir = "References";
+        const string ReferencesDir = ".";
 
         [Test]
         public void TestBelayaAkula()
