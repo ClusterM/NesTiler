@@ -25,7 +25,7 @@ jobs:
     runs-on: ${{ matrix.host }}
     env:
       APP_NAME: nestiler
-      PROJECT_PATH: .
+      PROJECT_PATH: ./NesTiler
       OUTPUT_DIR: output
       CONFIGURATION: Release
       OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
@@ -37,7 +37,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
     - name: Build
       env:
         SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
