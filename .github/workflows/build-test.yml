@@ -26,10 +26,8 @@ jobs:
     env:
       APP_NAME: nestiler
       PROJECT_PATH: ./NesTiler
-      TESTS_PATH: ./Tests
       OUTPUT_DIR: output
       CONFIGURATION: Release
-      TESTS_CONFIGURATION: Debug
       OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
     steps:
     - name: Checkout
@@ -43,15 +41,7 @@ jobs:
     - name: Build
       env:
         SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
-      run: dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true $SC_OPS -p:IncludeAllContentForSelfExtract=true -o ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}/${{ env.APP_NAME }}
-    - name: Tests
-      if: |
-        (matrix.host == 'ubuntu-latest' && matrix.os == 'linux' && matrix.arch != 'arm') 
-        || (matrix.host == 'macos-latest' && matrix.os == 'osx' && matrix.arch != 'arm')
-        || (matrix.host == 'windows-latest' && matrix.os == 'win' && matrix.arch != 'arm')
-      env:
-        SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
-      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true $SC_OPS -p:IncludeAllContentForSelfExtract=true
+      run: dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true {{ env.SC_OPS }} -o ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}/${{ env.APP_NAME }}
     - name: Upload artifact
       if: |
         (matrix.host == 'ubuntu-latest' && matrix.os == 'linux') 
