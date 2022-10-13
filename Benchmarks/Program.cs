@@ -1,28 +1,14 @@
-﻿using System.Text.Json;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using System.Xml.Linq;
-using BenchmarkDotNet.Engines;
 
 namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 {
     public class Benchmarks
     {
-        static int Main(string[] args)
+        static void Main()
         {
             var summary = BenchmarkRunner.Run<Benchmarks>();
             Console.WriteLine(summary);
-            return 0;
         }
 
         [Benchmark]
@@ -144,7 +130,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 
         public void DoBenchmarkSplit4(string imagePath)
         {
-            var prefix = Path.GetFileName(imagePath);
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
                 "-i0", $"{imagePath}:0:64",
@@ -170,6 +156,8 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
     }
 }
