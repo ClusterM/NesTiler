@@ -1,8 +1,10 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Color = System.Drawing.Color;
 
 namespace com.clusterrr.Famicom.NesTiler
 {
@@ -31,7 +33,7 @@ namespace com.clusterrr.Famicom.NesTiler
             // Empty palette
         }
 
-        public Palette(Bitmap image, int leftX, int topY, int width, int height, Color bgColor)
+        public Palette(SKBitmap image, int leftX, int topY, int width, int height, Color bgColor)
         {
             Dictionary<Color, int> colorCounter = new Dictionary<Color, int>();
             colorCounter[bgColor] = 0;
@@ -39,7 +41,7 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 for (int x = leftX; x < leftX + width; x++)
                 {
-                    var color = image.GetPixel(x, y);
+                    var color = image.GetPixelColor(x, y);
                     if (!colorCounter.ContainsKey(color)) colorCounter[color] = 0;
                     colorCounter[color]++;
                 }
@@ -66,14 +68,14 @@ namespace com.clusterrr.Famicom.NesTiler
                 if (colorsList.Count > i) this[i + 1] = colorsList[i];
         }
 
-        public double GetTileDelta(Bitmap image, int leftX, int topY, int width, int height, Color bgColor)
+        public double GetTileDelta(SKBitmap image, int leftX, int topY, int width, int height, Color bgColor)
         {
             double delta = 0;
             for (int y = topY; y < topY + height; y++)
             {
                 for (int x = leftX; x < leftX + width; x++)
                 {
-                    var color = image.GetPixel(x, y);
+                    var color = image.GetPixelColor(x, y);
                     delta += GetMinDelta(color, bgColor).delta;
                 }
             }

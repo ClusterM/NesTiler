@@ -2,7 +2,7 @@
 
 namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 {
-    public class Benchmarks
+    public class Tests
     {
         const string ImagesPath = "Images";
         const string ReferencesDir = "References";
