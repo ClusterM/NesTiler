@@ -4,115 +4,118 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 {
     public class Benchmarks
     {
+        const string ImagesPath = "Images";
+        const string ReferencesDir = "References";
+
         [Test]
         public void TestBelayaAkula()
         {
-            var imagePath = Path.Combine(@"Images", "belaya_akula.gif");
+            var imagePath = Path.Combine(ImagesPath, "belaya_akula.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestBuhanka()
         {
-            var imagePath = Path.Combine(@"Images", "buhanka.gif");
+            var imagePath = Path.Combine(ImagesPath, "buhanka.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestChernobyl()
         {
-            var imagePath = Path.Combine(@"Images", "chernobyl.gif");
+            var imagePath = Path.Combine(ImagesPath, "chernobyl.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestDira()
         {
-            var imagePath = Path.Combine(@"Images", "dira.gif");
+            var imagePath = Path.Combine(ImagesPath, "dira.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestGlaza()
         {
-            var imagePath = Path.Combine(@"Images", "glaza.gif");
+            var imagePath = Path.Combine(ImagesPath, "glaza.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestGorgona()
         {
-            var imagePath = Path.Combine(@"Images", "gorgona.gif");
+            var imagePath = Path.Combine(ImagesPath, "gorgona.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestMyatejl()
         {
-            var imagePath = Path.Combine(@"Images", "myatej.gif");
+            var imagePath = Path.Combine(ImagesPath, "myatej.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestPagoda()
         {
-            var imagePath = Path.Combine(@"Images", "pagoda.gif");
+            var imagePath = Path.Combine(ImagesPath, "pagoda.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestRayon4()
         {
-            var imagePath = Path.Combine(@"Images", "rayon4.gif");
+            var imagePath = Path.Combine(ImagesPath, "rayon4.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestShkola()
         {
-            var imagePath = Path.Combine(@"Images", "shkola.gif");
+            var imagePath = Path.Combine(ImagesPath, "shkola.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestSindikat()
         {
-            var imagePath = Path.Combine(@"Images", "sindikat.gif");
+            var imagePath = Path.Combine(ImagesPath, "sindikat.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestSputnik()
         {
-            var imagePath = Path.Combine(@"Images", "sputnik.gif");
+            var imagePath = Path.Combine(ImagesPath, "sputnik.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestSworm()
         {
-            var imagePath = Path.Combine(@"Images", "sworm.gif");
+            var imagePath = Path.Combine(ImagesPath, "sworm.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestTrailerPark()
         {
-            var imagePath = Path.Combine(@"Images", "trailer-park.gif");
+            var imagePath = Path.Combine(ImagesPath, "trailer-park.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestWarfaceLogo()
         {
-            var imagePath = Path.Combine(@"Images", "warface_logo.gif");
+            var imagePath = Path.Combine(ImagesPath, "warface_logo.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestZapravka()
         {
-            var imagePath = Path.Combine(@"Images", "zapravka.gif");
+            var imagePath = Path.Combine(ImagesPath, "zapravka.gif");
             DoTestSplit4(imagePath);
         }
 
@@ -123,7 +126,6 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 
         public void DoTestSplit4(string imagePath)
         {
-            const string referencesDir = "References";
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
@@ -151,25 +153,25 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 0)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 1)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 2)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 3)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 2)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 3)))));
 
-            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, NameTablePath(prefix, 0)))));
-            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, NameTablePath(prefix, 1)))));
-            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, NameTablePath(prefix, 2)))));
-            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, NameTablePath(prefix, 3)))));
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 2)))));
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 3)))));
 
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 0)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 1)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 2)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PatternTablePath(prefix, 3)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 2)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 3)))));
 
-            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PalettePath(prefix, 0)))));
-            Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PalettePath(prefix, 1)))));
-            Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PalettePath(prefix, 2)))));
-            Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(referencesDir, PalettePath(prefix, 3)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))));
         }
     }
 }

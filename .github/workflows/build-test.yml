@@ -29,6 +29,7 @@ jobs:
       TESTS_PATH: ./Tests
       OUTPUT_DIR: output
       CONFIGURATION: Release
+      TESTS_CONFIGURATION: Debug
       OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
     steps:
     - name: Checkout
@@ -48,7 +49,9 @@ jobs:
         (matrix.host == 'ubuntu-latest' && matrix.os == 'linux' && matrix.arch != 'arm') 
         || (matrix.host == 'macos-latest' && matrix.os == 'osx' && matrix.arch != 'arm')
         || (matrix.host == 'windows-latest' && matrix.os == 'win' && matrix.arch != 'arm')
-      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true $SC_OPS -p:IncludeAllContentForSelfExtract=true
+      env:
+        SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
+      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true $SC_OPS -p:IncludeAllContentForSelfExtract=true
     - name: Upload artifact
       if: |
         (matrix.host == 'ubuntu-latest' && matrix.os == 'linux') 
