@@ -48,7 +48,7 @@ jobs:
         (matrix.host == 'ubuntu-latest' && matrix.os == 'linux' && matrix.arch != 'arm') 
         || (matrix.host == 'macos-latest' && matrix.os == 'osx' && matrix.arch != 'arm')
         || (matrix.host == 'windows-latest' && matrix.os == 'win' && matrix.arch != 'arm')
-      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }}
+      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true $SC_OPS -p:IncludeAllContentForSelfExtract=true
     - name: Upload artifact
       if: |
         (matrix.host == 'ubuntu-latest' && matrix.os == 'linux') 

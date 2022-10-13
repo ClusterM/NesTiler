@@ -5,6 +5,8 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 {
     public class Benchmarks
     {
+        const string ImagesPath = "Images";
+
         static void Main()
         {
             var summary = BenchmarkRunner.Run<Benchmarks>();
@@ -14,112 +16,112 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         [Benchmark]
         public void BenchmarkBelayaAkula()
         {
-            var imagePath = @"Images\belaya_akula.gif";
+            var imagePath = Path.Combine(ImagesPath, "belaya_akula.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkBuhanka()
         {
-            var imagePath = @"Images\buhanka.gif";
+            var imagePath = Path.Combine(ImagesPath, "buhanka.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkChernobyl()
         {
-            var imagePath = @"Images\chernobyl.gif";
+            var imagePath = Path.Combine(ImagesPath, "chernobyl.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkDira()
         {
-            var imagePath = @"Images\dira.gif";
+            var imagePath = Path.Combine(ImagesPath, "dira.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkGlaza()
         {
-            var imagePath = @"Images\glaza.gif";
+            var imagePath = Path.Combine(ImagesPath, "glaza.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkGorgona()
         {
-            var imagePath = @"Images\gorgona.gif";
+            var imagePath = Path.Combine(ImagesPath, "gorgona.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkMyatejl()
         {
-            var imagePath = @"Images\myatej.gif";
+            var imagePath = Path.Combine(ImagesPath, "myatej.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkPagoda()
         {
-            var imagePath = @"Images\pagoda.gif";
+            var imagePath = Path.Combine(ImagesPath, "pagoda.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkRayon4()
         {
-            var imagePath = @"Images\rayon4.gif";
+            var imagePath = Path.Combine(ImagesPath, "rayon4.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkShkola()
         {
-            var imagePath = @"Images\shkola.gif";
+            var imagePath = Path.Combine(ImagesPath, "shkola.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkSindikat()
         {
-            var imagePath = @"Images\sindikat.gif";
+            var imagePath = Path.Combine(ImagesPath, "sindikat.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkSputnik()
         {
-            var imagePath = @"Images\sputnik.gif";
+            var imagePath = Path.Combine(ImagesPath, "sputnik.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkSworm()
         {
-            var imagePath = @"Images\sworm.gif";
+            var imagePath = Path.Combine(ImagesPath, "sworm.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkTrailerPark()
         {
-            var imagePath = @"Images\trailer-park.gif";
+            var imagePath = Path.Combine(ImagesPath, "trailer-park.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkWarfaceLogo()
         {
-            var imagePath = @"Images\warface_logo.gif";
+            var imagePath = Path.Combine(ImagesPath, "warface_logo.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
         public void BenchmarkZapravka()
         {
-            var imagePath = @"Images\zapravka.gif";
+            var imagePath = Path.Combine(ImagesPath, "zapravka.gif");
             DoBenchmarkSplit4(imagePath);
         }
 

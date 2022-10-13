@@ -7,112 +7,112 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         [Test]
         public void TestBelayaAkula()
         {
-            var imagePath = @"Images\belaya_akula.gif";
+            var imagePath = Path.Combine(@"Images", "belaya_akula.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestBuhanka()
         {
-            var imagePath = @"Images\buhanka.gif";
+            var imagePath = Path.Combine(@"Images", "buhanka.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestChernobyl()
         {
-            var imagePath = @"Images\chernobyl.gif";
+            var imagePath = Path.Combine(@"Images", "chernobyl.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestDira()
         {
-            var imagePath = @"Images\dira.gif";
+            var imagePath = Path.Combine(@"Images", "dira.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestGlaza()
         {
-            var imagePath = @"Images\glaza.gif";
+            var imagePath = Path.Combine(@"Images", "glaza.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestGorgona()
         {
-            var imagePath = @"Images\gorgona.gif";
+            var imagePath = Path.Combine(@"Images", "gorgona.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestMyatejl()
         {
-            var imagePath = @"Images\myatej.gif";
+            var imagePath = Path.Combine(@"Images", "myatej.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestPagoda()
         {
-            var imagePath = @"Images\pagoda.gif";
+            var imagePath = Path.Combine(@"Images", "pagoda.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestRayon4()
         {
-            var imagePath = @"Images\rayon4.gif";
+            var imagePath = Path.Combine(@"Images", "rayon4.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestShkola()
         {
-            var imagePath = @"Images\shkola.gif";
+            var imagePath = Path.Combine(@"Images", "shkola.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestSindikat()
         {
-            var imagePath = @"Images\sindikat.gif";
+            var imagePath = Path.Combine(@"Images", "sindikat.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestSputnik()
         {
-            var imagePath = @"Images\sputnik.gif";
+            var imagePath = Path.Combine(@"Images", "sputnik.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestSworm()
         {
-            var imagePath = @"Images\sworm.gif";
+            var imagePath = Path.Combine(@"Images", "sworm.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestTrailerPark()
         {
-            var imagePath = @"Images\trailer-park.gif";
+            var imagePath = Path.Combine(@"Images", "trailer-park.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestWarfaceLogo()
         {
-            var imagePath = @"Images\warface_logo.gif";
+            var imagePath = Path.Combine(@"Images", "warface_logo.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
         public void TestZapravka()
         {
-            var imagePath = @"Images\zapravka.gif";
+            var imagePath = Path.Combine(@"Images", "zapravka.gif");
             DoTestSplit4(imagePath);
         }
 
