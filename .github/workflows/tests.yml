@@ -13,13 +13,6 @@ jobs:
       matrix:
         host: [windows-latest, ubuntu-latest, macos-latest]
         sc: [no-self-contained, self-contained]
-        exclude:
-          - os: linux
-            arch: x86
-          - os: osx
-            arch: x86
-          - os: osx
-            arch: arm          
     runs-on: ${{ matrix.host }}
     env:
       TESTS_PATH: ./Tests
