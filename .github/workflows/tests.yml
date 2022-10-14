@@ -18,10 +18,10 @@ jobs:
       CONFIGURATION: Release
       TESTS_CONFIGURATION: Debug
     steps:
+    - name: Fix line endings
+      run: git config --global core.autocrlf false
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Checkout submodules
-      run: git submodule update --init --recursive
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
