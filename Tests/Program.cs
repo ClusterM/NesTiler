@@ -5,7 +5,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
     public class Tests
     {
         const string ImagesPath = "Images";
-        const string ReferencesDir = ".";
+        const string ReferencesDir = "References";
 
         [Test]
         public void TestBelayaAkula()
@@ -143,7 +143,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
-                "-input-0", $"{imagePath}:0:64",
+                "-input-0", $"{imagePath}",
                 "--out-pattern-table-0", PatternTablePath(prefix, 0),
                 "--out-name-table-0", NameTablePath(prefix, 0),
                 "--out-attribute-table-0", AttrTablePath(prefix, 0),
