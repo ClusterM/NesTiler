@@ -32,7 +32,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine();
             Console.WriteLine("Available options:");
             Console.WriteLine(" {0,-40}{1}", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
-            Console.WriteLine(" {0,-40}{1}", "--colors <file>", $"JSON file with list of available colors (defaukt - {DEFAULT_COLORS_FILE})");
+            Console.WriteLine(" {0,-40}{1}", "--colors <file>", $"JSON file with list of available colors (default - {DEFAULT_COLORS_FILE})");
             Console.WriteLine(" {0,-40}{1}", "--mode bg|sprite8x8|sprite8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
             Console.WriteLine(" {0,-40}{1}", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
             Console.WriteLine(" {0,-40}{1}", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
@@ -147,7 +147,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         case "bgcolor":
                         case "bg-color":
                         case "background-color":
-                            bgColor = ColorTranslator.FromHtml(value);
+                            if (value != "auto") bgColor = ColorTranslator.FromHtml(value);
                             i++;
                             break;
                         case "enable-palettes":
