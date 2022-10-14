@@ -8,129 +8,144 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         const string ReferencesDir = "References";
 
         [Test]
-        public void TestBelayaAkula()
+        public void BelayaAkula()
         {
             var imagePath = Path.Combine(ImagesPath, "belaya_akula.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestBuhanka()
+        public void Buhanka()
         {
             var imagePath = Path.Combine(ImagesPath, "buhanka.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestChernobyl()
+        public void Chernobyl()
         {
             var imagePath = Path.Combine(ImagesPath, "chernobyl.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestDira()
+        public void Dira()
         {
             var imagePath = Path.Combine(ImagesPath, "dira.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestGlaza()
+        public void Glaza()
         {
             var imagePath = Path.Combine(ImagesPath, "glaza.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestGorgona()
+        public void Gorgona()
         {
             var imagePath = Path.Combine(ImagesPath, "gorgona.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestMyatejl()
+        public void Myatejl()
         {
             var imagePath = Path.Combine(ImagesPath, "myatej.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestPagoda()
+        public void Pagoda()
         {
             var imagePath = Path.Combine(ImagesPath, "pagoda.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestRayon4()
+        public void Rayon4()
         {
             var imagePath = Path.Combine(ImagesPath, "rayon4.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestShkola()
+        public void Shkola()
         {
             var imagePath = Path.Combine(ImagesPath, "shkola.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestSindikat()
+        public void Sindikat()
         {
             var imagePath = Path.Combine(ImagesPath, "sindikat.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestSputnik()
+        public void Sputnik()
         {
             var imagePath = Path.Combine(ImagesPath, "sputnik.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestSworm()
+        public void Sworm()
         {
             var imagePath = Path.Combine(ImagesPath, "sworm.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestTrailerPark()
+        public void TrailerPark()
         {
             var imagePath = Path.Combine(ImagesPath, "trailer-park.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestWarfaceLogo()
+        public void WarfaceLogo()
         {
             var imagePath = Path.Combine(ImagesPath, "warface_logo.gif");
             DoTestSplit4(imagePath);
         }
 
         [Test]
-        public void TestBlasterMasterLeft()
+        public void Jurassic()
+        {
+            var imagePath = Path.Combine(ImagesPath, "jurassic.png");
+            DoTestSplit2(imagePath);
+        }
+
+        [Test]
+        public void Jurassic2()
+        {
+            var imagePath = Path.Combine(ImagesPath, "jurassic2.png");
+            DoTestSplit2(imagePath);
+        }
+
+        [Test]
+        public void BlasterMasterLeft()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_left.png");
             DoTestNoSplit(imagePath, "#000000");
         }
 
         [Test]
-        public void TestBlasterMasterRight()
+        public void BlasterMasterRight()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_right.png");
             DoTestNoSplit(imagePath, "#000000");
         }
 
         [Test]
-        public void TestBlasterMasterRightFull()
+        public void BlasterMasterSharedPattern()
         {
-            var imagePath = Path.Combine(ImagesPath, "blaster_master_right_full.png");
-            DoTestNoSplit(imagePath, "#000000");
+            var imagePath1 = Path.Combine(ImagesPath, "blaster_master_left.png");
+            var imagePath2 = Path.Combine(ImagesPath, "blaster_master_right.png");
+            DoBenchmarkSharedPattern(imagePath1, imagePath2, "#000000");
         }
 
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
@@ -168,13 +183,49 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))));
         }
 
+        public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2, string bgColor = "auto")
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath1) + "_" + Path.GetFileNameWithoutExtension(imagePath2);
+            var args = new string[] {
+                "--enable-palettes", "0,1,2,3",
+                "-input-0", $"{imagePath1}",
+                "-input-1", $"{imagePath2}",
+                "--out-pattern-table", PatternTablePath(prefix, 0),
+                "--out-name-table-0", NameTablePath(prefix, 0),
+                "--out-name-table-1", NameTablePath(prefix, 1),
+                "--out-attribute-table-0", AttrTablePath(prefix, 0),
+                "--out-attribute-table-1", AttrTablePath(prefix, 1),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-palette-1", PalettePath(prefix, 1),
+                "--out-palette-2", PalettePath(prefix, 2),
+                "--out-palette-3", PalettePath(prefix, 3),
+                "--bg-color", bgColor,
+                "--share-pattern-tables"
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))));
+
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 1)))));
+
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 1)))));
+
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))));
+        }
+
         public void DoTestSplit2(string imagePath)
         {
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
-                "-input-0", $"{imagePath}:0:64",
-                "-input-1", $"{imagePath}:64:64",
+                "-input-0", $"{imagePath}:0:128",
+                "-input-1", $"{imagePath}:128:112",
                 "--out-pattern-table-0", PatternTablePath(prefix, 0),
                 "--out-pattern-table-1", PatternTablePath(prefix, 1),
                 "--out-name-table-0", NameTablePath(prefix, 0),
@@ -195,8 +246,8 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             Assert.That(File.ReadAllBytes(NameTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 0)))));
             Assert.That(File.ReadAllBytes(NameTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 1)))));
 
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 1)))));
 
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))));
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))));
@@ -243,10 +294,10 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             Assert.That(File.ReadAllBytes(NameTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 2)))));
             Assert.That(File.ReadAllBytes(NameTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 3)))));
 
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 1)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 2)))));
-            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 3)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 2)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 3)))));
 
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))));
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))));

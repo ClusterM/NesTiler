@@ -14,150 +14,151 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         }
 
         [Benchmark]
-        public void BenchmarkBelayaAkula()
+        public void BelayaAkula()
         {
             var imagePath = Path.Combine(ImagesPath, "belaya_akula.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkBuhanka()
+        public void Buhanka()
         {
             var imagePath = Path.Combine(ImagesPath, "buhanka.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkChernobyl()
+        public void Chernobyl()
         {
             var imagePath = Path.Combine(ImagesPath, "chernobyl.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkDira()
+        public void Dira()
         {
             var imagePath = Path.Combine(ImagesPath, "dira.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkGlaza()
+        public void Glaza()
         {
             var imagePath = Path.Combine(ImagesPath, "glaza.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkGorgona()
+        public void Gorgona()
         {
             var imagePath = Path.Combine(ImagesPath, "gorgona.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkMyatejl()
+        public void Myatejl()
         {
             var imagePath = Path.Combine(ImagesPath, "myatej.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkPagoda()
+        public void Pagoda()
         {
             var imagePath = Path.Combine(ImagesPath, "pagoda.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkRayon4()
+        public void Rayon4()
         {
             var imagePath = Path.Combine(ImagesPath, "rayon4.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkShkola()
+        public void Shkola()
         {
             var imagePath = Path.Combine(ImagesPath, "shkola.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkSindikat()
+        public void Sindikat()
         {
             var imagePath = Path.Combine(ImagesPath, "sindikat.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkSputnik()
+        public void Sputnik()
         {
             var imagePath = Path.Combine(ImagesPath, "sputnik.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkSworm()
+        public void Sworm()
         {
             var imagePath = Path.Combine(ImagesPath, "sworm.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkTrailerPark()
+        public void TrailerPark()
         {
             var imagePath = Path.Combine(ImagesPath, "trailer-park.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkWarfaceLogo()
+        public void WarfaceLogo()
         {
             var imagePath = Path.Combine(ImagesPath, "warface_logo.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkZapravka()
+        public void Zapravka()
         {
             var imagePath = Path.Combine(ImagesPath, "zapravka.gif");
             DoBenchmarkSplit4(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkJurassic()
+        public void Jurassic()
         {
             var imagePath = Path.Combine(ImagesPath, "jurassic.png");
             DoBenchmarkSplit2(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkJurassic2()
+        public void Jurassic2()
         {
             var imagePath = Path.Combine(ImagesPath, "jurassic2.png");
             DoBenchmarkSplit2(imagePath);
         }
 
         [Benchmark]
-        public void BenchmarkBlasterMasterLeft()
+        public void BlasterMasterLeft()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_left.png");
             DoBenchmarkNoSplit(imagePath, "#000000");
         }
 
         [Benchmark]
-        public void BenchmarkBlasterMasterRight()
+        public void BlasterMasterRight()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_right.png");
             DoBenchmarkNoSplit(imagePath, "#000000");
         }
 
         [Benchmark]
-        public void BenchmarkBlasterMasterRightFull()
+        public void BlasterMasterSharedPattern()
         {
-            var imagePath = Path.Combine(ImagesPath, "blaster_master_right_full.png");
-            DoBenchmarkNoSplit(imagePath, "#000000");
+            var imagePath1 = Path.Combine(ImagesPath, "blaster_master_left.png");
+            var imagePath2 = Path.Combine(ImagesPath, "blaster_master_right.png");
+            DoBenchmarkSharedPattern(imagePath1, imagePath2, "#000000");
         }
 
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
@@ -183,7 +184,32 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+        }
+
+        public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2, string bgColor = "auto")
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath1) + "_" + Path.GetFileNameWithoutExtension(imagePath2);
+            var args = new string[] {
+                "--enable-palettes", "0,1,2,3",
+                "-input-0", $"{imagePath1}",
+                "-input-1", $"{imagePath2}",
+                "--out-pattern-table", PatternTablePath(prefix, 0),
+                "--out-name-table-0", NameTablePath(prefix, 0),
+                "--out-name-table-1", NameTablePath(prefix, 1),
+                "--out-attribute-table-0", AttrTablePath(prefix, 0),
+                "--out-attribute-table-1", AttrTablePath(prefix, 1),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-palette-1", PalettePath(prefix, 1),
+                "--out-palette-2", PalettePath(prefix, 2),
+                "--out-palette-3", PalettePath(prefix, 3),
+                "--bg-color", bgColor,
+                "--share-pattern-tables"
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+
+            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit2(string imagePath)

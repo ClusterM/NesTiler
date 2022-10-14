@@ -38,6 +38,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine(" {0,-40}{1}", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
             Console.WriteLine(" {0,-40}{1}", "--palette-<#>", "comma separated list of colors to use in palette number # (default - auto)");
             Console.WriteLine(" {0,-40}{1}", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
+            Console.WriteLine(" {0,-40}{1}", "--share-pattern-tables", "use one pattern table for all images");
             Console.WriteLine(" {0,-40}{1}", "--ignore-tiles-range", "option to disable tile ID overflow check");
             Console.WriteLine(" {0,-40}{1}", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
             Console.WriteLine(" {0,-40}{1}", "--out-palette-<#> <file>", "output filename for palette number #");
@@ -75,24 +76,31 @@ namespace com.clusterrr.Famicom.NesTiler
                 var mode = TilesMode.Backgrounds;
                 int tilePalWidth = 16;
                 int tilePalHeight = 16;
+                bool sharePatternTables = false;
+                bool ignoreTilesRange = false;
+                int patternTableStartOffsetShared = 0;
+                var patternTableStartOffsets = new Dictionary<int, int>();
+
+                // Data
                 var imagesOriginal = new Dictionary<int, SKBitmap>();
                 var imagesRecolored = new Dictionary<int, SKBitmap>();
                 var palleteIndexes = new Dictionary<int, byte[,]>();
-                var patternTableStartOffsets = new Dictionary<int, int>();
                 var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
                 var nameTables = new Dictionary<int, List<int>>();
-                bool ignoreTilesRange = false;
+                int tileID = 0;
 
                 // Filenames
                 var outPreview = new Dictionary<int, string>();
                 var outPalette = new Dictionary<int, string>();
                 var outPatternTable = new Dictionary<int, string>();
+                string outPatternTableShared = null;
                 var outNameTable = new Dictionary<int, string>();
                 var outAttributeTable = new Dictionary<int, string>();
 
                 var nesColorsCache = new Dictionary<Color, byte>();
 
                 var paramRegex = new Regex(@"^--?(?<param>[a-zA-Z-]+?)-?(?<index>[0-9]*)$");
+
                 for (int i = 0; i < args.Length; i++)
                 {
                     var match = paramRegex.Match(args[i]);
@@ -167,7 +175,11 @@ namespace com.clusterrr.Famicom.NesTiler
                             break;
                         case "pattern-offset":
                             patternTableStartOffsets[indexNum] = int.Parse(value);
+                            patternTableStartOffsetShared = patternTableStartOffsets[indexNum];
                             i++;
+                            break;
+                        case "share-pattern-tables":
+                            sharePatternTables = true;
                             break;
                         case "out-preview":
                         case "output-preview":
@@ -182,6 +194,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         case "out-pattern-table":
                         case "output-pattern-table":
                             outPatternTable[indexNum] = value;
+                            outPatternTableShared = value;
                             i++;
                             break;
                         case "out-name-table":
@@ -417,7 +430,6 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                         }
 
-
                     // Remove unsed palettes
                     paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
 
@@ -597,16 +609,24 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     Console.WriteLine($"Creating pattern table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
                     var image = imagesRecolored[imageNum];
-                    if (!patternTables.ContainsKey(imageNum)) patternTables[imageNum] = new Dictionary<int, Tile>();
-                    var patternTable = patternTables[imageNum];
+                    if (!patternTables.ContainsKey(!sharePatternTables ? imageNum : 0)) patternTables[!sharePatternTables ? imageNum : 0] = new Dictionary<int, Tile>();
+                    var patternTable = patternTables[!sharePatternTables ? imageNum : 0];
                     if (!nameTables.ContainsKey(imageNum)) nameTables[imageNum] = new List<int>();
                     var nameTable = nameTables[imageNum];
-                    if (!patternTableStartOffsets.ContainsKey(imageNum))
-                        patternTableStartOffsets[imageNum] = 0;
-                    var tileID = patternTableStartOffsets[imageNum];
+                    if (!sharePatternTables)
+                    {
+                        if (!patternTableStartOffsets.ContainsKey(imageNum))
+                            patternTableStartOffsets[imageNum] = 0;
+                        tileID = patternTableStartOffsets[imageNum];
+                    }
+                    else
+                    {
+                        tileID = Math.Max(tileID, patternTableStartOffsetShared);
+                        patternTableStartOffsets[imageNum] = tileID;
+                    }
 
                     var tileWidth = 8;
-                    var tileHeight = (mode == TilesMode.Sprites8x16 ? 16 : 8);
+                    var tileHeight = mode == TilesMode.Sprites8x16 ? 16 : 8;
 
                     for (int tileY = 0; tileY < image.Height / tileHeight; tileY++)
                     {
@@ -641,7 +661,9 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                         }
                     }
-                    if (tileID > patternTableStartOffsets[imageNum])
+                    if (sharePatternTables && tileID > patternTableStartOffsetShared)
+                        Console.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsetShared}-{tileID - 1}");
+                    else if (tileID > patternTableStartOffsets[imageNum])
                         Console.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
                         Console.WriteLine($"Pattern table is empty");
@@ -649,7 +671,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         throw new ArgumentOutOfRangeException("Tiles out of range");
 
                     // Save pattern table to file
-                    if (outPatternTable.ContainsKey(imageNum))
+                    if (outPatternTable.ContainsKey(imageNum) && !sharePatternTables)
                     {
                         var patternTableRaw = new List<byte>();
                         for (int t = patternTableStartOffsets[imageNum]; t < tileID; t++)
@@ -665,8 +687,21 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (outNameTable.ContainsKey(imageNum))
                     {
                         File.WriteAllBytes(outNameTable[imageNum], nameTable.Select(i => (byte)i).ToArray());
-                        Console.WriteLine($"Name table #{imageNum} saved to {outPatternTable[imageNum]}");
+                        Console.WriteLine($"Name table #{imageNum} saved to {outNameTable[imageNum]}");
                     }
+                }
+
+                // Save shared pattern table to file
+                if (sharePatternTables)
+                {
+                    var patternTableRaw = new List<byte>();
+                    for (int t = patternTableStartOffsetShared; t < tileID; t++)
+                    {
+                        var raw = patternTables[0][t].GetRawData();
+                        patternTableRaw.AddRange(raw);
+                    }
+                    File.WriteAllBytes(outPatternTableShared, patternTableRaw.ToArray());
+                    Console.WriteLine($"Pattern table saved to {outPatternTableShared}");
                 }
 
                 return 0;
