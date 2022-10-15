@@ -184,7 +184,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2, string bgColor = "auto")
@@ -204,12 +204,12 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
                 "--bg-color", bgColor,
-                "--share-pattern-tables"
+                "--share-pattern-table"
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit2(string imagePath)

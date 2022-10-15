@@ -134,7 +134,7 @@ namespace com.clusterrr.Famicom.NesTiler
             return GetEnumerator();
         }
 
-        public override string ToString() => string.Join(", ", colors.Where(c => c.HasValue).Select(c => ColorTranslator.ToHtml(c.Value)));
+        public override string ToString() => string.Join(", ", colors.Where(c => c.HasValue).Select(c => ColorTranslator.ToHtml(c.Value)).OrderBy(c => c));
 
         public override int GetHashCode()
         {

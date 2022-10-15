@@ -281,6 +281,10 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int x = 0; x < image.Width; x++)
                         {
                             var color = image.GetPixelColor(x, y);
+                            if (color.R == 0x00 && color.G == 0x50 && color.B == 0x00)
+                            {
+                                Console.WriteLine($"{x} {y}");
+                            }
                             var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
                             image.SetPixelColor(x, y, similarColor);
                         }
