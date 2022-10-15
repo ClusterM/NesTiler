@@ -200,7 +200,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
                 "--bg-color", bgColor,
-                "--share-pattern-tables"
+                "--share-pattern-table"
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
