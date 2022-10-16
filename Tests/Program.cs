@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace com.clusterrr.Famicom.NesTiler.Benchmarks
+namespace com.clusterrr.Famicom.NesTiler.Tests
 {
     public class Tests
     {
@@ -130,14 +130,14 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         public void BlasterMasterLeft()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_left.png");
-            DoTestNoSplit(imagePath, "#000000");
+            DoTestNoSplit(imagePath);
         }
 
         [Test]
         public void BlasterMasterRight()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_right.png");
-            DoTestNoSplit(imagePath, "#000000");
+            DoTestNoSplit(imagePath);
         }
 
         [Test]
@@ -145,7 +145,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         {
             var imagePath1 = Path.Combine(ImagesPath, "blaster_master_left.png");
             var imagePath2 = Path.Combine(ImagesPath, "blaster_master_right.png");
-            DoBenchmarkSharedPattern(imagePath1, imagePath2, "#000000");
+            DoBenchmarkSharedPattern(imagePath1, imagePath2);
         }
 
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
@@ -153,7 +153,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
         private string PalettePath(string prefix, int number) => $"{prefix}_palette_{number}.bin";
 
-        public void DoTestNoSplit(string imagePath, string bgColor = "auto")
+        public void DoTestNoSplit(string imagePath)
         {
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
@@ -166,7 +166,6 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
-                "--bg-color", bgColor,
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
@@ -183,7 +182,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))));
         }
 
-        public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2, string bgColor = "auto")
+        public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2)
         {
             var prefix = Path.GetFileNameWithoutExtension(imagePath1) + "_" + Path.GetFileNameWithoutExtension(imagePath2);
             var args = new string[] {
@@ -199,7 +198,6 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
-                "--bg-color", bgColor,
                 "--share-pattern-table"
             };
             var r = Program.Main(args);

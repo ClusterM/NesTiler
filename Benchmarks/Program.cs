@@ -143,14 +143,14 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         public void BlasterMasterLeft()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_left.png");
-            DoBenchmarkNoSplit(imagePath, "#000000");
+            DoBenchmarkNoSplit(imagePath);
         }
 
         [Benchmark]
         public void BlasterMasterRight()
         {
             var imagePath = Path.Combine(ImagesPath, "blaster_master_right.png");
-            DoBenchmarkNoSplit(imagePath, "#000000");
+            DoBenchmarkNoSplit(imagePath);
         }
 
         [Benchmark]
@@ -158,7 +158,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         {
             var imagePath1 = Path.Combine(ImagesPath, "blaster_master_left.png");
             var imagePath2 = Path.Combine(ImagesPath, "blaster_master_right.png");
-            DoBenchmarkSharedPattern(imagePath1, imagePath2, "#000000");
+            DoBenchmarkSharedPattern(imagePath1, imagePath2);
         }
 
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
@@ -166,7 +166,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
         private string PalettePath(string prefix, int number) => $"{prefix}_palette_{number}.bin";
 
-        public void DoBenchmarkNoSplit(string imagePath, string bgColor = "auto")
+        public void DoBenchmarkNoSplit(string imagePath)
         {
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
@@ -179,15 +179,14 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
-                "--bg-color", bgColor,
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
-        public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2, string bgColor = "auto")
+        public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2)
         {
             var prefix = Path.GetFileNameWithoutExtension(imagePath1) + "_" + Path.GetFileNameWithoutExtension(imagePath2);
             var args = new string[] {
@@ -203,13 +202,12 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
-                "--bg-color", bgColor,
-                "--share-pattern-table"
+                 "--share-pattern-table"
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit2(string imagePath)

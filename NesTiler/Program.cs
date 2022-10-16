@@ -15,9 +15,10 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     public class Program
     {
-        private const string REPO_PATH = "https://github.com/ClusterM/nestiler";
+        const string REPO_PATH = "https://github.com/ClusterM/nestiler";
         const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
-        private static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
+        static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
+        const int MAX_BG_COLOR_AUTODETECT_ITERATIONS = 5;
 
         public enum TilesMode
         {
@@ -84,7 +85,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 // Data
                 var imagesOriginal = new Dictionary<int, SKBitmap>();
                 var imagesRecolored = new Dictionary<int, SKBitmap>();
-                var palleteIndexes = new Dictionary<int, byte[,]>();
+                var paletteIndexes = new Dictionary<int, byte[,]>();
                 var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
                 var nameTables = new Dictionary<int, List<int>>();
                 int tileID = 0;
@@ -246,7 +247,9 @@ namespace com.clusterrr.Famicom.NesTiler
                     var offsetRegex = new Regex(@"^(?<filename>.*?)(:(?<offset>[0-9]+)(:(?<height>[0-9]+))?)?$");
                     var match = offsetRegex.Match(image.Value);
                     var filename = match.Groups["filename"].Value;
+                    if (!File.Exists(filename)) throw new FileNotFoundException($"File {filename} not found");
                     imagesOriginal[image.Key] = SKBitmap.Decode(filename);
+                    if (imagesOriginal[image.Key] == null) throw new InvalidDataException($"Can't load {filename}");
                     var offsetS = match.Groups["offset"].Value;
                     var heightS = match.Groups["height"].Value;
                     // Crop it if need
@@ -281,25 +284,29 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int x = 0; x < image.Width; x++)
                         {
                             var color = image.GetPixelColor(x, y);
-                            if (color.R == 0x00 && color.G == 0x50 && color.B == 0x00)
-                            {
-                                Console.WriteLine($"{x} {y}");
-                            }
                             var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
                             image.SetPixelColor(x, y, similarColor);
                         }
                     }
                 }
 
+                List<Palette> calculatedPalettes;
+                var maxCalculatedPaletteCount = Enumerable.Range(0, 4).Select(i => paletteEnabled[i] && fixedPalettes[i] == null).Count();
                 // Detect background color
                 if (bgColor.HasValue)
                 {
                     // Manually
                     bgColor = nesColors[FindSimilarColor(nesColors, bgColor.Value, nesColorsCache)];
+                    calculatedPalettes = CalculatePalettes(imagesRecolored, paletteEnabled, fixedPalettes, tilePalWidth, tilePalHeight, bgColor.Value).ToList();
+                    if (calculatedPalettes.Count > maxCalculatedPaletteCount)
+                    {
+
+                    }
                 }
                 else
                 {
                     // Autodetect most used color
+                    // TODO: improove bg color autodetect
                     Console.Write($"Background color autotect... ");
                     Dictionary<Color, int> colorPerTileCounter = new Dictionary<Color, int>();
                     foreach (var imageNum in imagesRecolored.Keys)
@@ -330,118 +337,23 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                         }
                     }
-                    bgColor = colorPerTileCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).FirstOrDefault();
+                    // Most used colors
+                    var candidates = colorPerTileCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+                    // Try to calculate palettes for every background color
+                    var calcResults = new Dictionary<Color, Palette[]>();
+                    for (int i = 0; i < Math.Min(candidates.Length, MAX_BG_COLOR_AUTODETECT_ITERATIONS); i++)
+                    {
+                        calcResults[candidates[i]] = CalculatePalettes(imagesRecolored, paletteEnabled, fixedPalettes, tilePalWidth, tilePalHeight, candidates[i]);
+                    }
+                    // Select background color which uses minimum palettes
+                    var kv = calcResults.OrderBy(kv => kv.Value.Length).First();
+                    (bgColor, calculatedPalettes) = (kv.Key, kv.Value.ToList());
                     Console.WriteLine(ColorTranslator.ToHtml(bgColor.Value));
                 }
 
-                var top4 = new List<Palette>();
-                // Calculate palettes if required
-                if ((new int[] { 0, 1, 2, 3 }).Select(i => paletteEnabled[i] && fixedPalettes[i] == null).Any())
+                if (calculatedPalettes.Count > maxCalculatedPaletteCount)
                 {
-                    // Creating and counting the palettes
-                    Dictionary<Palette, int> paletteCounter = new Dictionary<Palette, int>();
-                    foreach (var imageNum in imagesOriginal.Keys)
-                    {
-                        Console.WriteLine($"Creating palettes for file #{imageNum} - {imageFiles[imageNum]}...");
-                        var image = imagesRecolored[imageNum];
-                        // For each tile/sprite
-                        for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
-                        {
-                            for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
-                            {
-                                // Create palette using up to three most popular colors
-                                var palette = new Palette(
-                                    image, tileX * tilePalWidth, tileY * tilePalHeight,
-                                    tilePalWidth, tilePalHeight, bgColor.Value);
-
-                                // Skip tiles with only background color
-                                if (!palette.Any()) continue;
-
-                                // Do not count predefined palettes
-                                if (fixedPalettes.Where(p => p != null && p.Contains(palette)).Any())
-                                    // Считаем количество использования таких палитр
-                                    continue;
-
-                                // Count palette usage
-                                if (!paletteCounter.ContainsKey(palette))
-                                    paletteCounter[palette] = 0;
-                                paletteCounter[palette]++;
-                            }
-                        }
-                    }
-
-                    // Group palettes
-                    Console.WriteLine($"Calculating final palette list...");
-                    // From most popular to less popular
-                    var sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
-                    // Some palettes can contain all colors from other palettes, so we need to combine them
-                    foreach (var palette2 in sortedKeys)
-                        foreach (var palette1 in sortedKeys)
-                        {
-                            if ((palette2 != palette1) && (palette2.Count >= palette1.Count) && palette2.Contains(palette1))
-                            {
-                                // Move counter
-                                paletteCounter[palette2] += paletteCounter[palette1];
-                                paletteCounter[palette1] = 0;
-                            }
-                        }
-
-                    // Remove unsed palettes
-                    paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
-
-                    // Sort them again
-                    sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
-
-                    // Get 4 most popular palettes
-                    top4 = sortedKeys.Take(4).ToList();
-                    // Use free colors in palettes to store less popular palettes
-                    foreach (var t in top4)
-                    {
-                        if (t.Count < 3)
-                        {
-                            foreach (var p in sortedKeys)
-                            {
-                                var newColors = p.Where(c => !t.Contains(c));
-                                if (p != t && (paletteCounter[t] > 0) && (paletteCounter[p] > 0)
-                                    && (newColors.Count() + t.Count <= 3))
-                                {
-                                    var count1 = paletteCounter[t];
-                                    var count2 = paletteCounter[p];
-                                    paletteCounter[t] = 0;
-                                    paletteCounter[p] = 0;
-                                    foreach (var c in newColors) t.Add(c);
-                                    paletteCounter[t] = count1 + count2;
-                                }
-                            }
-                        }
-                    }
-
-                    // Remove unsed palettes
-                    paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
-
-                    // Sort them again
-                    sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
-
-                    // Combine palettes again
-                    foreach (var palette2 in sortedKeys)
-                        foreach (var palette1 in sortedKeys)
-                        {
-                            if ((palette2 != palette1) && (palette2.Count >= palette1.Count) && palette2.Contains(palette1))
-                            {
-                                // Move counter
-                                paletteCounter[palette2] += paletteCounter[palette1];
-                                paletteCounter[palette1] = 0;
-                            }
-                        }
-
-                    // Remove unsed palettes
-                    paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
-
-                    // Sort them again
-                    sortedKeys = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
-
-                    // Renew list of top 4 palettes
-                    top4 = sortedKeys.Take(4).ToList();
+                    // throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes - {maxCalculatedPaletteCount} is maximum");
                 }
 
                 // Select palettes
@@ -454,12 +366,12 @@ namespace com.clusterrr.Famicom.NesTiler
                         {
                             palettes[i] = fixedPalettes[i];
                         }
-                        else if (top4.Any())
+                        else if (calculatedPalettes.Any())
                         {
-                            if (top4.Any())
+                            if (calculatedPalettes.Any())
                             {
-                                palettes[i] = top4.First();
-                                top4.RemoveAt(0);
+                                palettes[i] = calculatedPalettes.First();
+                                calculatedPalettes.RemoveAt(0);
                             }
                             else
                             {
@@ -500,7 +412,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     var image = imagesOriginal[imageNum];
                     var imageRecolored = image.Copy();
                     imagesRecolored[imageNum] = imageRecolored;
-                    palleteIndexes[imageNum] = new byte[image.Width / tilePalWidth, image.Height / tilePalHeight];
+                    paletteIndexes[imageNum] = new byte[image.Width / tilePalWidth, image.Height / tilePalHeight];
                     // For each tile/sprite
                     for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
                     {
@@ -524,7 +436,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             Palette bestPalette = palettes[bestPaletteIndex];
                             // Remember palette index
-                            palleteIndexes[imageNum][tileX, tileY] = bestPaletteIndex;
+                            paletteIndexes[imageNum][tileX, tileY] = bestPaletteIndex;
 
                             // Change tile colors to colors from the palette
                             for (int y = 0; y < tilePalHeight; y++)
@@ -572,22 +484,22 @@ namespace com.clusterrr.Famicom.NesTiler
 
                             try
                             {
-                                topLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2];
+                                topLeft = paletteIndexes[imageNum][ptileX * 2, ptileY * 2];
                             }
                             catch (IndexOutOfRangeException) { }
                             try
                             {
-                                topRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
+                                topRight = paletteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
                             }
                             catch (IndexOutOfRangeException) { }
                             try
                             {
-                                bottomLeft = palleteIndexes[imageNum][ptileX * 2, ptileY * 2 + 1];
+                                bottomLeft = paletteIndexes[imageNum][ptileX * 2, ptileY * 2 + 1];
                             }
                             catch (IndexOutOfRangeException) { }
                             try
                             {
-                                bottomRight = palleteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2 + 1];
+                                bottomRight = paletteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2 + 1];
                             }
                             catch (IndexOutOfRangeException) { }
 
@@ -641,7 +553,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                 for (int x = 0; x < tileWidth; x++)
                                 {
                                     var color = image.GetPixelColor(tileX * tileWidth + x, tileY * tileHeight + y);
-                                    var palette = palettes[palleteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), tileY / (tilePalHeight / tileHeight)]];
+                                    var palette = palettes[paletteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), tileY / (tilePalHeight / tileHeight)]];
                                     byte colorIndex = 0;
                                     if (color != bgColor)
                                     {
@@ -719,6 +631,103 @@ namespace com.clusterrr.Famicom.NesTiler
 #endif
                 return 1;
             }
+        }
+
+        static Palette[] CalculatePalettes(Dictionary<int, SKBitmap> images, bool[] paletteEnabled, Palette[] fixedPalettes, int tilePalWidth, int tilePalHeight, Color bgColor)
+        {
+            var required = Enumerable.Range(0, 4).Select(i => paletteEnabled[i] && fixedPalettes[i] == null);
+            // Creating and counting the palettes
+            var paletteCounter = new Dictionary<Palette, int>();
+            foreach (var imageNum in images.Keys)
+            {
+                // Console.WriteLine($"Calculating palettes for file #{imageNum} - {imageFiles[imageNum]}...");
+                var image = images[imageNum];
+                // For each tile/sprite
+                for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
+                {
+                    for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
+                    {
+                        // Create palette using up to three most used colors
+                        var palette = new Palette(
+                            image, tileX * tilePalWidth, tileY * tilePalHeight,
+                            tilePalWidth, tilePalHeight, bgColor);
+
+                        // Skip tiles with only background color
+                        if (!palette.Any()) continue;
+
+                        // Do not count predefined palettes
+                        if (fixedPalettes.Where(p => p != null && p.Contains(palette)).Any())
+                            continue;
+
+                        // Count palette usage
+                        if (!paletteCounter.ContainsKey(palette))
+                            paletteCounter[palette] = 0;
+                        paletteCounter[palette]++;
+                    }
+                }
+            }
+
+            // Group palettes
+            //Console.WriteLine($"Calculating final palette list...");
+            // From most popular to less popular
+            var result = new Palette[0];
+
+            // Multiple iterations
+            while (true)
+            {
+                // Remove unused palettes
+                paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+                // Sort by usage
+                result = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+
+                // Some palettes can contain all colors from other palettes, so we need to combine them
+                foreach (var palette2 in result)
+                    foreach (var palette1 in result)
+                    {
+                        if ((palette2 != palette1) && (palette2.Count >= palette1.Count) && palette2.Contains(palette1))
+                        {
+                            // Move counter
+                            paletteCounter[palette2] += paletteCounter[palette1];
+                            paletteCounter[palette1] = 0;
+                        }
+                    }
+
+                // Remove unused palettes
+                paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+                // Sort them again
+                result = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+
+                // Get most used palettes
+                var top = result.Take(required.Count()).ToList();
+                // Use free colors in palettes to store less popular palettes
+                bool grouped = false;
+                foreach (var t in top)
+                {
+                    if (t.Count < 3)
+                    {
+                        foreach (var p in result)
+                        {
+                            var newColors = p.Where(c => !t.Contains(c));
+                            if (p != t && (newColors.Count() + t.Count <= 3))
+                            {
+                                foreach (var c in newColors) t.Add(c);
+                                paletteCounter[t] += paletteCounter[p];
+                                paletteCounter[p] = 0;
+                                grouped = true;
+                            }
+                        }
+                    }
+                }
+                if (!grouped) break; // Nothing changed, stop iterations
+
+            }
+
+            // Remove unused palettes
+            paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+            // Sort them again
+            result = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+
+            return result;
         }
 
         static byte FindSimilarColor(Dictionary<byte, Color> colors, Color color, Dictionary<Color, byte> cache = null)
