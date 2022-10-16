@@ -715,16 +715,18 @@ namespace com.clusterrr.Famicom.NesTiler
                             var newColors = p.Where(c => !t.Contains(c));
                             if (p != t && (newColors.Count() + t.Count <= 3))
                             {
-                                foreach (var c in newColors) t.Add(c);
-                                paletteCounter[t] += paletteCounter[p];
+                                var count1 = paletteCounter[t];
+                                var count2 = paletteCounter[p];
+                                paletteCounter[t] = 0;
                                 paletteCounter[p] = 0;
+                                foreach (var c in newColors) t.Add(c);
+                                paletteCounter[t] = count1 + count2;
                                 grouped = true;
                             }
                         }
                     }
                 }
                 if (!grouped) break; // Nothing changed, stop iterations
-
             }
 
             // Remove unused palettes
