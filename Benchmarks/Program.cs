@@ -161,6 +161,13 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             DoBenchmarkSharedPattern(imagePath1, imagePath2);
         }
 
+        [Benchmark]
+        public void MeLossy()
+        {
+            var imagePath = Path.Combine(ImagesPath, "me.png");
+            DoBenchmarkSplit2Lossy(imagePath);
+        }
+
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
         private string NameTablePath(string prefix, int number) => $"{prefix}_name_table_{number}.bin";
         private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
@@ -233,7 +240,32 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 
             //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
-        
+
+        public void DoBenchmarkSplit2Lossy(string imagePath)
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--enable-palettes", "0,1,2,3",
+                "-input-0", $"{imagePath}:0:128",
+                "-input-1", $"{imagePath}:128:112",
+                "--out-pattern-table-0", PatternTablePath(prefix, 0),
+                "--out-pattern-table-1", PatternTablePath(prefix, 1),
+                "--out-name-table-0", NameTablePath(prefix, 0),
+                "--out-name-table-1", NameTablePath(prefix, 1),
+                "--out-attribute-table-0", AttrTablePath(prefix, 0),
+                "--out-attribute-table-1", AttrTablePath(prefix, 1),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-palette-1", PalettePath(prefix, 1),
+                "--out-palette-2", PalettePath(prefix, 2),
+                "--out-palette-3", PalettePath(prefix, 3),
+                "--lossy"
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+
+            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+        }
+
         public void DoBenchmarkSplit4(string imagePath)
         {
             var prefix = Path.GetFileNameWithoutExtension(imagePath);

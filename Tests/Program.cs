@@ -148,6 +148,13 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             DoBenchmarkSharedPattern(imagePath1, imagePath2);
         }
 
+        [Test]
+        public void MeLossy()
+        {
+            var imagePath = Path.Combine(ImagesPath, "me.png");
+            DoTestSplit2Lossy(imagePath);
+        }
+
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
         private string NameTablePath(string prefix, int number) => $"{prefix}_name_table_{number}.bin";
         private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
@@ -234,6 +241,43 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 1)))));
+
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(NameTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, NameTablePath(prefix, 1)))));
+
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(AttrTablePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, AttrTablePath(prefix, 1)))));
+
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))));
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))));
+        }
+
+        public void DoTestSplit2Lossy(string imagePath)
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--enable-palettes", "0,1,2,3",
+                "-input-0", $"{imagePath}:0:128",
+                "-input-1", $"{imagePath}:128:112",
+                "--out-pattern-table-0", PatternTablePath(prefix, 0),
+                "--out-pattern-table-1", PatternTablePath(prefix, 1),
+                "--out-name-table-0", NameTablePath(prefix, 0),
+                "--out-name-table-1", NameTablePath(prefix, 1),
+                "--out-attribute-table-0", AttrTablePath(prefix, 0),
+                "--out-attribute-table-1", AttrTablePath(prefix, 1),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-palette-1", PalettePath(prefix, 1),
+                "--out-palette-2", PalettePath(prefix, 2),
+                "--out-palette-3", PalettePath(prefix, 3),
+                "--lossy"
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");

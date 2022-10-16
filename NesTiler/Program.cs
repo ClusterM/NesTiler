@@ -41,6 +41,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine(" {0,-40}{1}", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
             Console.WriteLine(" {0,-40}{1}", "--share-pattern-table", "use one pattern table for all images");
             Console.WriteLine(" {0,-40}{1}", "--ignore-tiles-range", "option to disable tile ID overflow check");
+            Console.WriteLine(" {0,-40}{1}", "--lossy", "option to ignore palettes loss, produces distorted image if there are too many colors");
             Console.WriteLine(" {0,-40}{1}", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
             Console.WriteLine(" {0,-40}{1}", "--out-palette-<#> <file>", "output filename for palette number #");
             Console.WriteLine(" {0,-40}{1}", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
@@ -79,6 +80,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 int tilePalHeight = 16;
                 bool sharePatternTable = false;
                 bool ignoreTilesRange = false;
+                bool lossy = false;
                 int patternTableStartOffsetShared = 0;
                 var patternTableStartOffsets = new Dictionary<int, int>();
 
@@ -213,6 +215,9 @@ namespace com.clusterrr.Famicom.NesTiler
                         case "ignoretilesrange":
                         case "ignore-tiles-range":
                             ignoreTilesRange = true;
+                            break;
+                        case "lossy":
+                            lossy = true;
                             break;
                         default:
                             throw new ArgumentException($"Unknown argument: {args[i]}");
@@ -351,9 +356,9 @@ namespace com.clusterrr.Famicom.NesTiler
                     Console.WriteLine(ColorTranslator.ToHtml(bgColor.Value));
                 }
 
-                if (calculatedPalettes.Count > maxCalculatedPaletteCount)
+                if (calculatedPalettes.Count > maxCalculatedPaletteCount && !lossy)
                 {
-                    // throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes - {maxCalculatedPaletteCount} is maximum");
+                    throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes - {maxCalculatedPaletteCount} is maximum");
                 }
 
                 // Select palettes
