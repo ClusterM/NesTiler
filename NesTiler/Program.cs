@@ -83,10 +83,10 @@ namespace com.clusterrr.Famicom.NesTiler
                 bool lossy = false;
                 int patternTableStartOffsetShared = 0;
                 var patternTableStartOffsets = new Dictionary<int, int>();
+                var attributeTableOffsets = new Dictionary<int, int>();
 
                 // Data
-                var imagesOriginal = new Dictionary<int, SKBitmap>();
-                var imagesRecolored = new Dictionary<int, SKBitmap>();
+                var images = new Dictionary<int, SKBitmap>();
                 var paletteIndexes = new Dictionary<int, byte[,]>();
                 var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
                 var nameTables = new Dictionary<int, List<int>>();
@@ -181,6 +181,10 @@ namespace com.clusterrr.Famicom.NesTiler
                             patternTableStartOffsetShared = patternTableStartOffsets[indexNum];
                             i++;
                             break;
+                        case "attribute-table-offset":
+                            attributeTableOffsets[indexNum] = int.Parse(value);
+                            i++;
+                            break;
                         case "share-pattern-table":
                             sharePatternTable = true;
                             break;
@@ -253,37 +257,36 @@ namespace com.clusterrr.Famicom.NesTiler
                     var match = offsetRegex.Match(image.Value);
                     var filename = match.Groups["filename"].Value;
                     if (!File.Exists(filename)) throw new FileNotFoundException($"File {filename} not found");
-                    imagesOriginal[image.Key] = SKBitmap.Decode(filename);
-                    if (imagesOriginal[image.Key] == null) throw new InvalidDataException($"Can't load {filename}");
+                    images[image.Key] = SKBitmap.Decode(filename);
+                    if (images[image.Key] == null) throw new InvalidDataException($"Can't load {filename}");
                     var offsetS = match.Groups["offset"].Value;
                     var heightS = match.Groups["height"].Value;
                     // Crop it if need
                     if (!string.IsNullOrEmpty(offsetS))
                     {
                         int offset = int.Parse(offsetS);
-                        int height = imagesOriginal[image.Key].Height - offset;
+                        int height = images[image.Key].Height - offset;
                         if (!string.IsNullOrEmpty(heightS))
                             height = int.Parse(heightS);
                         Console.WriteLine($"Cropping it to {offset}:{height}...");
-                        var cropped = new SKBitmap(imagesOriginal[image.Key].Width, height);
+                        var cropped = new SKBitmap(images[image.Key].Width, height);
                         using (SKCanvas bitmapCanvas = new SKCanvas(cropped))
                         {
-                            bitmapCanvas.DrawBitmap(imagesOriginal[image.Key], 0, -offset);
+                            bitmapCanvas.DrawBitmap(images[image.Key], 0, -offset);
                         }
-                        imagesOriginal[image.Key].Dispose();
-                        imagesOriginal[image.Key] = cropped;
+                        images[image.Key].Dispose();
+                        images[image.Key] = cropped;
                     }
-                    if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
-                        throw new InvalidDataException("Invalid image size");
+                    //if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
+                    //    throw new InvalidDataException("Invalid image size");
                     // TODO: more image size checks
                 }
 
                 // Change all colors in the images to colors from the NES palette
-                foreach (var imageNum in imagesOriginal.Keys)
+                foreach (var imageNum in images.Keys)
                 {
                     Console.WriteLine($"Adjusting colors for file #{imageNum} - {imageFiles[imageNum]}...");
-                    var image = imagesOriginal[imageNum].Copy();
-                    imagesRecolored[imageNum] = image;
+                    var image = images[imageNum];
                     for (int y = 0; y < image.Height; y++)
                     {
                         for (int x = 0; x < image.Width; x++)
@@ -292,7 +295,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
                             image.SetPixelColor(x, y, similarColor);
                         }
-                    }
+                    }                    
                 }
 
                 List<Palette> calculatedPalettes;
@@ -302,21 +305,16 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     // Manually
                     bgColor = nesColors[FindSimilarColor(nesColors, bgColor.Value, nesColorsCache)];
-                    calculatedPalettes = CalculatePalettes(imagesRecolored, paletteEnabled, fixedPalettes, tilePalWidth, tilePalHeight, bgColor.Value).ToList();
-                    if (calculatedPalettes.Count > maxCalculatedPaletteCount)
-                    {
-
-                    }
+                    calculatedPalettes = CalculatePalettes(images, paletteEnabled, fixedPalettes, attributeTableOffsets, tilePalWidth, tilePalHeight, bgColor.Value).ToList();
                 }
                 else
                 {
                     // Autodetect most used color
-                    // TODO: improove bg color autodetect
-                    Console.Write($"Background color autotect... ");
+                    Console.Write($"Background color autodetect... ");
                     Dictionary<Color, int> colorPerTileCounter = new Dictionary<Color, int>();
-                    foreach (var imageNum in imagesRecolored.Keys)
+                    foreach (var imageNum in images.Keys)
                     {
-                        var image = imagesRecolored[imageNum];
+                        var image = images[imageNum];
                         for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
                         {
                             for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
@@ -348,7 +346,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     var calcResults = new Dictionary<Color, Palette[]>();
                     for (int i = 0; i < Math.Min(candidates.Length, MAX_BG_COLOR_AUTODETECT_ITERATIONS); i++)
                     {
-                        calcResults[candidates[i]] = CalculatePalettes(imagesRecolored, paletteEnabled, fixedPalettes, tilePalWidth, tilePalHeight, candidates[i]);
+                        calcResults[candidates[i]] = CalculatePalettes(images, paletteEnabled, fixedPalettes, attributeTableOffsets, tilePalWidth, tilePalHeight, candidates[i]);
                     }
                     // Select background color which uses minimum palettes
                     var kv = calcResults.OrderBy(kv => kv.Value.Length).First();
@@ -410,18 +408,17 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
 
                 // Select palette for each tile/sprite and recolorize using them
-                imagesRecolored.Clear();
-                foreach (var imageNum in imagesOriginal.Keys)
+                foreach (var imageNum in images.Keys)
                 {
                     Console.WriteLine($"Mapping palettes for file #{imageNum} - {imageFiles[imageNum]}...");
-                    var image = imagesOriginal[imageNum];
-                    var imageRecolored = image.Copy();
-                    imagesRecolored[imageNum] = imageRecolored;
-                    paletteIndexes[imageNum] = new byte[image.Width / tilePalWidth, image.Height / tilePalHeight];
+                    var image = images[imageNum];
+                    int attributeTableOffset;
+                    attributeTableOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                    paletteIndexes[imageNum] = new byte[image.Width / tilePalWidth, (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)tilePalHeight)];
                     // For each tile/sprite
-                    for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
+                    for (int tilePalY = 0; tilePalY < (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)tilePalHeight); tilePalY++)
                     {
-                        for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
+                        for (int tilePalX = 0; tilePalX < image.Width / tilePalWidth; tilePalX++)
                         {
                             double minDelta = double.MaxValue;
                             byte bestPaletteIndex = 0;
@@ -430,7 +427,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             {
                                 if (palettes[paletteIndex] == null) continue;
                                 double delta = palettes[paletteIndex].GetTileDelta(
-                                    image, tileX * tilePalWidth, tileY * tilePalHeight,
+                                    image, tilePalX * tilePalWidth, tilePalY * tilePalHeight - attributeTableOffset,
                                     tilePalWidth, tilePalHeight, bgColor.Value);
                                 // Find palette with most similar colors
                                 if (delta < minDelta)
@@ -441,21 +438,23 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             Palette bestPalette = palettes[bestPaletteIndex];
                             // Remember palette index
-                            paletteIndexes[imageNum][tileX, tileY] = bestPaletteIndex;
+                            paletteIndexes[imageNum][tilePalX, tilePalY] = bestPaletteIndex;
 
                             // Change tile colors to colors from the palette
                             for (int y = 0; y < tilePalHeight; y++)
                             {
                                 for (int x = 0; x < tilePalWidth; x++)
                                 {
-                                    var color = image.GetPixelColor(tileX * tilePalWidth + x, tileY * tilePalHeight + y);
+                                    var cy = tilePalY * tilePalHeight + y - attributeTableOffset;
+                                    if (cy < 0) continue;
+                                    var color = image.GetPixelColor(tilePalX * tilePalWidth + x, cy);
                                     var similarColor = FindSimilarColor(Enumerable.Concat(
                                             bestPalette,
                                             new Color[] { bgColor.Value }
                                         ), color);
-                                    imageRecolored.SetPixelColor(
-                                        tileX * tilePalWidth + x,
-                                        tileY * tilePalHeight + y,
+                                    image.SetPixelColor(
+                                        tilePalX * tilePalWidth + x,
+                                        cy,
                                         similarColor);
                                 }
                             }
@@ -465,7 +464,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Save preview if required
                     if (outPreview.ContainsKey(imageNum))
                     {
-                        File.WriteAllBytes(outPreview[imageNum], imageRecolored.Encode(SKEncodedImageFormat.Png, 0).ToArray());
+                        File.WriteAllBytes(outPreview[imageNum], image.Encode(SKEncodedImageFormat.Png, 0).ToArray());
                         Console.WriteLine($"Preview #{imageNum} saved to {outPreview[imageNum]}");
                     }
                 }
@@ -476,37 +475,32 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (mode != TilesMode.Backgrounds)
                         throw new InvalidOperationException("Attribute table generation available for backgrounds mode only");
                     Console.WriteLine($"Creating attribute table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
-                    var image = imagesOriginal[imageNum];
+                    var image = images[imageNum];
+                    int attributeTableOffset;
+                    attributeTableOffsets.TryGetValue(imageNum, out attributeTableOffset);
                     var attributeTableRaw = new List<byte>();
-                    for (int ptileY = 0; ptileY < Math.Ceiling(image.Height / 32.0); ptileY++)
+                    int width = paletteIndexes[imageNum].GetLength(0);
+                    int height = paletteIndexes[imageNum].GetLength(1);
+                    for (int ptileY = 0; ptileY < Math.Ceiling(height / 2.0); ptileY++)
                     {
-                        for (int ptileX = 0; ptileX < Math.Ceiling(image.Width / 32.0); ptileX++)
+                        for (int ptileX = 0; ptileX < Math.Ceiling(width / 2.0); ptileX++)
                         {
                             byte topLeft = 0;
                             byte topRight = 0;
                             byte bottomLeft = 0;
                             byte bottomRight = 0;
 
-                            try
-                            {
-                                topLeft = paletteIndexes[imageNum][ptileX * 2, ptileY * 2];
-                            }
-                            catch (IndexOutOfRangeException) { }
-                            try
-                            {
-                                topRight = paletteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
-                            }
-                            catch (IndexOutOfRangeException) { }
-                            try
+                            topLeft = paletteIndexes[imageNum][ptileX * 2, ptileY * 2];
+                            topLeft = paletteIndexes[imageNum][ptileX * 2, ptileY * 2];
+                            topRight = paletteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
+                            topRight = paletteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2];
+                            if (ptileY * 2 + 1 < height)
                             {
                                 bottomLeft = paletteIndexes[imageNum][ptileX * 2, ptileY * 2 + 1];
-                            }
-                            catch (IndexOutOfRangeException) { }
-                            try
-                            {
+                                bottomLeft = paletteIndexes[imageNum][ptileX * 2, ptileY * 2 + 1];
+                                bottomRight = paletteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2 + 1];
                                 bottomRight = paletteIndexes[imageNum][ptileX * 2 + 1, ptileY * 2 + 1];
                             }
-                            catch (IndexOutOfRangeException) { }
 
                             var atv = (byte)
                                 (topLeft // top left
@@ -526,10 +520,12 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
 
                 // Generate pattern tables and nametables
-                foreach (var imageNum in imagesRecolored.Keys)
+                foreach (var imageNum in images.Keys)
                 {
                     Console.WriteLine($"Creating pattern table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
-                    var image = imagesRecolored[imageNum];
+                    var image = images[imageNum];
+                    int attributeTableOffset;
+                    attributeTableOffsets.TryGetValue(imageNum, out attributeTableOffset);
                     if (!patternTables.ContainsKey(!sharePatternTable ? imageNum : 0)) patternTables[!sharePatternTable ? imageNum : 0] = new Dictionary<int, Tile>();
                     var patternTable = patternTables[!sharePatternTable ? imageNum : 0];
                     if (!nameTables.ContainsKey(imageNum)) nameTables[imageNum] = new List<int>();
@@ -558,7 +554,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                 for (int x = 0; x < tileWidth; x++)
                                 {
                                     var color = image.GetPixelColor(tileX * tileWidth + x, tileY * tileHeight + y);
-                                    var palette = palettes[paletteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), tileY / (tilePalHeight / tileHeight)]];
+                                    var palette = palettes[paletteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), (tileY + attributeTableOffset / tileHeight) / (tilePalHeight / tileHeight)]];
                                     byte colorIndex = 0;
                                     if (color != bgColor)
                                     {
@@ -638,7 +634,7 @@ namespace com.clusterrr.Famicom.NesTiler
             }
         }
 
-        static Palette[] CalculatePalettes(Dictionary<int, SKBitmap> images, bool[] paletteEnabled, Palette[] fixedPalettes, int tilePalWidth, int tilePalHeight, Color bgColor)
+        static Palette[] CalculatePalettes(Dictionary<int, SKBitmap> images, bool[] paletteEnabled, Palette[] fixedPalettes, Dictionary<int, int> attributeTableOffsets, int tilePalWidth, int tilePalHeight, Color bgColor)
         {
             var required = Enumerable.Range(0, 4).Select(i => paletteEnabled[i] && fixedPalettes[i] == null);
             // Creating and counting the palettes
@@ -647,14 +643,16 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 // Console.WriteLine($"Calculating palettes for file #{imageNum} - {imageFiles[imageNum]}...");
                 var image = images[imageNum];
+                int attributeTableOffset;
+                attributeTableOffsets.TryGetValue(imageNum, out attributeTableOffset);
                 // For each tile/sprite
-                for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
+                for (int tileY = 0; tileY < (image.Height + attributeTableOffset) / tilePalHeight; tileY++)
                 {
                     for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
                     {
                         // Create palette using up to three most used colors
                         var palette = new Palette(
-                            image, tileX * tilePalWidth, tileY * tilePalHeight,
+                            image, tileX * tilePalWidth, tileY * tilePalHeight - attributeTableOffset,
                             tilePalWidth, tilePalHeight, bgColor);
 
                         // Skip tiles with only background color
@@ -673,10 +671,7 @@ namespace com.clusterrr.Famicom.NesTiler
             }
 
             // Group palettes
-            //Console.WriteLine($"Calculating final palette list...");
-            // From most popular to less popular
             var result = new Palette[0];
-
             // Multiple iterations
             while (true)
             {
@@ -746,6 +741,7 @@ namespace com.clusterrr.Famicom.NesTiler
             }
             byte result = byte.MaxValue;
             double minDelta = double.MaxValue;
+            Color c = Color.Transparent;
             foreach (var index in colors.Keys)
             {
                 var delta = color.GetDelta(colors[index]);
@@ -753,6 +749,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     minDelta = delta;
                     result = index;
+                    c = colors[index];
                 }
             }
             if (result == byte.MaxValue)

@@ -36,21 +36,22 @@ namespace com.clusterrr.Famicom.NesTiler
         public Palette(SKBitmap image, int leftX, int topY, int width, int height, Color bgColor)
         {
             Dictionary<Color, int> colorCounter = new Dictionary<Color, int>();
-            colorCounter[bgColor] = 0;
             for (int y = topY; y < topY + height; y++)
             {
+                if (y < 0) continue;
                 for (int x = leftX; x < leftX + width; x++)
                 {
                     var color = image.GetPixelColor(x, y);
+                    if (color == bgColor) continue;
                     if (!colorCounter.ContainsKey(color)) colorCounter[color] = 0;
                     colorCounter[color]++;
                 }
             }
 
-            var sortedColors = colorCounter.Where(kv => kv.Key != bgColor)
-                .OrderByDescending(kv => kv.Value).ToList();
+            var sortedColors = colorCounter
+                .OrderByDescending(kv => kv.Value).ToArray();
             for (int i = 0; i < 3; i++)
-                if (sortedColors.Count > i)
+                if (sortedColors.Length > i)
                     this[i + 1] = sortedColors[i].Key;
         }
 
@@ -73,6 +74,7 @@ namespace com.clusterrr.Famicom.NesTiler
             double delta = 0;
             for (int y = topY; y < topY + height; y++)
             {
+                if (y < 0) continue;
                 for (int x = leftX; x < leftX + width; x++)
                 {
                     var color = image.GetPixelColor(x, y);
