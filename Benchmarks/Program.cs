@@ -189,7 +189,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2)
@@ -213,7 +213,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit2(string imagePath)
@@ -237,7 +237,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit2Lossy(string imagePath)
@@ -262,7 +262,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit4(string imagePath)
@@ -294,7 +294,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
 
-            foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
+            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
     }
