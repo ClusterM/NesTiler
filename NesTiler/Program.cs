@@ -332,7 +332,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 else
                 {
                     // Autodetect most used color
-                    Console.Write($"Background color autodetect... ");
+                    console($"Background color autodetect... ");
                     Dictionary<Color, int> colorPerTileCounter = new Dictionary<Color, int>();
                     foreach (var imageNum in images.Keys)
                     {
