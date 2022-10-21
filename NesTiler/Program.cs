@@ -26,6 +26,17 @@ namespace com.clusterrr.Famicom.NesTiler
             Sprites,
             Sprites8x16
         }
+        
+        static void PrintAppInfo()
+        {
+            Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
+            Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
+#if DEBUG
+            Console.WriteLine($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
+#endif
+            Console.WriteLine("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");
+            Console.WriteLine("");
+        }
 
         static void PrintHelp()
         {
@@ -58,6 +69,7 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 if (args.Length == 0 || args.Contains("help") || args.Contains("--help"))
                 {
+                    PrintAppInfo();
                     PrintHelp();
                     return 0;
                 }
@@ -240,13 +252,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     }
                 }
 
-                console($"NesTiler v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
-                console($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
-#if DEBUG
-                console($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
-#endif
-                console("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");
-                console("");
+                if (!quiet) PrintAppInfo();
 
                 if (!imageFiles.Any())
                     throw new ArgumentException($"At least one input file required");
