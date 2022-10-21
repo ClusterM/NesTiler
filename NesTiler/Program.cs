@@ -54,13 +54,6 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public static int Main(string[] args)
         {
-            Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
-            Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
-#if DEBUG
-            Console.WriteLine($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
-#endif
-            Console.WriteLine("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");
-            Console.WriteLine("");
             try
             {
                 if (args.Length == 0 || args.Contains("help") || args.Contains("--help"))
@@ -247,6 +240,14 @@ namespace com.clusterrr.Famicom.NesTiler
                     }
                 }
 
+                console($"NesTiler v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
+                console($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
+#if DEBUG
+                console($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
+#endif
+                console("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");
+                console("");
+
                 if (!imageFiles.Any())
                     throw new ArgumentException($"At least one input file required");
 
@@ -407,7 +408,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         if (palettes[i] != null)
                         {
                             console($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i].Select(p => ColorTranslator.ToHtml(p)))}");
-                            outPalettesCsvLines?.Add($"{i},{string.Join(",", palettes[i].Select(p => ColorTranslator.ToHtml(p)))}");
+                            outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor.Value)},{string.Join(",",Enumerable.Range(1,3).Select(c => (palettes[i][c] != null ? ColorTranslator.ToHtml(palettes[i][c].Value) : "")))}");
                         }
                     }
                 }

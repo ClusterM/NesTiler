@@ -171,6 +171,8 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
         private string NameTablePath(string prefix, int number) => $"{prefix}_name_table_{number}.bin";
         private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
         private string PalettePath(string prefix, int number) => $"{prefix}_palette_{number}.bin";
+        private string TilesCsvPath(string prefix) => $"{prefix}_tiles.csv";
+        private string PalettesCsvPath(string prefix) => $"{prefix}_palettes.csv";
 
         public void DoBenchmarkNoSplit(string imagePath)
         {
@@ -185,6 +187,9 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
+                "--out-tiles-csv", TilesCsvPath(prefix),
+                "--out-palettes-csv", PalettesCsvPath(prefix),
+                "--quiet",
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
@@ -208,7 +213,10 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
-                 "--share-pattern-table"
+                "--share-pattern-table",
+                "--out-tiles-csv", TilesCsvPath(prefix),
+                "--out-palettes-csv", PalettesCsvPath(prefix),
+                "--quiet",
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
@@ -233,6 +241,9 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
+                "--out-tiles-csv", TilesCsvPath(prefix),
+                "--out-palettes-csv", PalettesCsvPath(prefix),
+                "--quiet",
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
@@ -257,7 +268,10 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
-                "--lossy"
+                "--lossy",
+                "--out-tiles-csv", TilesCsvPath(prefix),
+                "--out-palettes-csv", PalettesCsvPath(prefix),
+                "--quiet",
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
@@ -290,6 +304,9 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
+                "--out-tiles-csv", TilesCsvPath(prefix),
+                "--out-palettes-csv", PalettesCsvPath(prefix),
+                "--quiet",
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
