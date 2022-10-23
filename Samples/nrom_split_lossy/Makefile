@@ -18,6 +18,8 @@ PALETTE_0_BIN=palette_0.bin
 PALETTE_1_BIN=palette_1.bin
 PALETTE_2_BIN=palette_2.bin
 PALETTE_3_BIN=palette_3.bin
+PREVIEW_1=preview1.png
+PREVIEW_2=preview2.png
 
 build: $(EXECUTABLE)
 
@@ -41,7 +43,8 @@ $(PATTERN_0_BIN) $(PATTERN_1_BIN) \
 $(NAME_TABLE_0_BIN) $(NAME_TABLE_1_BIN) \
 $(ATTR_TABLE_0_BIN) $(ATTR_TABLE_1_BIN) \
 $(PALETTE_0_BIN) $(PALETTE_1_BIN) \
-$(PALETTE_2_BIN) $(PALETTE_3_BIN): $(IMAGE)
+$(PALETTE_2_BIN) $(PALETTE_3_BIN) \
+$(PREVIEW_1) $(PREVIEW_2): $(IMAGE)
 	$(TILER) --mode bg --enable-palettes 0,1,2,3 \
 	--in-0 $(IMAGE):0:$(HEIGHT1) --in-1 $(IMAGE):$(HEIGHT1):$(HEIGHT2) \
 	--out-pattern-table-0 $(PATTERN_0_BIN) --out-pattern-table-1 $(PATTERN_1_BIN) \
@@ -49,4 +52,4 @@ $(PALETTE_2_BIN) $(PALETTE_3_BIN): $(IMAGE)
 	--out-attribute-table-0 $(ATTR_TABLE_0_BIN) --out-attribute-table-1 $(ATTR_TABLE_1_BIN) \
 	--out-palette-0 $(PALETTE_0_BIN) --out-palette-1 $(PALETTE_1_BIN) \
 	--out-palette-2 $(PALETTE_2_BIN) --out-palette-3 $(PALETTE_3_BIN) \
-    --lossy
+    --lossy --out-preview-0 $(PREVIEW_1) --out-preview-1 $(PREVIEW_2)

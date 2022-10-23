@@ -1,6 +1,6 @@
 ﻿using System;
+using System.IO.Hashing;
 using System.Linq;
-using System.Security.AccessControl;
 
 namespace com.clusterrr.Famicom.NesTiler
 {
@@ -29,10 +29,10 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     for (int x = 0; x < Width; x++)
                     {
-                        if ((Pixels[y * Width + x] & 1) != 0)
-                            data[pixel / 64 * 2 + y] |= (byte)(1 << bit);
-                        if ((Pixels[y * Width + x] & 2) != 0)
-                            data[pixel / 64 * 2 + y + 8] |= (byte)(1 << bit);
+                        if ((Pixels[(y * Width) + x] & 1) != 0)
+                            data[(pixel / 64 * 2) + y] |= (byte)(1 << bit);
+                        if ((Pixels[(y * Width) + x] & 2) != 0)
+                            data[(pixel / 64 * 2) + y + 8] |= (byte)(1 << bit);
                         pixel++;
                         bit = (byte)((byte)(bit - 1) % 8);
                     }
@@ -51,7 +51,10 @@ namespace com.clusterrr.Famicom.NesTiler
         public override int GetHashCode()
         {
             if (hash != null) return hash.Value;
-            hash = GetAsTileData().Sum(v => v);
+            var crc = new Crc32();
+            crc.Append(GetAsTileData());
+            var hashBytes = crc.GetCurrentHash();
+            hash = BitConverter.ToInt32(hashBytes, 0);
             return hash.Value;
         }
     }
