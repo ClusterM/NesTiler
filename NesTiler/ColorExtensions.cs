@@ -39,20 +39,5 @@ namespace com.clusterrr.Famicom.NesTiler
             cache[pair] = delta;
             return delta;
         }
-
-        public static Color GetPixelColor(this SKBitmap image, int x, int y)
-        {
-            //var skColor = image.GetPixel(x, y);
-            var b = image.Bytes;
-            var offset = image.RowBytes * y + x * image.BytesPerPixel;
-            var color = Color.FromArgb(b[offset + 3], b[offset + 2], b[offset + 1], b[offset + 0]);
-            return color;
-        }
-
-        public static void SetPixelColor(this SKBitmap image, int x, int y, Color color)
-        {
-            var skColor = new SKColor(color.R, color.G, color.B);
-            image.SetPixel(x, y, skColor);
-        }
     }
 }
