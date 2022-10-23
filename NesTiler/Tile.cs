@@ -1,65 +1,58 @@
 ﻿using System;
+using System.Linq;
+using System.Security.AccessControl;
 
 namespace com.clusterrr.Famicom.NesTiler
 {
-    class Tile : IEquatable<Tile>
+    sealed record Tile : IEquatable<Tile>
     {
-        public readonly byte[,] pixels;
+        public readonly byte[] Pixels;
+        public readonly int Width;
+        public readonly int Height;
+        private int? hash;
+        private byte[] data = null;
 
-        public Tile(byte[,] data)
+        public Tile(byte[] data, int width, int height)
         {
-            pixels = data;
+            (Pixels, Width, Height) = (data, width, height);
         }
 
-        public byte[] GetRawData()
+        public byte[] GetAsTileData()
         {
-            int width = pixels.GetLength(0);
-            int height = pixels.GetLength(1);
-            var raw = new byte[width * height / 8 * 2];
-            int pixel = 0;
-            byte bit = 7;
-            for (int y = 0; y < height; y++)
+            if (data != null) return data;
+            data = new byte[Width * Height / 8 * 2];
+            lock (data)
             {
-                for (int x = 0; x < width; x++)
+                int pixel = 0;
+                byte bit = 7;
+                for (int y = 0; y < Height; y++)
                 {
-                    if ((pixels[x, y] & 1) != 0)
-                        raw[pixel / 64 * 2 + y] |= (byte)(1 << bit);
-                    if ((pixels[x, y] & 2) != 0)
-                        raw[pixel / 64 * 2 + y + 8] |= (byte)(1 << bit);
-                    pixel++;
-                    bit = (byte)((byte)(bit - 1) % 8);
+                    for (int x = 0; x < Width; x++)
+                    {
+                        if ((Pixels[y * Width + x] & 1) != 0)
+                            data[pixel / 64 * 2 + y] |= (byte)(1 << bit);
+                        if ((Pixels[y * Width + x] & 2) != 0)
+                            data[pixel / 64 * 2 + y + 8] |= (byte)(1 << bit);
+                        pixel++;
+                        bit = (byte)((byte)(bit - 1) % 8);
+                    }
                 }
             }
-            return raw;
+            return data;
         }
 
         public bool Equals(Tile other)
         {
-            if ((pixels.GetLength(0) != other.pixels.GetLength(0))
-                || (pixels.GetLength(1) != other.pixels.GetLength(1)))
-                return false;
-            int width = pixels.GetLength(0);
-            int height = pixels.GetLength(1);
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                    if (pixels[x, y] != other.pixels[x, y]) 
-                        return false;
-            return true;
+            var data1 = GetAsTileData();
+            var data2 = other.GetAsTileData();
+            return Enumerable.SequenceEqual(data1, data2);
         }
 
         public override int GetHashCode()
         {
-            int hash = 0;
-            int width = pixels.GetLength(0);
-            int height = pixels.GetLength(1);
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                {
-                    hash ^= hash >> 28;
-                    hash <<= 4;
-                    hash ^= pixels[x, y];
-                }
-            return hash;
+            if (hash != null) return hash.Value;
+            hash = GetAsTileData().Sum(v => v);
+            return hash.Value;
         }
     }
 }

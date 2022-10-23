@@ -576,7 +576,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     {
                         for (int tileX = 0; tileX < image.Width / tileWidth; tileX++)
                         {
-                            var tileData = new byte[tileWidth, tileHeight];
+                            var tileData = new byte[tileWidth * tileHeight];
                             byte paletteIndex = 0;
                             for (int y = 0; y < tileHeight; y++)
                                 for (int x = 0; x < tileWidth; x++)
@@ -589,9 +589,9 @@ namespace com.clusterrr.Famicom.NesTiler
                                         paletteIndex = 1;
                                         while (palette[paletteIndex] != color) paletteIndex++;
                                     }
-                                    tileData[x, y] = paletteIndex;
+                                    tileData[y * tileWidth + x] = paletteIndex;
                                 }
-                            var tile = new Tile(tileData);
+                            var tile = new Tile(tileData, tileWidth, tileHeight);
                             var existsTile = patternTable.Where(kv => kv.Value.Equals(tile));
                             int currentTileID;
                             if (existsTile.Any())
@@ -626,7 +626,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         var patternTableRaw = new List<byte>();
                         for (int t = patternTableStartOffsets[imageNum]; t < tileID; t++)
                         {
-                            var raw = patternTable[t].GetRawData();
+                            var raw = patternTable[t].GetAsTileData();
                             patternTableRaw.AddRange(raw);
                         }
                         File.WriteAllBytes(outPatternTable[imageNum], patternTableRaw.ToArray());
@@ -647,7 +647,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     var patternTableRaw = new List<byte>();
                     for (int t = patternTableStartOffsetShared; t < tileID; t++)
                     {
-                        var raw = patternTables[0][t].GetRawData();
+                        var raw = patternTables[0][t].GetAsTileData();
                         patternTableRaw.AddRange(raw);
                     }
                     File.WriteAllBytes(outPatternTableShared, patternTableRaw.ToArray());
