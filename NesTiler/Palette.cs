@@ -33,7 +33,7 @@ namespace com.clusterrr.Famicom.NesTiler
             // Empty palette
         }
 
-        public Palette(SKBitmap image, int leftX, int topY, int width, int height, Color bgColor)
+        public Palette(FastBitmap image, int leftX, int topY, int width, int height, Color bgColor)
         {
             Dictionary<Color, int> colorCounter = new Dictionary<Color, int>();
             for (int y = topY; y < topY + height; y++)
@@ -69,7 +69,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 if (colorsList.Count > i) this[i + 1] = colorsList[i];
         }
 
-        public double GetTileDelta(SKBitmap image, int leftX, int topY, int width, int height, Color bgColor)
+        public double GetTileDelta(FastBitmap image, int leftX, int topY, int width, int height, Color bgColor)
         {
             double delta = 0;
             for (int y = topY; y < topY + height; y++)

@@ -1,8 +1,12 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 
 namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 {
+    [SimpleJob(RuntimeMoniker.Net60, warmupCount: 2, targetCount: 5)]
+    [MeanColumn]
+    [MemoryDiagnoser]
     public class Benchmarks
     {
         const string ImagesPath = "Images";

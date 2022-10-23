@@ -42,8 +42,10 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public static Color GetPixelColor(this SKBitmap image, int x, int y)
         {
-            var skColor = image.GetPixel(x, y);
-            var color = Color.FromArgb(skColor.Red, skColor.Green, skColor.Blue);
+            //var skColor = image.GetPixel(x, y);
+            var b = image.Bytes;
+            var offset = image.RowBytes * y + x * image.BytesPerPixel;
+            var color = Color.FromArgb(b[offset + 3], b[offset + 2], b[offset + 1], b[offset + 0]);
             return color;
         }
 

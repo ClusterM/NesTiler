@@ -95,7 +95,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 bool quiet = false;
 
                 // Data
-                var images = new Dictionary<int, SKBitmap>();
+                var images = new Dictionary<int, FastBitmap>();
                 var paletteIndexes = new Dictionary<int, byte[,]>();
                 var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
                 var nameTables = new Dictionary<int, List<int>>();
@@ -278,33 +278,27 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
 
                 // Loading images
-                foreach (var image in imageFiles)
+                foreach (var imageFile in imageFiles)
                 {
-                    console($"Loading file #{image.Key} - {Path.GetFileName(image.Value)}...");
+                    console($"Loading file #{imageFile.Key} - {Path.GetFileName(imageFile.Value)}...");
                     var offsetRegex = new Regex(@"^(?<filename>.*?)(:(?<offset>[0-9]+)(:(?<height>[0-9]+))?)?$");
-                    var match = offsetRegex.Match(image.Value);
+                    var match = offsetRegex.Match(imageFile.Value);
                     var filename = match.Groups["filename"].Value;
-                    if (!File.Exists(filename)) throw new FileNotFoundException($"File {filename} not found");
-                    images[image.Key] = SKBitmap.Decode(filename);
-                    if (images[image.Key] == null) throw new InvalidDataException($"Can't load {filename}");
                     var offsetS = match.Groups["offset"].Value;
                     var heightS = match.Groups["height"].Value;
                     // Crop it if need
+                    int offset = 0;
+                    int height = 0;
                     if (!string.IsNullOrEmpty(offsetS))
                     {
-                        int offset = int.Parse(offsetS);
-                        int height = images[image.Key].Height - offset;
-                        if (!string.IsNullOrEmpty(heightS))
-                            height = int.Parse(heightS);
-                        console($"Cropping it to {offset}:{height}...");
-                        var cropped = new SKBitmap(images[image.Key].Width, height);
-                        using (SKCanvas bitmapCanvas = new SKCanvas(cropped))
-                        {
-                            bitmapCanvas.DrawBitmap(images[image.Key], 0, -offset);
-                        }
-                        images[image.Key].Dispose();
-                        images[image.Key] = cropped;
+                        offset = int.Parse(offsetS);
+                        if (!string.IsNullOrEmpty(heightS)) height = int.Parse(heightS);
                     }
+                    if (!File.Exists(filename)) throw new FileNotFoundException($"File {filename} not found");
+                    var image = FastBitmap.Decode(filename, offset, height);
+                    if (image == null) throw new InvalidDataException($"Can't load {filename}");
+                    images[imageFile.Key] = image;
+                    
                     //if ((imagesOriginal[image.Key].Width % tilePalWidth != 0) || (imagesOriginal[image.Key].Height % tilePalHeight != 0))
                     //    throw new InvalidDataException("Invalid image size");
                     // TODO: more image size checks
@@ -496,7 +490,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Save preview if required
                     if (outPreview.ContainsKey(imageNum))
                     {
-                        File.WriteAllBytes(outPreview[imageNum], image.Encode(SKEncodedImageFormat.Png, 0).ToArray());
+                        File.WriteAllBytes(outPreview[imageNum], image.Encode(SKEncodedImageFormat.Png, 0));
                         console($"Preview #{imageNum} saved to {outPreview[imageNum]}");
                     }
                 }
@@ -684,7 +678,7 @@ namespace com.clusterrr.Famicom.NesTiler
             }
         }
 
-        static Palette[] CalculatePalettes(Dictionary<int, SKBitmap> images, bool[] paletteEnabled, Palette[] fixedPalettes, Dictionary<int, int> attributeTableOffsets, int tilePalWidth, int tilePalHeight, Color bgColor)
+        static Palette[] CalculatePalettes(Dictionary<int, FastBitmap> images, bool[] paletteEnabled, Palette[] fixedPalettes, Dictionary<int, int> attributeTableOffsets, int tilePalWidth, int tilePalHeight, Color bgColor)
         {
             var required = Enumerable.Range(0, 4).Select(i => paletteEnabled[i] && fixedPalettes[i] == null);
             // Creating and counting the palettes
