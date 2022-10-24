@@ -43,7 +43,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine();
             Console.WriteLine("Available options:");
             Console.WriteLine(" {0,-40}{1}", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
-            Console.WriteLine(" {0,-40}{1}", "--colors <file>", $"JSON file with list of available colors (default - {DEFAULT_COLORS_FILE})");
+            Console.WriteLine(" {0,-40}{1}", "--colors <file>", $"JSON or PAL file with the list of available colors (default - {DEFAULT_COLORS_FILE})");
             Console.WriteLine(" {0,-40}{1}", "--mode bg|sprite8x8|sprite8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
             Console.WriteLine(" {0,-40}{1}", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
             Console.WriteLine(" {0,-40}{1}", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
@@ -272,19 +272,18 @@ namespace com.clusterrr.Famicom.NesTiler
                 if (!quiet) PrintAppInfo();
 
                 // Loading and parsing palette JSON
-                var paletteJson = File.ReadAllText(colorsFile);
-                var nesColorsStr = JsonSerializer.Deserialize<Dictionary<string, string>>(paletteJson);
-                var nesColors = nesColorsStr.Select(kv => new KeyValuePair<byte, Color>(
-                        kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
-                        ColorTranslator.FromHtml(kv.Value)
-                    )).Where(kv => !FORBIDDEN_COLORS.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+                var nesColors = LoadColors(colorsFile);
                 var outTilesCsvLines = !string.IsNullOrEmpty(outTilesCsv) ? new List<string>() : null;
                 var outPalettesCsvLines = !string.IsNullOrEmpty(outPalettesCsv) ? new List<string>() : null;
 
                 if (outColorsTable != null)
                 {
+                    console($"Writing color tables to {outColorsTable}...");
                     WriteColorsTable(nesColors, outColorsTable);
                 }
+
+                // Stop if there are no images
+                if (!imageFiles.Any()) return 0;
 
                 // Change the fixed palettes to colors from the NES palette
                 for (int i = 0; i < fixedPalettes.Length; i++)
@@ -695,6 +694,35 @@ namespace com.clusterrr.Famicom.NesTiler
 #endif
                 return 1;
             }
+        }
+
+        private static Dictionary<byte, Color> LoadColors(string filename)
+        {
+            var data = File.ReadAllBytes(filename);
+            Dictionary<byte, Color> nesColors;
+            // Detect file type
+            if ((Path.GetExtension(filename) == ".pal") || ((data.Length == 192 || data.Length == 1536) && data.Where(b => b >= 128).Any()))
+            {
+                // Binary file
+                nesColors = new Dictionary<byte, Color>();
+                for (byte c = 0; c < 64; c++)
+                {
+                    var color = Color.FromArgb(data[c * 3], data[c * 3 + 1], data[c * 3 + 2]);
+                    nesColors[c] = color;
+                }
+            }
+            else
+            {
+                var paletteJson = File.ReadAllText(filename);
+                var nesColorsStr = JsonSerializer.Deserialize<Dictionary<string, string>>(paletteJson);
+                nesColors = nesColorsStr.ToDictionary(
+                        kv => kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
+                        kv => ColorTranslator.FromHtml(kv.Value)
+                    );
+            }
+            // filter out invalid colors;
+            nesColors = nesColors.Where(kv => !FORBIDDEN_COLORS.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+            return nesColors;
         }
 
         static void WriteColorsTable(Dictionary<byte, Color> nesColors, string filename)
