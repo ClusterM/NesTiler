@@ -43,9 +43,6 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public bool Equals(Tile other)
         {
-            var hash1 = GetHashCode();
-            var hash2 = other.GetHashCode();
-            if (hash1 != hash2) return false;
             var data1 = GetAsTileData();
             var data2 = other.GetAsTileData();
             return Enumerable.SequenceEqual(data1, data2);
