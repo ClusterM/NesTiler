@@ -426,6 +426,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         if (palettes[i] != null)
                         {
                             console($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i].Select(p => ColorTranslator.ToHtml(p)))}");
+                            // Write CSV if required
                             outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor.Value)},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i][c] != null ? ColorTranslator.ToHtml(palettes[i][c].Value) : "")))}");
                         }
                     }
@@ -595,36 +596,38 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int tileX = 0; tileX < image.Width / tileWidth; tileX++)
                         {
                             var tileData = new byte[tileWidth * tileHeight];
-                            byte paletteIndex = 0;
+                            byte paletteID = 0;
                             for (int y = 0; y < tileHeight; y++)
                                 for (int x = 0; x < tileWidth; x++)
                                 {
                                     var color = image.GetPixelColor((tileX * tileWidth) + x, (tileY * tileHeight) + y);
-                                    var palette = palettes[paletteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), (tileY + (attributeTableOffset / tileHeight)) / (tilePalHeight / tileHeight)]];
-                                    paletteIndex = 0;
+                                    paletteID = paletteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), (tileY + (attributeTableOffset / tileHeight)) / (tilePalHeight / tileHeight)];
+                                    var palette = palettes[paletteID];
+                                    byte colorIndex = 0;
                                     if (color != bgColor)
                                     {
-                                        paletteIndex = 1;
-                                        while (palette[paletteIndex] != color) paletteIndex++;
+                                        colorIndex = 1;
+                                        while (palette[colorIndex] != color) colorIndex++;
                                     }
-                                    tileData[(y * tileWidth) + x] = paletteIndex;
+                                    tileData[(y * tileWidth) + x] = colorIndex;
                                 }
                             var tile = new Tile(tileData, tileWidth, tileHeight);
                             int currentTileID, id;
                             if (patternTable.TryGetValue(tile, out id))
                             {
-                                nameTable.Add(id);
+                                if (mode == TilesMode.Backgrounds) nameTable.Add(id);
                                 currentTileID = id;
                             }
                             else
                             {
                                 patternTable[tile] = tileID;
-                                nameTable.Add(tileID);
+                                if (mode == TilesMode.Backgrounds) nameTable.Add(tileID);
                                 currentTileID = tileID;
                                 tileID++;
                             }
 
-                            outTilesCsvLines?.Add($"{imageNum},{imageFiles[imageNum]},{tileY},{tileX},{tileX * tileWidth},{tileY * tileHeight},{tileWidth},{tileHeight},{currentTileID},{paletteIndex}");
+                            // Write CSV if required
+                            outTilesCsvLines?.Add($"{imageNum},{imageFiles[imageNum]},{tileY},{tileX},{tileX * tileWidth},{tileY * tileHeight},{tileWidth},{tileHeight},{currentTileID},{paletteID}");
                         }
                     }
                     if (sharePatternTable && tileID > patternTableStartOffsetShared)
@@ -653,8 +656,10 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Save nametable to file
                     if (outNameTable.ContainsKey(imageNum))
                     {
+                        if (mode != TilesMode.Backgrounds)
+                            throw new InvalidOperationException("Nametable table generation available for backgrounds mode only");
                         File.WriteAllBytes(outNameTable[imageNum], nameTable.Select(i => (byte)i).ToArray());
-                        console($"Name table #{imageNum} saved to {outNameTable[imageNum]}");
+                        console($"Nametable #{imageNum} saved to {outNameTable[imageNum]}");
                     }
                 }
 
