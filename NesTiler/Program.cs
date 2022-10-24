@@ -678,7 +678,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     File.WriteAllLines(outTilesCsv, outTilesCsvLines);
                 }
                 // Save CSV palettes report
-                if (outTilesCsvLines != null)
+                if (outPalettesCsv != null)
                 {
                     File.WriteAllLines(outPalettesCsv, outPalettesCsvLines);
                 }
