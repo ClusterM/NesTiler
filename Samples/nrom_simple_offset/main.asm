@@ -63,14 +63,14 @@ load_palette:
   lda #HIGH(palette)
   sta <COPY_SOURCE_ADDR+1
   lda #$3F
-  sta $2006
+  sta PPUADDR
   lda #$00
-  sta $2006
+  sta PPUADDR
   ldy #$00
   ldx #16
 .loop:
   lda [COPY_SOURCE_ADDR], y
-  sta $2007
+  sta PPUDATA
   iny
   dex
   bne .loop
@@ -81,14 +81,14 @@ load_nametable:
   lda #HIGH(nametable_0)
   sta <COPY_SOURCE_ADDR+1
   lda #$21
-  sta $2006
+  sta PPUADDR
   lda #$40
-  sta $2006
+  sta PPUADDR
   ldy #$00
   ldx #$00
 .loop:
   lda [COPY_SOURCE_ADDR], y
-  sta $2007
+  sta PPUDATA
   iny
   bne .loop
   inc COPY_SOURCE_ADDR+1
