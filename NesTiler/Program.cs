@@ -94,13 +94,6 @@ namespace com.clusterrr.Famicom.NesTiler
                 var attributeTableOffsets = new Dictionary<int, int>();
                 bool quiet = false;
 
-                // Data
-                var images = new Dictionary<int, FastBitmap>();
-                var paletteIndexes = new Dictionary<int, byte[,]>();
-                var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
-                var nameTables = new Dictionary<int, List<int>>();
-                int tileID = 0;
-
                 // Filenames
                 var outPreview = new Dictionary<int, string>();
                 var outPalette = new Dictionary<int, string>();
@@ -112,8 +105,15 @@ namespace com.clusterrr.Famicom.NesTiler
                 string outPalettesCsv = null;
                 var console = (string text) => { if (!quiet) Console.WriteLine(text); };
 
+                // Data
+                var images = new Dictionary<int, FastBitmap>();
+                var paletteIndexes = new Dictionary<int, byte[,]>();
+                var patternTables = new Dictionary<int, Dictionary<int, Tile>>();
+                var nameTables = new Dictionary<int, List<int>>();
+                int tileID = 0;
+                
+                // Misc
                 var nesColorsCache = new Dictionary<Color, byte>();
-
                 var paramRegex = new Regex(@"^--?(?<param>[a-zA-Z-]+?)-?(?<index>[0-9]*)$");
 
                 for (int i = 0; i < args.Length; i++)
