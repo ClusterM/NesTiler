@@ -88,7 +88,7 @@ set_sprites:
   lda sprites_init_data, x
   sta SPRITES, x
   inx
-  cpx #(4 * 12)
+  cpx #(4 * 8)
   bne .loop  
 
   ; enable PPU
