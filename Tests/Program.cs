@@ -155,12 +155,27 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             DoTestSplit2Lossy(imagePath);
         }
 
+        [Test]
+        public void Sprites8x8()
+        {
+            var imagePath = Path.Combine(ImagesPath, "sprites1.png");
+            DoTestSprites8x8(imagePath);
+        }
+
+        [Test]
+        public void Sprites8x16()
+        {
+            var imagePath = Path.Combine(ImagesPath, "sprites2.png");
+            DoTestSprites8x8(imagePath);
+        }
+
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
         private string NameTablePath(string prefix, int number) => $"{prefix}_name_table_{number}.bin";
         private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
         private string PalettePath(string prefix, int number) => $"{prefix}_palette_{number}.bin";
         private string TilesCsvPath(string prefix) => $"{prefix}_tiles.csv";
         private string PalettesCsvPath(string prefix) => $"{prefix}_palettes.csv";
+        private string SpritesCsvPath(string prefix) => $"{prefix}_sprites.csv";
 
         public void DoTestNoSplit(string imagePath)
         {
@@ -191,6 +206,9 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))), "palette 1");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
+
+            Assert.That(File.ReadAllBytes(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
+            Assert.That(File.ReadAllBytes(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
         }
 
         public void DoTestSharedPattern(string imagePath1, string imagePath2)
@@ -228,6 +246,9 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))), "palette 1");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
+
+            Assert.That(File.ReadAllBytes(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
+            Assert.That(File.ReadAllBytes(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
         }
 
         public void DoTestSplit2(string imagePath)
@@ -266,6 +287,9 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))), "palette 1");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
+
+            Assert.That(File.ReadAllBytes(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
+            Assert.That(File.ReadAllBytes(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
         }
 
         public void DoTestSplit2Lossy(string imagePath)
@@ -305,6 +329,9 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))), "palette 1");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
+
+            Assert.That(File.ReadAllBytes(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
+            Assert.That(File.ReadAllBytes(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
         }
 
         public void DoTestSplit4(string imagePath)
@@ -357,6 +384,51 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 1)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 1)))), "palette 1");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
+
+            Assert.That(File.ReadAllBytes(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
+            Assert.That(File.ReadAllBytes(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
+        }
+
+        public void DoTestSprites8x8(string imagePath)
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--mode", "sprites8x8",
+                "--enable-palettes", "0",
+                "--in-0", imagePath,
+                "--out-pattern-table-0", PatternTablePath(prefix, 0),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-tiles-csv", SpritesCsvPath(prefix),
+                "--bg-color", "#000000",
+                "--quiet",
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))), "pattern table 0");
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))), "palette 0");
+            Assert.That(File.ReadAllBytes(SpritesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, SpritesCsvPath(prefix)))), "sprites CSV");
+        }
+
+        public void DoTestSprites8x16(string imagePath)
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--mode", "sprites8x8",
+                "--enable-palettes", "0",
+                "--in-0", imagePath,
+                "--out-pattern-table-0", PatternTablePath(prefix, 0),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-tiles-csv", SpritesCsvPath(prefix),
+                "--bg-color", "#000000",
+                "--quiet",
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))), "pattern table 0");
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))), "palette 0");
+            Assert.That(File.ReadAllBytes(SpritesCsvPath(prefix)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, SpritesCsvPath(prefix)))), "sprites CSV");
         }
     }
 }

@@ -1,11 +1,13 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
+using ColorMine.ColorSpaces;
+using static System.Net.Mime.MediaTypeNames;
+using System.Drawing;
 
 namespace com.clusterrr.Famicom.NesTiler.Benchmarks
 {
     [SimpleJob(RuntimeMoniker.Net60, warmupCount: 2, targetCount: 5)]
-    [MeanColumn]
     [MemoryDiagnoser]
     public class Benchmarks
     {
@@ -171,12 +173,27 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             DoBenchmarkSplit2Lossy(imagePath);
         }
 
+        [Benchmark]
+        public void Sprites8x8()
+        {
+            var imagePath = Path.Combine(ImagesPath, "sprites1.png");
+            DoBenchmarkSprites8x8(imagePath);
+        }
+
+        [Benchmark]
+        public void Sprites8x16()
+        {
+            var imagePath = Path.Combine(ImagesPath, "sprites2.png");
+            DoBenchmarkSprites8x8(imagePath);
+        }
+
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
         private string NameTablePath(string prefix, int number) => $"{prefix}_name_table_{number}.bin";
         private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
         private string PalettePath(string prefix, int number) => $"{prefix}_palette_{number}.bin";
         private string TilesCsvPath(string prefix) => $"{prefix}_tiles.csv";
         private string PalettesCsvPath(string prefix) => $"{prefix}_palettes.csv";
+        private string SpritesCsvPath(string prefix) => $"{prefix}_sprites.csv";
 
         public void DoBenchmarkNoSplit(string imagePath)
         {
@@ -197,8 +214,6 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
-
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSharedPattern(string imagePath1, string imagePath2)
@@ -224,8 +239,6 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
-
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit2(string imagePath)
@@ -251,8 +264,6 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
-
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit2Lossy(string imagePath)
@@ -279,8 +290,6 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
-
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
         public void DoBenchmarkSplit4(string imagePath)
@@ -314,9 +323,38 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
             };
             var r = Program.Main(args);
             if (r != 0) throw new InvalidOperationException($"Return code: {r}");
-
-            //foreach (var file in Directory.GetFiles(".", "*.bin")) File.Copy(file, Path.Join(@"E:\bins", Path.GetFileName(file)), true);
         }
 
+        public void DoBenchmarkSprites8x8(string imagePath)
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--mode", "sprites8x8",                "--enable-palettes", "0",
+                "--in-0", imagePath,
+                "--out-pattern-table-0", PatternTablePath(prefix, 0),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-tiles-csv", SpritesCsvPath(prefix),
+                "--bg-color", "#000000",
+                "--quiet",
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+        }
+
+        public void DoBenchmarkSprites8x16(string imagePath)
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--mode", "sprites8x8",                "--enable-palettes", "0",
+                "--in-0", imagePath,
+                "--out-pattern-table-0", PatternTablePath(prefix, 0),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-tiles-csv", SpritesCsvPath(prefix),
+                "--bg-color", "#000000",
+                "--quiet",
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+        }
     }
 }
