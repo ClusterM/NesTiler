@@ -28,7 +28,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         static void PrintAppInfo()
         {
-            Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
+            Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly()?.GetName()?.Version?.Major}.{Assembly.GetExecutingAssembly()?.GetName()?.Version?.Minor}");
             Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
 #if DEBUG
             Console.WriteLine($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
@@ -39,7 +39,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         static void PrintHelp()
         {
-            Console.WriteLine($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} <options>");
+            Console.WriteLine($"Usage: {Path.GetFileName(Process.GetCurrentProcess()?.MainModule?.FileName)} <options>");
             Console.WriteLine();
             Console.WriteLine("Available options:");
             Console.WriteLine(" {0,-40}{1}", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
@@ -732,12 +732,12 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
 
                 // Save CSV tiles report
-                if (outTilesCsvLines != null)
+                if (outTilesCsv != null && outTilesCsvLines != null)
                 {
                     File.WriteAllLines(outTilesCsv, outTilesCsvLines);
                 }
                 // Save CSV palettes report
-                if (outPalettesCsv != null)
+                if (outPalettesCsv != null && outPalettesCsvLines != null)
                 {
                     File.WriteAllLines(outPalettesCsv, outPalettesCsvLines);
                 }
@@ -781,6 +781,7 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 var paletteJson = File.ReadAllText(filename);
                 var nesColorsStr = JsonSerializer.Deserialize<Dictionary<string, string>>(paletteJson);
+                if (nesColorsStr == null) throw new InvalidDataException($"can't parse {filename}");
                 nesColors = nesColorsStr.ToDictionary(
                         kv => kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
                         kv => ColorTranslator.FromHtml(kv.Value)

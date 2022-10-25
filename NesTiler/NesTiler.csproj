@@ -6,12 +6,15 @@
     <AssemblyName>nestiler</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <DebugType>portable</DebugType>
+    <WarningLevel>7</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
+    <WarningLevel>7</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".git" />
@@ -62,6 +65,7 @@
     <Authors>Alexey "Cluster" Avdyukhin</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Product>NesTiler</Product>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="make commit buildtime&#xD;&#xA;" />

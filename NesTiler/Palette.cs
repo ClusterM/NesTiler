@@ -101,6 +101,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public bool Equals(Palette other)
         {
+            if (other == null) return false;
             var colors1 = colors.Where(c => c.HasValue)
                 .OrderBy(c => c.Value.ToArgb())
                 .Select(c => c.Value)

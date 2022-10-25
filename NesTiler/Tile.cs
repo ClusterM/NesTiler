@@ -44,6 +44,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public bool Equals(Tile other)
         {
+            if (other == null) return false;
             var data1 = GetAsPatternData();
             var data2 = other.GetAsPatternData();
             return Enumerable.SequenceEqual(data1, data2);
