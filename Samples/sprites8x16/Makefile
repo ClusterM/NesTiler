@@ -2,9 +2,9 @@ NESASM=nesasm
 EMU=fceux64
 TILER=nestiler
 SOURCE=main.asm
-EXECUTABLE=sprites8x8.nes
+EXECUTABLE=sprites8x16.nes
 
-IMAGE?=../../TestImages/Images/sprites1.png
+IMAGE?=../../TestImages/Images/sprites2.png
 
 PATTERN_0_BIN=pattern_0.bin
 PALETTE_0_BIN=palette_0.bin
@@ -32,7 +32,7 @@ $(NAME_TABLE_0_BIN) \
 $(ATTR_TABLE_0_BIN) \
 $(PALETTE_0_BIN) $(PALETTE_1_BIN) \
 $(PALETTE_2_BIN) $(PALETTE_3_BIN): $(IMAGE)
-	$(TILER) --mode sprites8x8 --enable-palettes 0 \
+	$(TILER) --mode sprites8x16 --enable-palettes 0 \
 	--in-0 $(IMAGE) \
 	--out-pattern-table-0 $(PATTERN_0_BIN) \
 	--out-palette-0 $(PALETTE_0_BIN) \
