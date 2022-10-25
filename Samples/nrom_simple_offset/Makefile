@@ -29,7 +29,6 @@ $(PATTERN_0_BIN) $(PATTERN_1_BIN) \
 $(NAME_TABLE_0_BIN) $(NAME_TABLE_1_BIN) \
 $(ATTR_TABLE_0_BIN) $(ATTR_TABLE_1_BIN) \
 $(PALETTE_0_BIN) $(PALETTE_1_BIN)
-	rm -f $(EXECUTABLE)
 	$(NESASM) $(SOURCE) -o $(EXECUTABLE) --symbols=$(notdir $(EXECUTABLE)) -iWss
 
 $(PATTERN_0_BIN) \
@@ -38,8 +37,8 @@ $(ATTR_TABLE_0_BIN) \
 $(PALETTE_0_BIN) $(PALETTE_1_BIN) \
 $(PALETTE_2_BIN) $(PALETTE_3_BIN): $(IMAGE)
 	$(TILER) --mode bg --enable-palettes 0,1,2,3 \
-	---in-0 $(IMAGE):80 \
-    --attribute-table-offset-0 80 \
+	--in-0 $(IMAGE):80 \
+    --attribute-table-y-offset-0 80 \
 	--out-pattern-table-0 $(PATTERN_0_BIN) \
 	--out-name-table-0 $(NAME_TABLE_0_BIN) \
 	--out-attribute-table-0 $(ATTR_TABLE_0_BIN) \
