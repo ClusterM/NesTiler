@@ -1,5 +1,6 @@
 commit.txt
 buildtime.txt 
+*.csv
 
 *.exe
 games.asm
