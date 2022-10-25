@@ -84,6 +84,8 @@ namespace com.clusterrr.Famicom.NesTiler
                 var paletteEnabled = new bool[4] { true, true, true, true };
                 var fixedPalettes = new Palette[4] { null, null, null, null };
                 var mode = TilesMode.Backgrounds;
+                int tileWidth = 8;
+                int tileHeight = 8;
                 int tilePalWidth = 16;
                 int tilePalHeight = 16;
                 bool sharePatternTable = false;
@@ -149,12 +151,16 @@ namespace com.clusterrr.Famicom.NesTiler
                                 case "sprites":
                                 case "sprites8x8":
                                     mode = TilesMode.Sprites;
+                                    tileWidth = 8;
+                                    tileHeight = 8;
                                     tilePalWidth = 8;
                                     tilePalHeight = 8;
                                     break;
                                 case "sprite8x16":
                                 case "sprites8x16":
                                     mode = TilesMode.Sprites;
+                                    tileWidth = 8;
+                                    tileHeight = 16;
                                     tilePalWidth = 8;
                                     tilePalHeight = 16;
                                     break;
@@ -162,6 +168,8 @@ namespace com.clusterrr.Famicom.NesTiler
                                 case "background":
                                 case "backgrounds":
                                     mode = TilesMode.Backgrounds;
+                                    tileWidth = 8;
+                                    tileHeight = 8;
                                     tilePalWidth = 16;
                                     tilePalHeight = 16;
                                     break;
@@ -285,6 +293,14 @@ namespace com.clusterrr.Famicom.NesTiler
                 // Stop if there are no images
                 if (!imageFiles.Any()) return 0;
 
+                switch (mode)
+                {
+                    case TilesMode.Sprites:
+                    case TilesMode.Sprites8x16:
+                        if (!bgColor.HasValue) throw new InvalidDataException("You must specify background color for sprites");
+                        break;
+                }
+
                 // Change the fixed palettes to colors from the NES palette
                 for (int i = 0; i < fixedPalettes.Length; i++)
                 {
@@ -332,8 +348,15 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int x = 0; x < image.Width; x++)
                         {
                             var color = image.GetPixelColor(x, y);
-                            var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
-                            image.SetPixelColor(x, y, similarColor);
+                            if (color.A >= 0x80 || mode == TilesMode.Backgrounds)
+                            {
+                                var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
+                                image.SetPixelColor(x, y, similarColor);
+                            } else
+                            {
+                                if (!bgColor.HasValue) throw new InvalidDataException("You must specify background color for images with transparency");
+                                image.SetPixelColor(x, y, bgColor.Value);
+                            }
                         }
                     }
                 }
@@ -587,9 +610,6 @@ namespace com.clusterrr.Famicom.NesTiler
                         patternTableStartOffsets[imageNum] = tileID;
                     }
 
-                    var tileWidth = 8;
-                    var tileHeight = mode == TilesMode.Sprites8x16 ? 16 : 8;
-
                     outTilesCsvLines?.Add("image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id");
                     for (int tileY = 0; tileY < image.Height / tileHeight; tileY++)
                     {
@@ -611,7 +631,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                     }
                                     tileData[(y * tileWidth) + x] = colorIndex;
                                 }
-                            var tile = new Tile(tileData, tileWidth, tileHeight);
+                            var tile = new Tile(tileData, tileHeight);
                             int currentTileID, id;
                             if (patternTable.TryGetValue(tile, out id))
                             {
@@ -625,6 +645,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                 currentTileID = tileID;
                                 tileID++;
                             }
+                            currentTileID = ((currentTileID & 0x7F) << 1) | ((currentTileID & 0x80) >> 7);
 
                             // Write CSV if required
                             outTilesCsvLines?.Add($"{imageNum},{imageFiles[imageNum]},{tileY},{tileX},{tileX * tileWidth},{tileY * tileHeight},{tileWidth},{tileHeight},{currentTileID},{paletteID}");
@@ -646,7 +667,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         var patternTableRaw = new List<byte>();
                         for (int t = patternTableStartOffsets[imageNum]; t < tileID; t++)
                         {
-                            var raw = patternTableReversed[t].GetAsTileData();
+                            var raw = patternTableReversed[t].GetAsPatternData();
                             patternTableRaw.AddRange(raw);
                         }
                         File.WriteAllBytes(outPatternTable[imageNum], patternTableRaw.ToArray());
@@ -670,7 +691,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     var patternTableRaw = new List<byte>();
                     for (int t = patternTableStartOffsetShared; t < tileID; t++)
                     {
-                        var raw = patternTableReversed[t].GetAsTileData();
+                        var raw = patternTableReversed[t].GetAsPatternData();
                         patternTableRaw.AddRange(raw);
                     }
                     File.WriteAllBytes(outPatternTableShared, patternTableRaw.ToArray());
