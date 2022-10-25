@@ -1,6 +1,6 @@
-NESASM=nesasm
-EMU=fceux64
-TILER=nestiler
+NESASM?=nesasm
+EMU?=fceux64
+TILER?=nestiler
 SOURCE=main.asm
 EXECUTABLE=sprites8x16.nes
 
