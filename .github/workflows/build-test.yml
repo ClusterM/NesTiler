@@ -33,9 +33,9 @@ jobs:
     - name: Fix line endings
       run: git config --global core.autocrlf false
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
     - name: Build
@@ -43,7 +43,7 @@ jobs:
         SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
       run: dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true ${{ env.SC_OPS }} -o ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}/${{ env.APP_NAME }} -p:IncludeAllContentForSelfExtract=true
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ env.OUTPUT_SUBDIR }}
         path: ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}
