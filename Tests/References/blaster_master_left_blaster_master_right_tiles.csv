@@ -959,7 +959,6 @@ image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,pal
 0,Images\blaster_master_left.png,29,29,232,232,8,8,52,1
 0,Images\blaster_master_left.png,29,30,240,232,8,8,52,1
 0,Images\blaster_master_left.png,29,31,248,232,8,8,52,1
-image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id
 1,Images\blaster_master_right.png,0,0,0,0,8,8,0,0
 1,Images\blaster_master_right.png,0,1,8,0,8,8,0,0
 1,Images\blaster_master_right.png,0,2,16,0,8,8,0,0

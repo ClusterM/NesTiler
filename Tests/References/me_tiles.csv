@@ -511,7 +511,6 @@ image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,pal
 0,Images\me.png:0:128,15,29,232,120,8,8,0,0
 0,Images\me.png:0:128,15,30,240,120,8,8,0,0
 0,Images\me.png:0:128,15,31,248,120,8,8,0,0
-image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id
 1,Images\me.png:128:112,0,0,0,0,8,8,0,0
 1,Images\me.png:128:112,0,1,8,0,8,8,0,0
 1,Images\me.png:128:112,0,2,16,0,8,8,0,0

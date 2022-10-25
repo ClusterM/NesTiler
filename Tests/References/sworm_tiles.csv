@@ -255,7 +255,6 @@ image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,pal
 0,Images\sworm.gif:0:64,7,29,232,56,8,8,235,0
 0,Images\sworm.gif:0:64,7,30,240,56,8,8,237,0
 0,Images\sworm.gif:0:64,7,31,248,56,8,8,239,0
-image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id
 1,Images\sworm.gif:64:64,0,0,0,0,8,8,0,0
 1,Images\sworm.gif:64:64,0,1,8,0,8,8,2,0
 1,Images\sworm.gif:64:64,0,2,16,0,8,8,4,0
@@ -512,7 +511,6 @@ image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,pal
 1,Images\sworm.gif:64:64,7,29,232,56,8,8,251,0
 1,Images\sworm.gif:64:64,7,30,240,56,8,8,253,0
 1,Images\sworm.gif:64:64,7,31,248,56,8,8,255,0
-image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id
 2,Images\sworm.gif:128:64,0,0,0,0,8,8,0,0
 2,Images\sworm.gif:128:64,0,1,8,0,8,8,2,0
 2,Images\sworm.gif:128:64,0,2,16,0,8,8,4,0
@@ -769,7 +767,6 @@ image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,pal
 2,Images\sworm.gif:128:64,7,29,232,56,8,8,186,0
 2,Images\sworm.gif:128:64,7,30,240,56,8,8,186,0
 2,Images\sworm.gif:128:64,7,31,248,56,8,8,186,0
-image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id
 3,Images\sworm.gif:192:48,0,0,0,0,8,8,0,0
 3,Images\sworm.gif:192:48,0,1,8,0,8,8,2,0
 3,Images\sworm.gif:192:48,0,2,16,0,8,8,4,2

@@ -588,6 +588,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
 
                 // Generate pattern tables and nametables
+                outTilesCsvLines?.Add("image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id");
                 foreach (var imageNum in images.Keys)
                 {
                     console($"Creating pattern table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
@@ -610,7 +611,6 @@ namespace com.clusterrr.Famicom.NesTiler
                         patternTableStartOffsets[imageNum] = tileID;
                     }
 
-                    outTilesCsvLines?.Add("image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id");
                     for (int tileY = 0; tileY < image.Height / tileHeight; tileY++)
                     {
                         for (int tileX = 0; tileX < image.Width / tileWidth; tileX++)
