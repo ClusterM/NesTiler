@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Linq;
 
 namespace com.clusterrr.Famicom.NesTiler.Tests
 {
@@ -207,8 +208,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
 
-            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
-            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
+            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
+            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
         }
 
         public void DoTestSharedPattern(string imagePath1, string imagePath2)
@@ -247,8 +248,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
 
-            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
-            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
+            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
+            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
         }
 
         public void DoTestSplit2(string imagePath)
@@ -288,8 +289,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
 
-            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
-            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
+            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
+            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
         }
 
         public void DoTestSplit2Lossy(string imagePath)
@@ -330,8 +331,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
 
-            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
-            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
+            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
+            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
         }
 
         public void DoTestSplit4(string imagePath)
@@ -385,8 +386,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
 
-            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix)))), "tiles CSV");
-            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix)))), "palette CSV");
+            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
+            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
         }
 
         public void DoTestSprites8x8(string imagePath)
@@ -407,7 +408,7 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
 
             Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))), "pattern table 0");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))), "palette 0");
-            Assert.That(File.ReadAllLines(SpritesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, SpritesCsvPath(prefix)))), "sprites CSV");
+            Assert.That(File.ReadAllLines(SpritesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, SpritesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "sprites CSV");
         }
 
         public void DoTestSprites8x16(string imagePath)
@@ -428,7 +429,7 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
 
             Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))), "pattern table 0");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))), "palette 0");
-            Assert.That(File.ReadAllLines(SpritesCsvPath(prefix)), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, SpritesCsvPath(prefix)))), "sprites CSV");
+            Assert.That(File.ReadAllLines(SpritesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, SpritesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "sprites CSV");
         }
     }
 }
