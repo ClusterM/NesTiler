@@ -92,32 +92,32 @@ namespace com.clusterrr.Famicom.NesTiler
                 Color2 = bgColor
             };
             if (deltaCache.ContainsKey(pair)) return deltaCache[pair];
-            var ac = Enumerable.Concat(colors.Where(c => c.HasValue).Select(c => c.Value), new Color[] { bgColor });
+            var ac = Enumerable.Concat(colors.Where(c => c.HasValue).Select(c => c!.Value), new Color[] { bgColor });
             var result = ac.OrderBy(c => c.GetDelta(color)).First();
             var r = (result, result.GetDelta(color));
             deltaCache[pair] = r;
             return r;
         }
 
-        public bool Equals(Palette other)
+        public bool Equals(Palette? other)
         {
             if (other == null) return false;
             var colors1 = colors.Where(c => c.HasValue)
-                .OrderBy(c => c.Value.ToArgb())
-                .Select(c => c.Value)
+                .OrderBy(c => c!.Value.ToArgb())
+                .Select(c => c!.Value)
                 .ToArray();
             var colors2 = new Color?[] { other[1], other[2], other[3] }
                 .Where(c => c.HasValue)
-                .OrderBy(c => c.Value.ToArgb())
-                .Select(c => c.Value)
+                .OrderBy(c => c!.Value.ToArgb())
+                .Select(c => c!.Value)
                 .ToArray();
-            return Enumerable.SequenceEqual<Color>(colors1, colors2);
+            return Enumerable.SequenceEqual(colors1, colors2);
         }
 
         public bool Contains(Palette other)
         {
             var thisColors = colors.Where(c => c.HasValue);
-            var otherColors = new Color?[] { other[1], other[2], other[3] }.Where(c => c.HasValue).Select(c => c.Value);
+            var otherColors = new Color?[] { other[1], other[2], other[3] }.Where(c => c.HasValue).Select(c => c!.Value);
 
             foreach (var color in otherColors)
             {
@@ -129,7 +129,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public IEnumerator<Color> GetEnumerator()
         {
-            return colors.Where(c => c.HasValue).Select(c => c.Value).GetEnumerator();
+            return colors.Where(c => c.HasValue).Select(c => c!.Value).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -137,7 +137,7 @@ namespace com.clusterrr.Famicom.NesTiler
             return GetEnumerator();
         }
 
-        public override string ToString() => string.Join(", ", colors.Where(c => c.HasValue).Select(c => ColorTranslator.ToHtml(c.Value)).OrderBy(c => c));
+        public override string ToString() => string.Join(", ", colors.Where(c => c.HasValue).Select(c => ColorTranslator.ToHtml(c!.Value)).OrderBy(c => c));
 
         public override int GetHashCode()
         {

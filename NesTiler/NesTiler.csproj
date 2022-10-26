@@ -65,7 +65,7 @@
     <Authors>Alexey "Cluster" Avdyukhin</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Product>NesTiler</Product>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="make commit buildtime&#xD;&#xA;" />

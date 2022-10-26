@@ -25,7 +25,7 @@ namespace com.clusterrr.Famicom.NesTiler
             colors = skBitmap.Pixels.Skip(verticalOffset * Width).Take(Width * Height).Select(p => Color.FromArgb(p.Alpha, p.Red, p.Green, p.Blue)).ToArray();
         }
 
-        public static FastBitmap Decode(string filename, int verticalOffset = 0, int height = 0)
+        public static FastBitmap? Decode(string filename, int verticalOffset = 0, int height = 0)
         {
             using var image = SKBitmap.Decode(filename);
             if (image == null) return null;

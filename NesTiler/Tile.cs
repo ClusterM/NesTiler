@@ -10,7 +10,7 @@ namespace com.clusterrr.Famicom.NesTiler
         public const int Width = 8;
         public readonly int Height;
         private int? hash;
-        private byte[] data = null;
+        private byte[]? data = null;
 
         public Tile(byte[] data, int height)
         {
@@ -42,7 +42,7 @@ namespace com.clusterrr.Famicom.NesTiler
             return data;
         }
 
-        public bool Equals(Tile other)
+        public bool Equals(Tile? other)
         {
             if (other == null) return false;
             var data1 = GetAsPatternData();
