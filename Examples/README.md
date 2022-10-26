@@ -35,7 +35,7 @@ This example uses single image splitted into four horizontally. Each part uses i
 Full screen animation. Two images splitted into two parts horizontally. MMC3 IRQs and bankswitching used to switch pattern tables on the respective lines.
 
 ## sprites8x8
-Simple 8x8 sprites example.
+Simple 8x8 sprites example. Also, this example shows how sprites with different colors combined into single palette.
 
 ## sprites8x16
 Simple 8x16 sprites example.
