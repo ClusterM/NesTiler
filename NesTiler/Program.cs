@@ -332,7 +332,13 @@ namespace com.clusterrr.Famicom.NesTiler
                     return 1;
                 }
 
-                if (!quiet) PrintAppInfo();
+                if (!quiet)
+                {
+                    PrintAppInfo();
+                    Trace.Listeners.Clear();
+                    Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
+                    Trace.AutoFlush = true;
+                }
 
                 // Some input data checks
                 switch (mode)
@@ -351,7 +357,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 if (outColorsTable != null)
                 {
-                    console($"Writing color tables to {outColorsTable}...");
+                    Trace.WriteLine($"Writing color tables to {outColorsTable}...");
                     WriteColorsTable(nesColors, outColorsTable);
                 }
 
@@ -371,7 +377,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 // Loading images
                 foreach (var imageFile in imageFiles)
                 {
-                    console($"Loading file #{imageFile.Key} - {Path.GetFileName(imageFile.Value)}...");
+                    Trace.WriteLine($"Loading image #{imageFile.Key} - {Path.GetFileName(imageFile.Value)}...");
                     var offsetRegex = new Regex(@"^(?<filename>.*?)(:(?<offset>[0-9]+)(:(?<height>[0-9]+))?)?$");
                     var match = offsetRegex.Match(imageFile.Value);
                     var filename = match.Groups["filename"].Value;
@@ -398,7 +404,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 // Change all colors in the images to colors from the NES palette
                 foreach (var imageNum in images.Keys)
                 {
-                    console($"Adjusting colors for file #{imageNum} - {imageFiles[imageNum]}...");
+                    Trace.WriteLine($"Adjusting colors for image #{imageNum}...");
                     var image = images[imageNum];
                     for (int y = 0; y < image.Height; y++)
                     {
@@ -431,7 +437,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 else
                 {
                     // Autodetect most used color
-                    console($"Background color autodetect... ");
+                    Trace.Write($"Background color autodetect... ");
                     Dictionary<Color, int> colorPerTileCounter = new Dictionary<Color, int>();
                     foreach (var imageNum in images.Keys)
                     {
@@ -472,7 +478,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Select background color which uses minimum palettes
                     var kv = calcResults.OrderBy(kv => kv.Value.Length).First();
                     (bgColor, calculatedPalettes) = (kv.Key, kv.Value.ToList());
-                    console(ColorTranslator.ToHtml(bgColor.Value));
+                    Trace.WriteLine(ColorTranslator.ToHtml(bgColor.Value));
                 }
 
                 if (calculatedPalettes.Count > maxCalculatedPaletteCount && !lossy)
@@ -506,7 +512,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                         if (palettes[i] != null)
                         {
-                            console($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i]!.Select(p => ColorTranslator.ToHtml(p)))}");
+                            Trace.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i]!.Select(p => ColorTranslator.ToHtml(p)))}");
                             // Write CSV if required
                             outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor.Value)},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i]![c] != null ? ColorTranslator.ToHtml(palettes[i]![c]!.Value) : "")))}");
                         }
@@ -529,14 +535,14 @@ namespace com.clusterrr.Famicom.NesTiler
                                 paletteRaw[c] = FindSimilarColor(nesColors, palettes[p]![c]!.Value, nesColorsCache);
                         }
                         File.WriteAllBytes(outPalette[p], paletteRaw);
-                        console($"Palette #{p} saved to {outPalette[p]}");
+                        Trace.WriteLine($"Palette #{p} saved to {outPalette[p]}");
                     }
                 }
 
                 // Select palette for each tile/sprite and recolorize using them
                 foreach (var imageNum in images.Keys)
                 {
-                    console($"Mapping palettes for file #{imageNum} - {imageFiles[imageNum]}...");
+                    Trace.WriteLine($"Mapping palettes for image #{imageNum}...");
                     var image = images[imageNum];
                     int attributeTableOffset;
                     attributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
@@ -591,7 +597,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (outPreview.ContainsKey(imageNum))
                     {
                         File.WriteAllBytes(outPreview[imageNum], image.Encode(SKEncodedImageFormat.Png, 0));
-                        console($"Preview #{imageNum} saved to {outPreview[imageNum]}");
+                        Trace.WriteLine($"Preview #{imageNum} saved to {outPreview[imageNum]}");
                     }
                 }
 
@@ -600,7 +606,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     if (mode != TilesMode.Backgrounds)
                         throw new InvalidOperationException("Attribute table generation available for backgrounds mode only.");
-                    console($"Creating attribute table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
+                    Trace.WriteLine($"Creating attribute table for image #{imageNum}...");
                     var image = images[imageNum];
                     int attributeTableOffset;
                     attributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
@@ -641,7 +647,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (outAttributeTable.ContainsKey(imageNum))
                     {
                         File.WriteAllBytes(outAttributeTable[imageNum], attributeTableRaw.ToArray());
-                        console($"Attribute table #{imageNum} saved to {outAttributeTable[imageNum]}");
+                        Trace.WriteLine($"Attribute table #{imageNum} saved to {outAttributeTable[imageNum]}");
                     }
                 }
 
@@ -649,7 +655,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 outTilesCsvLines?.Add("image_id,image_file,line,column,tile_x,tile_y,tile_width,tile_height,tile_id,palette_id");
                 foreach (var imageNum in images.Keys)
                 {
-                    console($"Creating pattern table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
+                    Trace.WriteLine($"Creating pattern table for image #{imageNum}...");
                     var image = images[imageNum];
                     int attributeTableOffset;
                     attributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
@@ -710,11 +716,11 @@ namespace com.clusterrr.Famicom.NesTiler
                         }
                     }
                     if (sharePatternTable && tileID > patternTableStartOffsetShared)
-                        console($"#{imageNum} tiles range: {patternTableStartOffsetShared}-{tileID - 1}");
+                        Trace.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsetShared}-{tileID - 1}");
                     else if (tileID > patternTableStartOffsets[imageNum])
-                        console($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
+                        Trace.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
-                        console($"Pattern table is empty.");
+                        Trace.WriteLine($"Pattern table is empty.");
                     if (tileID > 256 && !ignoreTilesRange)
                         throw new ArgumentOutOfRangeException("Tiles out of range.");
 
@@ -729,7 +735,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             patternTableRaw.AddRange(raw);
                         }
                         File.WriteAllBytes(outPatternTable[imageNum], patternTableRaw.ToArray());
-                        console($"Pattern table #{imageNum} saved to {outPatternTable[imageNum]}");
+                        Trace.WriteLine($"Pattern table #{imageNum} saved to {outPatternTable[imageNum]}");
                     }
 
                     // Save nametable to file
@@ -738,7 +744,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         if (mode != TilesMode.Backgrounds)
                             throw new InvalidOperationException("Nametable table generation available for backgrounds mode only.");
                         File.WriteAllBytes(outNameTable[imageNum], nameTable.Select(i => (byte)i).ToArray());
-                        console($"Nametable #{imageNum} saved to {outNameTable[imageNum]}");
+                        Trace.WriteLine($"Nametable #{imageNum} saved to {outNameTable[imageNum]}");
                     }
                 }
 
@@ -753,7 +759,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         patternTableRaw.AddRange(raw);
                     }
                     File.WriteAllBytes(outPatternTableShared, patternTableRaw.ToArray());
-                    console($"Pattern table saved to {outPatternTableShared}");
+                    Trace.WriteLine($"Pattern table saved to {outPatternTableShared}");
                 }
 
                 // Save CSV tiles report
@@ -910,7 +916,6 @@ namespace com.clusterrr.Famicom.NesTiler
             var paletteCounter = new Dictionary<Palette, int>();
             foreach (var imageNum in images.Keys)
             {
-                // write($"Calculating palettes for file #{imageNum} - {imageFiles[imageNum]}...");
                 var image = images[imageNum];
                 int attributeTableOffset;
                 attributeTableOffsets.TryGetValue(imageNum, out attributeTableOffset);
