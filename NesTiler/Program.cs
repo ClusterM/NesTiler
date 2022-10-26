@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -42,26 +43,27 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine($"Usage: {Path.GetFileName(Process.GetCurrentProcess()?.MainModule?.FileName)} <options>");
             Console.WriteLine();
             Console.WriteLine("Available options:");
-            Console.WriteLine(" {0,-40}{1}", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
-            Console.WriteLine(" {0,-40}{1}", "--colors <file>", $"JSON or PAL file with the list of available colors (default - {DEFAULT_COLORS_FILE})");
-            Console.WriteLine(" {0,-40}{1}", "--mode bg|sprite8x8|sprite8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
-            Console.WriteLine(" {0,-40}{1}", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
-            Console.WriteLine(" {0,-40}{1}", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
-            Console.WriteLine(" {0,-40}{1}", "--palette-<#>", "comma separated list of colors to use in palette number # (default - auto)");
-            Console.WriteLine(" {0,-40}{1}", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
-            Console.WriteLine(" {0,-40}{1}", "--attribute-table-y-offset-#", "vertical offset for attribute table in pixels");
-            Console.WriteLine(" {0,-40}{1}", "--share-pattern-table", "use one pattern table for all images");
-            Console.WriteLine(" {0,-40}{1}", "--ignore-tiles-range", "option to disable tile ID overflow check");
-            Console.WriteLine(" {0,-40}{1}", "--lossy", "option to ignore palettes loss, produces distorted image if there are too many colors");
-            Console.WriteLine(" {0,-40}{1}", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
-            Console.WriteLine(" {0,-40}{1}", "--out-palette-<#> <file>", "output filename for palette number #");
-            Console.WriteLine(" {0,-40}{1}", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
-            Console.WriteLine(" {0,-40}{1}", "--out-name-table-<#> <file>", "output filename for nametable of image number #");
-            Console.WriteLine(" {0,-40}{1}", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
-            Console.WriteLine(" {0,-40}{1}", "--out-tiles-csv <file.csv>", "output filename for tiles info in CSV format");
-            Console.WriteLine(" {0,-40}{1}", "--out-palettes-csv <file.csv>", "output filename for palettes info in CSV format");
-            Console.WriteLine(" {0,-40}{1}", "--out-colors-table <file.png>", "output filename for graphical table of available colors (from \"--colors\" option)");
-            Console.WriteLine(" {0,-40}{1}", "--quiet", "suppress console output");
+            // TODO: move options to constants
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-i#,", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-c,", "--colors <file>", $"JSON or PAL file with the list of available colors (default - {DEFAULT_COLORS_FILE})");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-m,", "--mode bg|sprites8x8|sprites8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-b,", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-e,", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-p#,", "--palette-<#>", "comma separated list of colors to use in palette number # (default - auto)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-o#,", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-y#,", "--attribute-table-y-offset-#", "vertical offset for attribute table in pixels");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-s,", "--share-pattern-table", "use one pattern table for all images");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-r,", "--ignore-tiles-range", "option to disable tile ID overflow check");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-l,", "--lossy", "option to ignore palettes loss, produces distorted image if there are too many colors");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-v#,", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-t#,", "--out-palette-<#> <file>", "output filename for palette number #");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-n#,", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-a#,", "--out-name-table-<#> <file>", "output filename for nametable of image number #");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-u#,", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-z,", "--out-tiles-csv <file.csv>", "output filename for tiles info in CSV format");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-x,", "--out-palettes-csv <file.csv>", "output filename for palettes info in CSV format");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-g,", "--out-colors-table <file.png>", "output filename for graphical table of available colors (from \"--colors\" option)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-q,", "--quiet", "suppress console output");
         }
 
         public static int Main(string[] args)
@@ -142,10 +144,12 @@ namespace com.clusterrr.Famicom.NesTiler
                             i++;
                             nothingToDo = false;
                             break;
+                        case "c":
                         case "colors":
                             colorsFile = value;
                             i++;
                             break;
+                        case "m":
                         case "mode":
                             switch (value.ToLower())
                             {
@@ -180,6 +184,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
+                        case "b":
                         case "bgcolor":
                         case "bg-color":
                         case "background-color":
@@ -195,6 +200,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
+                        case "e":
                         case "enable-palettes":
                             {
                                 var paletteNumbersStr = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -213,6 +219,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
+                        case "p":
                         case "palette":
                             {
                                 var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c => ColorTranslator.FromHtml(c));
@@ -220,6 +227,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
+                        case "o":
                         case "pattern-offset":
                             if (!int.TryParse(value, out valueInt))
                                 throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
@@ -229,6 +237,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             patternTableStartOffsetShared = patternTableStartOffsets[indexNum];
                             i++;
                             break;
+                        case "y":
                         case "attribute-table-y-offset":
                             if (!int.TryParse(value, out valueInt))
                                 throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
@@ -239,25 +248,41 @@ namespace com.clusterrr.Famicom.NesTiler
                             attributeTableYOffsets[indexNum] = valueInt;
                             i++;
                             break;
+                        case "s":
                         case "share-pattern-table":
                             sharePatternTable = true;
                             break;
+                        case "r":
+                        case "ignoretilesrange":
+                        case "ignore-tiles-range":
+                            ignoreTilesRange = true;
+                            break;
+                        case "l":
+                        case "lossy":
+                            lossy = true;
+                            break;
+                        case "v":
                         case "out-preview":
                         case "output-preview":
                             outPreview[indexNum] = value;
                             i++;
                             break;
+                        case "t":
                         case "out-palette":
                         case "output-palette":
+                            if (indexNum < 0 || indexNum > 3)
+                                throw new ArgumentException($"palette index must be between 0 and 3.", param);
                             outPalette[indexNum] = value;
                             i++;
                             break;
+                        case "n":
                         case "out-pattern-table":
                         case "output-pattern-table":
                             outPatternTable[indexNum] = value;
                             outPatternTableShared = value;
                             i++;
                             break;
+                        case "a":
                         case "out-name-table":
                         case "output-name-table":
                         case "out-nametable":
@@ -265,33 +290,30 @@ namespace com.clusterrr.Famicom.NesTiler
                             outNameTable[indexNum] = value;
                             i++;
                             break;
+                        case "u":
                         case "out-attribute-table":
                         case "output-attribute-table":
                             outAttributeTable[indexNum] = value;
                             i++;
                             break;
-                        case "ignoretilesrange":
-                        case "ignore-tiles-range":
-                            ignoreTilesRange = true;
-                            break;
-                        case "lossy":
-                            lossy = true;
-                            break;
+                        case "z":
                         case "out-tiles-csv":
                             outTilesCsv = value;
                             i++;
                             break;
+                        case "x":
                         case "out-palettes-csv":
                             outPalettesCsv = value;
                             i++;
                             break;
+                        case "g":
                         case "out-colors-table":
                             outColorsTable = value;
                             i++;
                             nothingToDo = false;
                             break;
-                        case "quiet":
                         case "q":
+                        case "quiet":
                             quiet = true;
                             break;
                         default:
@@ -746,7 +768,7 @@ namespace com.clusterrr.Famicom.NesTiler
             }
             catch (ArgumentException ex)
             {
-                Console.Error.WriteLine($"{ex.ParamName}: {ex.Message}");
+                Console.Error.WriteLine($"Error. {ex.ParamName}: {ex.Message}");
                 return 1;
             }
             catch (Exception ex) when (ex is InvalidDataException || ex is InvalidOperationException || ex is ArgumentOutOfRangeException || ex is FileNotFoundException)
