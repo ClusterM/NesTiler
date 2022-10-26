@@ -46,25 +46,25 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine("Available options:");
             // TODO: move options to constants
             Console.WriteLine("{0,-4} {1,-40}{2}", "-i#,", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-c,", "--colors <file>", $"JSON or PAL file with the list of available colors (default - {DEFAULT_COLORS_FILE})");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-m,", "--mode bg|sprites8x8|sprites8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-b,", "--bg-color <color>", "background color in HTML color format (default - autodetected)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-e,", "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-c,",  "--colors <file>", $"JSON or PAL file with the list of available colors (default - {DEFAULT_COLORS_FILE})");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-m,",  "--mode bg|sprites8x8|sprites8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-b,",  "--bg-color <color>", "background color in HTML color format (default - autodetected)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-e,",  "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-p#,", "--palette-<#>", "comma separated list of colors to use in palette number # (default - auto)");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-o#,", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-y#,", "--attribute-table-y-offset-#", "vertical offset for attribute table in pixels");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-s,", "--share-pattern-table", "use one pattern table for all images");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-r,", "--ignore-tiles-range", "option to disable tile ID overflow check");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-l,", "--lossy", "option to ignore palettes loss, produces distorted image if there are too many colors");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-s,",  "--share-pattern-table", "use one pattern table for all images");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-r,",  "--ignore-tiles-range", "option to disable tile ID overflow check");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-l,",  "--lossy", "option to ignore palettes loss, produces distorted image if there are too many colors");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-v#,", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-t#,", "--out-palette-<#> <file>", "output filename for palette number #");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-n#,", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-a#,", "--out-name-table-<#> <file>", "output filename for nametable of image number #");
             Console.WriteLine("{0,-4} {1,-40}{2}", "-u#,", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-z,", "--out-tiles-csv <file.csv>", "output filename for tiles info in CSV format");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-x,", "--out-palettes-csv <file.csv>", "output filename for palettes info in CSV format");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-g,", "--out-colors-table <file.png>", "output filename for graphical table of available colors (from \"--colors\" option)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-q,", "--quiet", "suppress console output");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-z,",  "--out-tiles-csv <file.csv>", "output filename for tiles info in CSV format");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-x,",  "--out-palettes-csv <file.csv>", "output filename for palettes info in CSV format");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-g,",  "--out-colors-table <file.png>", "output filename for graphical table of available colors (from \"--colors\" option)");
+            Console.WriteLine("{0,-4} {1,-40}{2}", "-q,",  "--quiet", "suppress console output");
         }
 
         public static int Main(string[] args)
@@ -483,7 +483,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 if (calculatedPalettes.Count > maxCalculatedPaletteCount && !lossy)
                 {
-                    throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes - {maxCalculatedPaletteCount} is maximum.");
+                    throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes, {maxCalculatedPaletteCount} is maximum.");
                 }
 
                 // Select palettes
@@ -799,6 +799,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         private static Dictionary<byte, Color> LoadColors(string filename)
         {
+            Trace.WriteLine($"Loading colors from {filename}...");
             if (!File.Exists(filename)) throw new FileNotFoundException($"Could not find file '{filename}'.", filename);
             var data = File.ReadAllBytes(filename);
             Dictionary<byte, Color> nesColors;
@@ -824,8 +825,8 @@ namespace com.clusterrr.Famicom.NesTiler
                         try
                         {
                             var index = kv.Key.ToLower().StartsWith("0x") ? Convert.ToByte(kv.Key.Substring(2), 16) : byte.Parse(kv.Key);
-                            // TODO: show some warning?
-                            // if (FORBIDDEN_COLORS.Contains(index))                                
+                            if (FORBIDDEN_COLORS.Contains(index))
+                                Trace.WriteLine($"WARNING! color #{kv.Key} is forbidden color, it will be ignored.");
                             if (index > 0x3D) throw new ArgumentException($"{kv.Key} - invalid color index.", filename);
                             return index;
                         }
