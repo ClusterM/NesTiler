@@ -1,6 +1,7 @@
 ﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Drawing;
@@ -20,7 +21,7 @@ namespace com.clusterrr.Famicom.NesTiler
         const int MAX_BG_COLOR_AUTODETECT_ITERATIONS = 5;
         static byte[] FORBIDDEN_COLORS = new byte[] { 0x0D, 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F };
 
-        public enum TilesMode
+        enum TilesMode
         {
             Backgrounds,
             Sprites8x8,
@@ -127,7 +128,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     var match = paramRegex.Match(args[i]);
                     if (!match.Success)
-                        throw new ArgumentException($"invalid argument.", args[i]);
+                        throw new ArgumentException($"Invalid argument.", args[i]);
                     string param = match.Groups["param"].Value;
                     string indexStr = match.Groups["index"].Value;
                     int indexNum = 0;
@@ -193,7 +194,8 @@ namespace com.clusterrr.Famicom.NesTiler
                                 try
                                 {
                                     bgColor = ColorTranslator.FromHtml(value);
-                                } catch (FormatException)
+                                }
+                                catch (FormatException)
                                 {
                                     throw new ArgumentException($"{value} - invalid color.", param);
                                 }
@@ -211,11 +213,11 @@ namespace com.clusterrr.Famicom.NesTiler
                                     if (!int.TryParse(palNumStr, out valueInt))
                                         throw new ArgumentException($"\"{palNumStr}\" is not valid integer value.", param);
                                     if (valueInt < 0 || valueInt > 3)
-                                        throw new ArgumentException($"palette index must be between 0 and 3.", param);
+                                        throw new ArgumentException($"Palette index must be between 0 and 3.", param);
                                     paletteEnabled[valueInt] = true;
                                 }
                                 if (!paletteEnabled.Where(p => p).Any()) // will never be executed?
-                                    throw new ArgumentException($"you need to enable at least one palette.", param);
+                                    throw new ArgumentException($"You need to enable at least one palette.", param);
                             }
                             i++;
                             break;
@@ -232,7 +234,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             if (!int.TryParse(value, out valueInt))
                                 throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
                             if (valueInt < 0 || valueInt >= 256)
-                                throw new ArgumentException($"value ({valueInt}) must be between 0 and 255.", param);
+                                throw new ArgumentException($"Value ({valueInt}) must be between 0 and 255.", param);
                             patternTableStartOffsets[indexNum] = valueInt;
                             patternTableStartOffsetShared = patternTableStartOffsets[indexNum];
                             i++;
@@ -242,9 +244,9 @@ namespace com.clusterrr.Famicom.NesTiler
                             if (!int.TryParse(value, out valueInt))
                                 throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
                             if (valueInt % 8 != 0)
-                                throw new ArgumentException($"value ({valueInt}) must be divisible by 8.", param);
+                                throw new ArgumentException($"Value ({valueInt}) must be divisible by 8.", param);
                             if (valueInt < 0 || valueInt >= 256)
-                                throw new ArgumentException($"value ({valueInt}) must be between 0 and 255.", param);
+                                throw new ArgumentException($"Value ({valueInt}) must be between 0 and 255.", param);
                             attributeTableYOffsets[indexNum] = valueInt;
                             i++;
                             break;
@@ -271,7 +273,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         case "out-palette":
                         case "output-palette":
                             if (indexNum < 0 || indexNum > 3)
-                                throw new ArgumentException($"palette index must be between 0 and 3.", param);
+                                throw new ArgumentException($"Palette index must be between 0 and 3.", param);
                             outPalette[indexNum] = value;
                             i++;
                             break;
@@ -317,7 +319,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             quiet = true;
                             break;
                         default:
-                            throw new ArgumentException($"unknown argument.", args[i]);
+                            throw new ArgumentException($"Unknown argument.", args[i]);
                     }
                 }
 
@@ -337,9 +339,10 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     case TilesMode.Sprites8x8:
                     case TilesMode.Sprites8x16:
-                        if (!bgColor.HasValue) throw new InvalidDataException("you must specify background color for sprites.");
+                        if (!bgColor.HasValue) throw new InvalidDataException("You must specify background color for sprites.");
                         break;
                 }
+                // TODO: more input checks
 
                 // Loading and parsing palette JSON
                 var nesColors = LoadColors(colorsFile);
@@ -382,14 +385,14 @@ namespace com.clusterrr.Famicom.NesTiler
                         offset = int.Parse(offsetS);
                         if (!string.IsNullOrEmpty(heightS)) height = int.Parse(heightS);
                     }
-                    if (!File.Exists(filename)) throw new FileNotFoundException($"could not find file '{filename}'.", filename);
+                    if (!File.Exists(filename)) throw new FileNotFoundException($"Could not find file '{filename}'.", filename);
                     var image = FastBitmap.Decode(filename, offset, height);
-                    if (image == null) throw new InvalidDataException($"can't load {filename}.");
+                    if (image == null) throw new InvalidDataException($"Can't load {filename}.");
                     images[imageFile.Key] = image;
 
-                    if (mode == TilesMode.Backgrounds && image.Width != 256) throw new ArgumentException("image width must be 256 for backgrounds mode.", filename);
-                    if (image.Width % tileWidth != 0) throw new ArgumentException($"image width must be divisible by {tileWidth}.", filename);
-                    if (image.Height % tileHeight != 0) throw new ArgumentException($"image height must be divisible by {tileHeight}.", filename);
+                    if (mode == TilesMode.Backgrounds && image.Width != 256) throw new ArgumentException("Image width must be 256 for backgrounds mode.", filename);
+                    if (image.Width % tileWidth != 0) throw new ArgumentException($"Image width must be divisible by {tileWidth}.", filename);
+                    if (image.Height % tileHeight != 0) throw new ArgumentException($"Image height must be divisible by {tileHeight}.", filename);
                 }
 
                 // Change all colors in the images to colors from the NES palette
@@ -409,7 +412,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             else
                             {
-                                if (!bgColor.HasValue) throw new InvalidDataException("you must specify background color for images with transparency.");
+                                if (!bgColor.HasValue) throw new InvalidDataException("You must specify background color for images with transparency.");
                                 image.SetPixelColor(x, y, bgColor.Value);
                             }
                         }
@@ -474,7 +477,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 if (calculatedPalettes.Count > maxCalculatedPaletteCount && !lossy)
                 {
-                    throw new ArgumentOutOfRangeException($"can't fit {calculatedPalettes.Count} palettes - {maxCalculatedPaletteCount} is maximum.");
+                    throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes - {maxCalculatedPaletteCount} is maximum.");
                 }
 
                 // Select palettes
@@ -596,7 +599,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 foreach (var imageNum in outAttributeTable.Keys)
                 {
                     if (mode != TilesMode.Backgrounds)
-                        throw new InvalidOperationException("attribute table generation available for backgrounds mode only.");
+                        throw new InvalidOperationException("Attribute table generation available for backgrounds mode only.");
                     console($"Creating attribute table for file #{imageNum} - {Path.GetFileName(imageFiles[imageNum])}...");
                     var image = images[imageNum];
                     int attributeTableOffset;
@@ -711,7 +714,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     else if (tileID > patternTableStartOffsets[imageNum])
                         console($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
-                        console($"Pattern table is empty");
+                        console($"Pattern table is empty.");
                     if (tileID > 256 && !ignoreTilesRange)
                         throw new ArgumentOutOfRangeException("Tiles out of range.");
 
@@ -768,12 +771,17 @@ namespace com.clusterrr.Famicom.NesTiler
             }
             catch (ArgumentException ex)
             {
-                Console.Error.WriteLine($"Error. {ex.ParamName}: {ex.Message}");
+                Console.Error.WriteLine($"Error. {ex.Message}");
+                return 1;
+            }
+            catch (JsonException ex)
+            {
+                Console.Error.WriteLine($"Can't parse JSON: {ex.Message}");
                 return 1;
             }
             catch (Exception ex) when (ex is InvalidDataException || ex is InvalidOperationException || ex is ArgumentOutOfRangeException || ex is FileNotFoundException)
             {
-                Console.Error.WriteLine($"Error: {ex.Message}");
+                Console.Error.WriteLine($"Error. {ex.Message}");
                 return 1;
             }
             catch (Exception ex)
@@ -785,7 +793,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         private static Dictionary<byte, Color> LoadColors(string filename)
         {
-            if (!File.Exists(filename)) throw new FileNotFoundException($"could not find file '{filename}'.", filename);
+            if (!File.Exists(filename)) throw new FileNotFoundException($"Could not find file '{filename}'.", filename);
             var data = File.ReadAllBytes(filename);
             Dictionary<byte, Color> nesColors;
             // Detect file type
@@ -803,11 +811,35 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 var paletteJson = File.ReadAllText(filename);
                 var nesColorsStr = JsonSerializer.Deserialize<Dictionary<string, string>>(paletteJson);
-                if (nesColorsStr == null) throw new InvalidDataException($"can't parse {filename}");
+                if (nesColorsStr == null) throw new InvalidDataException($"Can't parse {filename}");
                 nesColors = nesColorsStr.ToDictionary(
-                        kv => kv.Key.ToLower().StartsWith("0x") ? (byte)Convert.ToInt32(kv.Key.Substring(2), 16) : byte.Parse(kv.Key),
-                        kv => ColorTranslator.FromHtml(kv.Value)
-                    );
+                    kv =>
+                    {
+                        try
+                        {
+                            var index = kv.Key.ToLower().StartsWith("0x") ? Convert.ToByte(kv.Key.Substring(2), 16) : byte.Parse(kv.Key);
+                            // TODO: show some warning?
+                            // if (FORBIDDEN_COLORS.Contains(index))                                
+                            if (index > 0x3D) throw new ArgumentException($"{kv.Key} - invalid color index.", filename);
+                            return index;
+                        }
+                        catch (Exception ex) when (ex is FormatException || ex is OverflowException)
+                        {
+                            throw new ArgumentException($"{kv.Key} - invalid color index.", filename);
+                        }
+                    },
+                    kv =>
+                    {
+                        try
+                        {
+                            return ColorTranslator.FromHtml(kv.Value);
+                        }
+                        catch (FormatException)
+                        {
+                            throw new ArgumentException($"{kv.Value} - invalid color.", filename);
+                        }
+                    }
+                );
             }
             // filter out invalid colors;
             nesColors = nesColors.Where(kv => !FORBIDDEN_COLORS.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -816,6 +848,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         static void WriteColorsTable(Dictionary<byte, Color> nesColors, string filename)
         {
+            // Export colors to nice table image
             const int colorSize = 64;
             const int colorColumns = 16;
             const int colorRows = 4;
