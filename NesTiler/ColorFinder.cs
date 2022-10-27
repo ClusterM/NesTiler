@@ -13,28 +13,28 @@ namespace com.clusterrr.Famicom.NesTiler
     {
         static byte[] FORBIDDEN_COLORS = new byte[] { 0x0D, 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F };
 
-        public readonly Dictionary<byte, Color> Colors;
-        private readonly Dictionary<Color, byte> cache = new();
+        public readonly Dictionary<byte, SKColor> Colors;
+        private readonly Dictionary<SKColor, byte> cache = new();
 
         public ColorFinder(string filename)
         {
             this.Colors = LoadColors(filename);
         }
 
-        private static Dictionary<byte, Color> LoadColors(string filename)
+        private static Dictionary<byte, SKColor> LoadColors(string filename)
         {
             Trace.WriteLine($"Loading colors from {filename}...");
             if (!File.Exists(filename)) throw new FileNotFoundException($"Could not find file '{filename}'.", filename);
             var data = File.ReadAllBytes(filename);
-            Dictionary<byte, Color> nesColors;
+            Dictionary<byte, SKColor> nesColors;
             // Detect file type
             if ((Path.GetExtension(filename) == ".pal") || ((data.Length == 192 || data.Length == 1536) && data.Where(b => b >= 128).Any()))
             {
                 // Binary file
-                nesColors = new Dictionary<byte, Color>();
+                nesColors = new Dictionary<byte, SKColor>();
                 for (byte c = 0; c < 64; c++)
                 {
-                    var color = Color.FromArgb(data[c * 3], data[(c * 3) + 1], data[(c * 3) + 2]);
+                    var color = new SKColor(data[c * 3], data[(c * 3) + 1], data[(c * 3) + 2]);
                     nesColors[c] = color;
                 }
             }
@@ -63,7 +63,8 @@ namespace com.clusterrr.Famicom.NesTiler
                     {
                         try
                         {
-                            return ColorTranslator.FromHtml(kv.Value);
+                            var color = ColorTranslator.FromHtml(kv.Value); ;
+                            return new SKColor(color.R, color.G, color.B);
                         }
                         catch (FormatException)
                         {
@@ -82,13 +83,13 @@ namespace com.clusterrr.Famicom.NesTiler
         /// </summary>
         /// <param name="color">Input color</param>
         /// <returns>Output color index</returns>
-        public byte FindSimilarColorIndex(Color color)
+        public byte FindSimilarColorIndex(SKColor color)
         {
             if (cache.ContainsKey(color))
                 return cache[color];
             byte result = byte.MaxValue;
             double minDelta = double.MaxValue;
-            Color c = Color.Transparent;
+            SKColor c = SKColors.Transparent;
             foreach (var index in Colors.Keys)
             {
                 var delta = color.GetDelta(Colors[index]);
@@ -112,9 +113,9 @@ namespace com.clusterrr.Famicom.NesTiler
         /// <param name="colors">Haystack</param>
         /// <param name="color">Niddle</param>
         /// <returns>Output color</returns>
-        public Color FindSimilarColor(IEnumerable<Color> colors, Color color)
+        public SKColor FindSimilarColor(IEnumerable<SKColor> colors, SKColor color)
         {
-            Color result = Color.Black;
+            SKColor result = SKColors.Black;
             double minDelta = double.MaxValue;
             foreach (var c in colors)
             {
@@ -133,7 +134,7 @@ namespace com.clusterrr.Famicom.NesTiler
         /// </summary>
         /// <param name="color">Input colo</param>
         /// <returns>Output color</returns>
-        public Color FindSimilarColor(Color color) => Colors[FindSimilarColorIndex(color)];
+        public SKColor FindSimilarColor(SKColor color) => Colors[FindSimilarColorIndex(color)];
 
         public void WriteColorsTable(string filename)
         {
@@ -150,19 +151,17 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 for (int x = 0; x < colorColumns; x++)
                 {
-                    Color color;
-                    SKColor skColor;
+                    SKColor color;
                     SKPaint paint;
                     if (Colors.TryGetValue((byte)((y * colorColumns) + x), out color))
                     {
-                        skColor = new SKColor(color.R, color.G, color.B);
-                        paint = new SKPaint() { Color = skColor };
+                        paint = new SKPaint() { Color = color };
                         canvas.DrawRegion(new SKRegion(new SKRectI(x * colorSize, y * colorSize, (x + 1) * colorSize, (y + 1) * colorSize)), paint);
 
-                        skColor = new SKColor((byte)(0xFF - color.R), (byte)(0xFF - color.G), (byte)(0xFF - color.B)); // invert color
+                        color = new SKColor((byte)(0xFF - color.Red), (byte)(0xFF - color.Green), (byte)(0xFF - color.Blue)); // invert color
                         paint = new SKPaint()
                         {
-                            Color = skColor,
+                            Color = color,
                             TextAlign = SKTextAlign.Center,
                             TextSize = textSize,
                             FilterQuality = SKFilterQuality.High,

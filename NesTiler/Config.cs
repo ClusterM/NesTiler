@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -20,7 +21,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public string ColorsFile { get; private set; }
         public Dictionary<int, string> ImageFiles { get; private set; } = new Dictionary<int, string>();
-        public Color? BgColor { get; private set; } = null;
+        public SKColor? BgColor { get; private set; } = null;
         public bool[] PaletteEnabled { get; private set; } = new bool[4] { true, true, true, true };
         public Palette?[] FixedPalettes { get; private set; } = new Palette?[4] { null, null, null, null };
         public TilesMode Mode { get; private set; } = TilesMode.Backgrounds;
@@ -125,7 +126,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         {
                             try
                             {
-                                config.BgColor = ColorTranslator.FromHtml(value);
+                                config.BgColor = ColorTranslator.FromHtml(value).ToSKColor();
                             }
                             catch (FormatException)
                             {
@@ -156,7 +157,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     case ArgPalette.S:
                     case ArgPalette.L:
                         {
-                            var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c => ColorTranslator.FromHtml(c));
+                            var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c => ColorTranslator.FromHtml(c).ToSKColor());
                             config.FixedPalettes[indexNum] = new Palette(colors);
                         }
                         i++;

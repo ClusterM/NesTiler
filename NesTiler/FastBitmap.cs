@@ -11,7 +11,7 @@ namespace com.clusterrr.Famicom.NesTiler
         public int Width { get; }
         public int Height { get; }
 
-        private readonly Color[] colors;
+        private readonly SKColor[] colors;
         private static Dictionary<string, SKBitmap> imagesCache = new Dictionary<string, SKBitmap>();
 
         private FastBitmap(SKBitmap skBitmap, int verticalOffset = 0, int height = -1)
@@ -20,7 +20,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Height = height <= 0 ? skBitmap.Height - verticalOffset : height;
             if (skBitmap.Height - verticalOffset - Height < 0 || Height <= 0) throw new InvalidOperationException("Invalid image height.");
             var pixels = skBitmap.Pixels;
-            colors = skBitmap.Pixels.Skip(verticalOffset * Width).Take(Width * Height).Select(p => Color.FromArgb(p.Alpha, p.Red, p.Green, p.Blue)).ToArray();
+            colors = skBitmap.Pixels.Skip(verticalOffset * Width).Take(Width * Height).ToArray();
         }
 
         public static FastBitmap? Decode(string filename, int verticalOffset = 0, int height = -1)
@@ -40,12 +40,12 @@ namespace com.clusterrr.Famicom.NesTiler
             }
         }
 
-        public Color GetPixelColor(int x, int y)
+        public SKColor GetPixelColor(int x, int y)
         {
             return colors[(y * Width) + x];
         }
 
-        public void SetPixelColor(int x, int y, Color color)
+        public void SetPixelColor(int x, int y, SKColor color)
         {
             colors[(y * Width) + x] = color;
         }
@@ -58,8 +58,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 for (int x = 0; x < Width; x++)
                 {
                     var color = colors[(y * Width) + x];
-                    var skColor = new SKColor(color.R, color.G, color.B);
-                    skImage.SetPixel(x, y, skColor);
+                    skImage.SetPixel(x, y, color);
                 }
             }
             return skImage.Encode(format, v).ToArray();

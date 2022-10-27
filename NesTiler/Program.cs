@@ -139,7 +139,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int x = 0; x < image.Width; x++)
                         {
                             var color = image.GetPixelColor(x, y);
-                            if (color.A >= 0x80 || c.Mode == Config.TilesMode.Backgrounds)
+                            if (color.Alpha >= 0x80 || c.Mode == Config.TilesMode.Backgrounds)
                             {
                                 var similarColor = nesColors.FindSimilarColor(color);
                                 image.SetPixelColor(x, y, similarColor);
@@ -156,7 +156,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 List<Palette> calculatedPalettes;
                 var maxCalculatedPaletteCount = Enumerable.Range(0, 4)
                     .Select(i => c.PaletteEnabled[i] && c.FixedPalettes[i] == null).Count();
-                Color bgColor;
+                SKColor bgColor;
                 // Detect background color
                 if (c.BgColor.HasValue)
                 {
@@ -174,7 +174,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     // Autodetect most used color
                     Trace.Write($"Background color autodetect... ");
-                    Dictionary<Color, int> colorPerTileCounter = new Dictionary<Color, int>();
+                    Dictionary<SKColor, int> colorPerTileCounter = new();
                     foreach (var imageNum in images.Keys)
                     {
                         var image = images[imageNum];
@@ -183,7 +183,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             for (int tileX = 0; tileX < image.Width / c.TilePalWidth; tileX++)
                             {
                                 // Count each color only once per tile/sprite
-                                var colorsInTile = new List<Color>();
+                                var colorsInTile = new List<SKColor>();
                                 for (int y = 0; y < c.TilePalHeight; y++)
                                 {
                                     for (int x = 0; x < c.TilePalWidth; x++)
@@ -206,7 +206,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Most used colors
                     var candidates = colorPerTileCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
                     // Try to calculate palettes for every background color
-                    var calcResults = new Dictionary<Color, Palette[]>();
+                    var calcResults = new Dictionary<SKColor, Palette[]>();
                     for (int i = 0; i < Math.Min(candidates.Length, MAX_BG_COLOR_AUTODETECT_ITERATIONS); i++)
                     {
                         calcResults[candidates[i]] = CalculatePalettes(images,
@@ -220,7 +220,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Select background color which uses minimum palettes
                     var kv = calcResults.OrderBy(kv => kv.Value.Length).First();
                     (bgColor, calculatedPalettes) = (kv.Key, kv.Value.ToList());
-                    Trace.WriteLine(ColorTranslator.ToHtml(bgColor));
+                    Trace.WriteLine(ColorTranslator.ToHtml(bgColor.ToColor()));
                 }
 
                 if (calculatedPalettes.Count > maxCalculatedPaletteCount && !c.Lossy)
@@ -254,9 +254,9 @@ namespace com.clusterrr.Famicom.NesTiler
 
                         if (palettes[i] != null)
                         {
-                            Trace.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor)}(BG) {string.Join(" ", palettes[i]!.Select(p => ColorTranslator.ToHtml(p)))}");
+                            Trace.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.ToColor())}(BG) {string.Join(" ", palettes[i]!.Select(p => ColorTranslator.ToHtml(p.ToColor())))}");
                             // Write CSV if required
-                            outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor)},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i]![c] != null ? ColorTranslator.ToHtml(palettes[i]![c]!.Value) : "")))}");
+                            outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor.ToColor())},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i]![c] != null ? ColorTranslator.ToHtml(palettes[i]![c]!.Value.ToColor()) : "")))}");
                         }
                     }
                 }
@@ -324,7 +324,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                     var color = image.GetPixelColor((tilePalX * c.TilePalWidth) + x, cy);
                                     var similarColor = nesColors.FindSimilarColor(Enumerable.Concat(
                                             bestPalette,
-                                            new Color[] { bgColor }
+                                            new SKColor[] { bgColor }
                                         ), color);
                                     image.SetPixelColor(
                                         (tilePalX * c.TilePalWidth) + x,
@@ -539,7 +539,7 @@ namespace com.clusterrr.Famicom.NesTiler
             }
         }
 
-        static Palette[] CalculatePalettes(Dictionary<int, FastBitmap> images, bool[] paletteEnabled, Palette?[] fixedPalettes, Dictionary<int, int> attributeTableOffsets, int tilePalWidth, int tilePalHeight, Color bgColor)
+        static Palette[] CalculatePalettes(Dictionary<int, FastBitmap> images, bool[] paletteEnabled, Palette?[] fixedPalettes, Dictionary<int, int> attributeTableOffsets, int tilePalWidth, int tilePalHeight, SKColor bgColor)
         {
             var required = Enumerable.Range(0, 4).Select(i => paletteEnabled[i] && fixedPalettes[i] == null);
             // Creating and counting the palettes

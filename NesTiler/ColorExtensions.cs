@@ -1,5 +1,6 @@
 ﻿using ColorMine.ColorSpaces;
 using ColorMine.ColorSpaces.Comparisons;
+using SkiaSharp;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -7,8 +8,8 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     public record ColorPair
     {
-        public Color Color1;
-        public Color Color2;
+        public SKColor Color1;
+        public SKColor Color2;
     }
 
     static class ColorExtensions
@@ -17,7 +18,16 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public static void ClearCache() => cache.Clear();
 
-        public static double GetDelta(this Color color1, Color color2)
+        public static Color ToColor(this SKColor color)
+            => Color.FromArgb((int)color.ToArgb());
+
+        public static SKColor ToSKColor(this Color color)
+            => new SKColor((uint)color.ToArgb());
+
+        public static uint ToArgb(this SKColor color)
+            => (uint)((color.Alpha << 24) | (color.Red << 16) | (color.Green << 8) | color.Blue);
+
+        public static double GetDelta(this SKColor color1, SKColor color2)
         {
             var pair = new ColorPair()
             {
@@ -26,8 +36,8 @@ namespace com.clusterrr.Famicom.NesTiler
             };
             if (cache.ContainsKey(pair))
                 return cache[pair];
-            var a = new Rgb { R = color1.R, G = color1.G, B = color1.B };
-            var b = new Rgb { R = color2.R, G = color2.G, B = color2.B };
+            var a = new Rgb { R = color1.Red, G = color1.Green, B = color1.Blue };
+            var b = new Rgb { R = color2.Red, G = color2.Green, B = color2.Blue };
             var delta = a.Compare(b, new CieDe2000Comparison());
             cache[pair] = delta;
             return delta;
