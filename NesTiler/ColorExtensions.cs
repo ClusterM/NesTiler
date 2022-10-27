@@ -14,7 +14,8 @@ namespace com.clusterrr.Famicom.NesTiler
 
     static class ColorExtensions
     {
-        static Dictionary<ColorPair, double> cache = new();
+        private static Dictionary<ColorPair, double> cache = new();
+        private static CieDe2000Comparison comparer = new();
 
         public static void ClearCache() => cache.Clear();
 
@@ -38,7 +39,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 return cache[pair];
             var a = new Rgb { R = color1.Red, G = color1.Green, B = color1.Blue };
             var b = new Rgb { R = color2.Red, G = color2.Green, B = color2.Blue };
-            var delta = a.Compare(b, new CieDe2000Comparison());
+            var delta = a.Compare(b, comparer);
             cache[pair] = delta;
             return delta;
         }
