@@ -9,7 +9,6 @@ namespace com.clusterrr.Famicom.NesTiler
         public readonly byte[] Pixels;
         public const int Width = 8;
         public readonly int Height;
-        private int? hash;
         private byte[]? data = null;
 
         public Tile(byte[] data, int height)
@@ -52,12 +51,10 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public override int GetHashCode()
         {
-            if (hash != null) return hash.Value;
             var crc = new Crc32();
             crc.Append(GetAsPatternData());
             var hashBytes = crc.GetCurrentHash();
-            hash = BitConverter.ToInt32(hashBytes, 0);
-            return hash.Value;
+            return BitConverter.ToInt32(hashBytes, 0);
         }
     }
 }

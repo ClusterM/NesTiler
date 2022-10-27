@@ -112,6 +112,20 @@ namespace com.clusterrr.Famicom.NesTiler
                 .Select(c => c!.Value)
                 .ToArray();
             return Enumerable.SequenceEqual(colors1, colors2);
+            /*
+            if (other == null) return false;
+            var colors1 = colors.Where(c => c.HasValue)
+                .Select(c => c!.Value.ToArgb())
+                .OrderBy(c => c)
+                .ToArray();
+            var colors2 = new SKColor?[] { other[1], other[2], other[3] }
+                .Where(c => c.HasValue)
+                .Select(c => c!.Value.ToArgb())
+                .OrderBy(c => c)
+                .ToArray();
+            var r = Enumerable.SequenceEqual(colors1, colors2);
+            return r;
+            */
         }
 
         public bool Contains(Palette other)
@@ -139,11 +153,6 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public override string ToString() => string.Join(", ", colors.Where(c => c.HasValue).Select(c => ColorTranslator.ToHtml(c!.Value.ToColor())).OrderBy(c => c));
 
-        public override int GetHashCode()
-        {
-            return ((this[1]?.Red ?? 0) + (this[2]?.Red ?? 0) + (this[3]?.Red ?? 0))
-                | (((this[1]?.Green ?? 0) + (this[2]?.Green ?? 0) + (this[3]?.Green ?? 0)) << 10)
-                | (((this[1]?.Blue ?? 0) + (this[2]?.Blue ?? 0) + (this[3]?.Blue ?? 0)) << 20);
-        }
+        public override int GetHashCode() => (int)((this[1]?.ToArgb() ?? 0) + ((this[2]?.ToArgb() ?? 0) << 4) + ((this[3]?.ToArgb() ?? 0) << 8));
     }
 }
