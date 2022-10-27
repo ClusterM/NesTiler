@@ -286,8 +286,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     Trace.WriteLine($"Mapping palettes for image #{imageNum}...");
                     var image = images[imageNum];
-                    int attributeTableOffset;
-                    c.PattributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                    c.PattributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
                     paletteIndexes[imageNum] = new byte[image.Width / c.TilePalWidth, (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)c.TilePalHeight)];
                     // For each tile/sprite
                     for (int tilePalY = 0; tilePalY < (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)c.TilePalHeight); tilePalY++)
@@ -350,8 +349,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         throw new InvalidOperationException("Attribute table generation available for backgrounds mode only.");
                     Trace.WriteLine($"Creating attribute table for image #{imageNum}...");
                     var image = images[imageNum];
-                    int attributeTableOffset;
-                    c.PattributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                    c.PattributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
                     var attributeTableRaw = new List<byte>();
                     int width = paletteIndexes[imageNum].GetLength(0);
                     int height = paletteIndexes[imageNum].GetLength(1);
@@ -399,8 +397,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     Trace.WriteLine($"Creating pattern table for image #{imageNum}...");
                     var image = images[imageNum];
-                    int attributeTableOffset;
-                    c.PattributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                    c.PattributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
                     if (!patternTables.ContainsKey(!c.SharePatternTable ? imageNum : 0)) patternTables[!c.SharePatternTable ? imageNum : 0] = new Dictionary<Tile, int>();
                     var patternTable = patternTables[!c.SharePatternTable ? imageNum : 0];
                     if (!nameTables.ContainsKey(imageNum)) nameTables[imageNum] = new List<int>();
@@ -438,8 +435,8 @@ namespace com.clusterrr.Famicom.NesTiler
                                     tileData[(y * c.TileWidth) + x] = colorIndex;
                                 }
                             var tile = new Tile(tileData, c.TileHeight);
-                            int currentTileID, id;
-                            if (patternTable.TryGetValue(tile, out id))
+                            int currentTileID;
+                            if (patternTable.TryGetValue(tile, out int id))
                             {
                                 if (c.Mode == Config.TilesMode.Backgrounds) nameTable.Add(id);
                                 currentTileID = id;
