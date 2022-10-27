@@ -103,18 +103,6 @@ namespace com.clusterrr.Famicom.NesTiler
         {
             if (other == null) return false;
             var colors1 = colors.Where(c => c.HasValue)
-                .OrderBy(c => c!.Value.ToArgb())
-                .Select(c => c!.Value)
-                .ToArray();
-            var colors2 = new SKColor?[] { other[1], other[2], other[3] }
-                .Where(c => c.HasValue)
-                .OrderBy(c => c!.Value.ToArgb())
-                .Select(c => c!.Value)
-                .ToArray();
-            return Enumerable.SequenceEqual(colors1, colors2);
-            /*
-            if (other == null) return false;
-            var colors1 = colors.Where(c => c.HasValue)
                 .Select(c => c!.Value.ToArgb())
                 .OrderBy(c => c)
                 .ToArray();
@@ -125,7 +113,6 @@ namespace com.clusterrr.Famicom.NesTiler
                 .ToArray();
             var r = Enumerable.SequenceEqual(colors1, colors2);
             return r;
-            */
         }
 
         public bool Contains(Palette other)
