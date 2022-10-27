@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -16,17 +15,9 @@ namespace com.clusterrr.Famicom.NesTiler
     public class Program
     {
         public const string REPO_PATH = "https://github.com/ClusterM/nestiler";
-        public const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
         public static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
         public const int MAX_BG_COLOR_AUTODETECT_ITERATIONS = 5;
         static byte[] FORBIDDEN_COLORS = new byte[] { 0x0D, 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F };
-
-        enum TilesMode
-        {
-            Backgrounds,
-            Sprites8x8,
-            Sprites8x16
-        }
 
         static void PrintAppInfo()
         {
@@ -64,38 +55,20 @@ namespace com.clusterrr.Famicom.NesTiler
                     return 0;
                 }
 
-                string colorsFile = Path.Combine(AppContext.BaseDirectory, DEFAULT_COLORS_FILE);
-                if (!File.Exists(colorsFile))
-                    colorsFile = Path.Combine(Directory.GetCurrentDirectory(), DEFAULT_COLORS_FILE);
-                if (!File.Exists(colorsFile) && !OperatingSystem.IsWindows())
-                    colorsFile = Path.Combine("/etc", DEFAULT_COLORS_FILE);
-                var imageFiles = new Dictionary<int, string>();
-                Color? bgColor = null;
-                bool[] paletteEnabled = new bool[4] { true, true, true, true };
-                Palette?[] fixedPalettes = new Palette?[4] { null, null, null, null };
-                var mode = TilesMode.Backgrounds;
-                int tileWidth = 8;
-                int tileHeight = 8;
-                int tilePalWidth = 16;
-                int tilePalHeight = 16;
-                bool sharePatternTable = false;
-                bool ignoreTilesRange = false;
-                bool lossy = false;
-                int patternTableStartOffsetShared = 0;
-                var patternTableStartOffsets = new Dictionary<int, int>();
-                var attributeTableYOffsets = new Dictionary<int, int>();
-                bool quiet = false;
-
-                // Filenames
-                var outPreview = new Dictionary<int, string>();
-                var outPalette = new Dictionary<int, string>();
-                var outPatternTable = new Dictionary<int, string>();
-                string? outPatternTableShared = null;
-                var outNameTable = new Dictionary<int, string>();
-                var outAttributeTable = new Dictionary<int, string>();
-                string? outTilesCsv = null;
-                string? outPalettesCsv = null;
-                string? outColorsTable = null;
+                var c = Config.Parse(args);
+                Trace.Listeners.Clear();
+                if (!c.quiet)
+                {
+                    PrintAppInfo();
+                    Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
+                }
+                if (!c.ImageFiles.Any() && string.IsNullOrEmpty(c.OutColorsTable))
+                {
+                    Console.WriteLine("Nothing to do.");
+                    Console.WriteLine();
+                    PrintHelp();
+                    return 1;
+                }
 
                 // Data
                 var images = new Dictionary<int, FastBitmap>();
@@ -106,249 +79,33 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 // Misc
                 var nesColorsCache = new Dictionary<Color, byte>();
-                var paramRegex = new Regex(@"^--?(?<param>[a-zA-Z-]+?)-?(?<index>[0-9]*)$");
-                bool nothingToDo = true;
-
-                for (int i = 0; i < args.Length; i++)
-                {
-                    var match = paramRegex.Match(args[i]);
-                    if (!match.Success)
-                        throw new ArgumentException($"Invalid argument.", args[i]);
-                    string param = match.Groups["param"].Value;
-                    string indexStr = match.Groups["index"].Value;
-                    int indexNum = 0;
-                    if (!string.IsNullOrEmpty(indexStr))
-                        indexNum = int.Parse(indexStr);
-                    string value = i < args.Length - 1 ? args[i + 1] : "";
-                    int valueInt;
-                    switch (param)
-                    {
-                        case ArgIn.S:
-                        case ArgIn.L:
-                            imageFiles[indexNum] = value;
-                            i++;
-                            nothingToDo = false;
-                            break;
-                        case ArgColors.S:
-                        case ArgColors.L:
-                            colorsFile = value;
-                            i++;
-                            break;
-                        case ArgMode.S:
-                        case ArgMode.L:
-                            switch (value.ToLower())
-                            {
-                                case "sprite":
-                                case "sprites":
-                                case "sprites8x8":
-                                    mode = TilesMode.Sprites8x8;
-                                    tileWidth = 8;
-                                    tileHeight = 8;
-                                    tilePalWidth = 8;
-                                    tilePalHeight = 8;
-                                    break;
-                                case "sprite8x16":
-                                case "sprites8x16":
-                                    mode = TilesMode.Sprites8x16;
-                                    tileWidth = 8;
-                                    tileHeight = 16;
-                                    tilePalWidth = 8;
-                                    tilePalHeight = 16;
-                                    break;
-                                case "bg":
-                                case "background":
-                                case "backgrounds":
-                                    mode = TilesMode.Backgrounds;
-                                    tileWidth = 8;
-                                    tileHeight = 8;
-                                    tilePalWidth = 16;
-                                    tilePalHeight = 16;
-                                    break;
-                                default:
-                                    throw new ArgumentException($"{value} - invalid mode.", param);
-                            }
-                            i++;
-                            break;
-                        case ArgBgColor.S:
-                        case ArgBgColor.L:
-                            if (value != "auto")
-                            {
-                                try
-                                {
-                                    bgColor = ColorTranslator.FromHtml(value);
-                                }
-                                catch (FormatException)
-                                {
-                                    throw new ArgumentException($"{value} - invalid color.", param);
-                                }
-                            }
-                            i++;
-                            break;
-                        case ArgEnablePalettes.S:
-                        case ArgEnablePalettes.L:
-                            {
-                                var paletteNumbersStr = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                                for (int pal = 0; pal < paletteEnabled.Length; pal++)
-                                    paletteEnabled[pal] = false; // disable all palettes
-                                foreach (var palNumStr in paletteNumbersStr)
-                                {
-                                    if (!int.TryParse(palNumStr, out valueInt))
-                                        throw new ArgumentException($"\"{palNumStr}\" is not valid integer value.", param);
-                                    if (valueInt < 0 || valueInt > 3)
-                                        throw new ArgumentException($"Palette index must be between 0 and 3.", param);
-                                    paletteEnabled[valueInt] = true;
-                                }
-                                if (!paletteEnabled.Where(p => p).Any()) // will never be executed?
-                                    throw new ArgumentException($"You need to enable at least one palette.", param);
-                            }
-                            i++;
-                            break;
-                        case ArgPalette.S:
-                        case ArgPalette.L:
-                            {
-                                var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c => ColorTranslator.FromHtml(c));
-                                fixedPalettes[indexNum] = new Palette(colors);
-                            }
-                            i++;
-                            break;
-                        case ArgPatternOffset.S:
-                        case ArgPatternOffset.L:
-                            if (!int.TryParse(value, out valueInt))
-                                throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
-                            if (valueInt < 0 || valueInt >= 256)
-                                throw new ArgumentException($"Value ({valueInt}) must be between 0 and 255.", param);
-                            patternTableStartOffsets[indexNum] = valueInt;
-                            patternTableStartOffsetShared = patternTableStartOffsets[indexNum];
-                            i++;
-                            break;
-                        case ArgAttributeTableYOffset.S:
-                        case ArgAttributeTableYOffset.L:
-                            if (!int.TryParse(value, out valueInt))
-                                throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
-                            if (valueInt % 8 != 0)
-                                throw new ArgumentException($"Value ({valueInt}) must be divisible by 8.", param);
-                            if (valueInt < 0 || valueInt >= 256)
-                                throw new ArgumentException($"Value ({valueInt}) must be between 0 and 255.", param);
-                            attributeTableYOffsets[indexNum] = valueInt;
-                            i++;
-                            break;
-                        case ArgSharePatternTable.S:
-                        case ArgSharePatternTable.L:
-                            sharePatternTable = true;
-                            break;
-                        case ArgIgnoreTilesRange.S:
-                        case ArgIgnoreTilesRange.L:
-                            ignoreTilesRange = true;
-                            break;
-                        case ArgLossy.S:
-                        case ArgLossy.L:
-                            lossy = true;
-                            break;
-                        case ArgOutPreview.S:
-                        case ArgOutPreview.L:
-                            outPreview[indexNum] = value;
-                            i++;
-                            break;
-                        case ArgOutPalette.S:
-                        case ArgOutPalette.L:
-                            if (indexNum < 0 || indexNum > 3)
-                                throw new ArgumentException($"Palette index must be between 0 and 3.", param);
-                            outPalette[indexNum] = value;
-                            i++;
-                            break;
-                        case ArgOutPatternTable.S:
-                        case ArgOutPatternTable.L:
-                            outPatternTable[indexNum] = value;
-                            outPatternTableShared = value;
-                            i++;
-                            break;
-                        case ArgOutNameTable.S:
-                        case ArgOutNameTable.L:
-                            outNameTable[indexNum] = value;
-                            i++;
-                            break;
-                        case ArgOutAttributeTable.S:
-                        case ArgOutAttributeTable.L:
-                            outAttributeTable[indexNum] = value;
-                            i++;
-                            break;
-                        case ArgOutTilesCsv.S:
-                        case ArgOutTilesCsv.L:
-                            outTilesCsv = value;
-                            i++;
-                            break;
-                        case ArgOutPalettesCsv.S:
-                        case ArgOutPalettesCsv.L:
-                            outPalettesCsv = value;
-                            i++;
-                            break;
-                        case ArgOutColorsTable.S:
-                        case ArgOutColorsTable.L:
-                            outColorsTable = value;
-                            i++;
-                            nothingToDo = false;
-                            break;
-                        case ArgQuiet.S:
-                        case ArgQuiet.L:
-                            quiet = true;
-                            break;
-                        default:
-                            throw new ArgumentException($"Unknown argument.", args[i]);
-                    }
-                }
-
-                if (nothingToDo)
-                {
-                    PrintAppInfo();
-                    Console.WriteLine("Nothing to do.");
-                    Console.WriteLine();
-                    PrintHelp();
-                    return 1;
-                }
-
-                Trace.Listeners.Clear();
-                if (!quiet)
-                {
-                    PrintAppInfo();
-                    Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
-                }
-
-                // Some input data checks
-                switch (mode)
-                {
-                    case TilesMode.Sprites8x8:
-                    case TilesMode.Sprites8x16:
-                        if (!bgColor.HasValue) throw new InvalidDataException("You must specify background color for sprites.");
-                        break;
-                }
-                // TODO: more input checks
 
                 // Loading and parsing palette JSON
-                var nesColors = LoadColors(colorsFile);
-                var outTilesCsvLines = !string.IsNullOrEmpty(outTilesCsv) ? new List<string>() : null;
-                var outPalettesCsvLines = !string.IsNullOrEmpty(outPalettesCsv) ? new List<string>() : null;
+                var nesColors = LoadColors(c.ColorsFile);
+                var outTilesCsvLines = !string.IsNullOrEmpty(c.OutTilesCsv) ? new List<string>() : null;
+                var outPalettesCsvLines = !string.IsNullOrEmpty(c.OutPalettesCsv) ? new List<string>() : null;
 
-                if (outColorsTable != null)
+                if (c.OutColorsTable != null)
                 {
-                    Trace.WriteLine($"Writing color tables to {outColorsTable}...");
-                    WriteColorsTable(nesColors, outColorsTable);
+                    Trace.WriteLine($"Writing color tables to {c.OutColorsTable}...");
+                    WriteColorsTable(nesColors, c.OutColorsTable);
                 }
 
                 // Stop if there are no images
-                if (!imageFiles.Any()) return 0;
+                if (!c.ImageFiles.Any()) return 0;
 
                 // Change the fixed palettes to colors from the NES palette
-                for (int i = 0; i < fixedPalettes.Length; i++)
+                for (int i = 0; i < c.FixedPalettes.Length; i++)
                 {
-                    if (fixedPalettes[i] == null) continue;
-                    var colorsInPalette = fixedPalettes[i]!.ToArray();
+                    if (c.FixedPalettes[i] == null) continue;
+                    var colorsInPalette = c.FixedPalettes[i]!.ToArray();
                     for (int j = 0; j < colorsInPalette.Length; j++)
                         colorsInPalette[j] = nesColors[FindSimilarColor(nesColors, colorsInPalette[j], nesColorsCache)];
-                    fixedPalettes[i] = new Palette(colorsInPalette);
+                    c.FixedPalettes[i] = new Palette(colorsInPalette);
                 }
 
                 // Loading images
-                foreach (var imageFile in imageFiles)
+                foreach (var imageFile in c.ImageFiles)
                 {
                     Trace.WriteLine($"Loading image #{imageFile.Key} - {Path.GetFileName(imageFile.Value)}...");
                     var offsetRegex = new Regex(@"^(?<filename>.*?)(:(?<offset>[0-9]+)(:(?<height>[0-9]+))?)?$");
@@ -369,9 +126,9 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (image == null) throw new InvalidDataException($"Can't load {filename}.");
                     images[imageFile.Key] = image;
 
-                    if (mode == TilesMode.Backgrounds && image.Width != 256) throw new ArgumentException("Image width must be 256 for backgrounds mode.", filename);
-                    if (image.Width % tileWidth != 0) throw new ArgumentException($"Image width must be divisible by {tileWidth}.", filename);
-                    if (image.Height % tileHeight != 0) throw new ArgumentException($"Image height must be divisible by {tileHeight}.", filename);
+                    if (c.Mode == Config.TilesMode.Backgrounds && image.Width != 256) throw new ArgumentException("Image width must be 256 for backgrounds mode.", filename);
+                    if (image.Width % c.TileWidth != 0) throw new ArgumentException($"Image width must be divisible by {c.TileWidth}.", filename);
+                    if (image.Height % c.TileHeight != 0) throw new ArgumentException($"Image height must be divisible by {c.TileHeight}.", filename);
                 }
 
                 // Change all colors in the images to colors from the NES palette
@@ -384,28 +141,36 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int x = 0; x < image.Width; x++)
                         {
                             var color = image.GetPixelColor(x, y);
-                            if (color.A >= 0x80 || mode == TilesMode.Backgrounds)
+                            if (color.A >= 0x80 || c.Mode == Config.TilesMode.Backgrounds)
                             {
                                 var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
                                 image.SetPixelColor(x, y, similarColor);
                             }
                             else
                             {
-                                if (!bgColor.HasValue) throw new InvalidDataException("You must specify background color for images with transparency.");
-                                image.SetPixelColor(x, y, bgColor.Value);
+                                if (!c.BgColor.HasValue) throw new InvalidDataException("You must specify background color for images with transparency.");
+                                image.SetPixelColor(x, y, c.BgColor.Value);
                             }
                         }
                     }
                 }
 
                 List<Palette> calculatedPalettes;
-                var maxCalculatedPaletteCount = Enumerable.Range(0, 4).Select(i => paletteEnabled[i] && fixedPalettes[i] == null).Count();
+                var maxCalculatedPaletteCount = Enumerable.Range(0, 4)
+                    .Select(i => c.PaletteEnabled[i] && c.FixedPalettes[i] == null).Count();
+                Color bgColor;
                 // Detect background color
-                if (bgColor.HasValue)
+                if (c.BgColor.HasValue)
                 {
                     // Manually
-                    bgColor = nesColors[FindSimilarColor(nesColors, bgColor.Value, nesColorsCache)];
-                    calculatedPalettes = CalculatePalettes(images, paletteEnabled, fixedPalettes, attributeTableYOffsets, tilePalWidth, tilePalHeight, bgColor.Value).ToList();
+                    bgColor = nesColors[FindSimilarColor(nesColors, c.BgColor.Value, nesColorsCache)];
+                    calculatedPalettes = CalculatePalettes(images,
+                                                           c.PaletteEnabled,
+                                                           c.FixedPalettes,
+                                                           c.PattributeTableYOffsets,
+                                                           c.TilePalWidth,
+                                                           c.TilePalHeight,
+                                                           c.BgColor.Value).ToList();
                 }
                 else
                 {
@@ -415,17 +180,17 @@ namespace com.clusterrr.Famicom.NesTiler
                     foreach (var imageNum in images.Keys)
                     {
                         var image = images[imageNum];
-                        for (int tileY = 0; tileY < image.Height / tilePalHeight; tileY++)
+                        for (int tileY = 0; tileY < image.Height / c.TilePalHeight; tileY++)
                         {
-                            for (int tileX = 0; tileX < image.Width / tilePalWidth; tileX++)
+                            for (int tileX = 0; tileX < image.Width / c.TilePalWidth; tileX++)
                             {
                                 // Count each color only once per tile/sprite
                                 var colorsInTile = new List<Color>();
-                                for (int y = 0; y < tilePalHeight; y++)
+                                for (int y = 0; y < c.TilePalHeight; y++)
                                 {
-                                    for (int x = 0; x < tilePalWidth; x++)
+                                    for (int x = 0; x < c.TilePalWidth; x++)
                                     {
-                                        var color = image.GetPixelColor((tileX * tilePalWidth) + x, (tileY * tilePalHeight) + y);
+                                        var color = image.GetPixelColor((tileX * c.TilePalWidth) + x, (tileY * c.TilePalHeight) + y);
                                         if (!colorsInTile.Contains(color))
                                             colorsInTile.Add(color);
                                     }
@@ -446,15 +211,21 @@ namespace com.clusterrr.Famicom.NesTiler
                     var calcResults = new Dictionary<Color, Palette[]>();
                     for (int i = 0; i < Math.Min(candidates.Length, MAX_BG_COLOR_AUTODETECT_ITERATIONS); i++)
                     {
-                        calcResults[candidates[i]] = CalculatePalettes(images, paletteEnabled, fixedPalettes, attributeTableYOffsets, tilePalWidth, tilePalHeight, candidates[i]);
+                        calcResults[candidates[i]] = CalculatePalettes(images,
+                                                                       c.PaletteEnabled,
+                                                                       c.FixedPalettes,
+                                                                       c.PattributeTableYOffsets,
+                                                                       c.TilePalWidth,
+                                                                       c.TilePalHeight,
+                                                                       candidates[i]);
                     }
                     // Select background color which uses minimum palettes
                     var kv = calcResults.OrderBy(kv => kv.Value.Length).First();
                     (bgColor, calculatedPalettes) = (kv.Key, kv.Value.ToList());
-                    Trace.WriteLine(ColorTranslator.ToHtml(bgColor.Value));
+                    Trace.WriteLine(ColorTranslator.ToHtml(bgColor));
                 }
 
-                if (calculatedPalettes.Count > maxCalculatedPaletteCount && !lossy)
+                if (calculatedPalettes.Count > maxCalculatedPaletteCount && !c.Lossy)
                 {
                     throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes, {maxCalculatedPaletteCount} is maximum.");
                 }
@@ -464,11 +235,11 @@ namespace com.clusterrr.Famicom.NesTiler
                 outPalettesCsvLines?.Add("palette_id,color0,color1,color2,color3");
                 for (var i = 0; i < palettes.Length; i++)
                 {
-                    if (paletteEnabled[i])
+                    if (c.PaletteEnabled[i])
                     {
-                        if (fixedPalettes[i] != null)
+                        if (c.FixedPalettes[i] != null)
                         {
-                            palettes[i] = fixedPalettes[i];
+                            palettes[i] = c.FixedPalettes[i];
                         }
                         else if (calculatedPalettes.Any())
                         {
@@ -485,30 +256,30 @@ namespace com.clusterrr.Famicom.NesTiler
 
                         if (palettes[i] != null)
                         {
-                            Trace.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.Value)}(BG) {string.Join(" ", palettes[i]!.Select(p => ColorTranslator.ToHtml(p)))}");
+                            Trace.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor)}(BG) {string.Join(" ", palettes[i]!.Select(p => ColorTranslator.ToHtml(p)))}");
                             // Write CSV if required
-                            outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor.Value)},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i]![c] != null ? ColorTranslator.ToHtml(palettes[i]![c]!.Value) : "")))}");
+                            outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor)},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i]![c] != null ? ColorTranslator.ToHtml(palettes[i]![c]!.Value) : "")))}");
                         }
                     }
                 }
 
                 // Calculate palette as color indices and save them to files
-                var bgColorId = FindSimilarColor(nesColors, bgColor.Value, nesColorsCache);
+                var bgColorIndex = FindSimilarColor(nesColors, bgColor, nesColorsCache);
                 for (int p = 0; p < palettes.Length; p++)
                 {
-                    if (paletteEnabled[p] && outPalette.ContainsKey(p))
+                    if (c.PaletteEnabled[p] && c.OutPalette.ContainsKey(p))
                     {
                         var paletteRaw = new byte[4];
-                        paletteRaw[0] = bgColorId;
-                        for (int c = 1; c <= 3; c++)
+                        paletteRaw[0] = bgColorIndex;
+                        for (int colorIndex = 1; colorIndex <= 3; colorIndex++)
                         {
                             if (palettes[p] == null)
-                                paletteRaw[c] = 0;
-                            else if (palettes[p]![c].HasValue)
-                                paletteRaw[c] = FindSimilarColor(nesColors, palettes[p]![c]!.Value, nesColorsCache);
+                                paletteRaw[colorIndex] = 0;
+                            else if (palettes[p]![colorIndex].HasValue)
+                                paletteRaw[colorIndex] = FindSimilarColor(nesColors, palettes[p]![colorIndex]!.Value, nesColorsCache);
                         }
-                        File.WriteAllBytes(outPalette[p], paletteRaw);
-                        Trace.WriteLine($"Palette #{p} saved to {outPalette[p]}");
+                        File.WriteAllBytes(c.OutPalette[p], paletteRaw);
+                        Trace.WriteLine($"Palette #{p} saved to {c.OutPalette[p]}");
                     }
                 }
 
@@ -518,12 +289,12 @@ namespace com.clusterrr.Famicom.NesTiler
                     Trace.WriteLine($"Mapping palettes for image #{imageNum}...");
                     var image = images[imageNum];
                     int attributeTableOffset;
-                    attributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
-                    paletteIndexes[imageNum] = new byte[image.Width / tilePalWidth, (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)tilePalHeight)];
+                    c.PattributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                    paletteIndexes[imageNum] = new byte[image.Width / c.TilePalWidth, (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)c.TilePalHeight)];
                     // For each tile/sprite
-                    for (int tilePalY = 0; tilePalY < (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)tilePalHeight); tilePalY++)
+                    for (int tilePalY = 0; tilePalY < (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)c.TilePalHeight); tilePalY++)
                     {
-                        for (int tilePalX = 0; tilePalX < image.Width / tilePalWidth; tilePalX++)
+                        for (int tilePalX = 0; tilePalX < image.Width / c.TilePalWidth; tilePalX++)
                         {
                             double minDelta = double.MaxValue;
                             byte bestPaletteIndex = 0;
@@ -532,8 +303,8 @@ namespace com.clusterrr.Famicom.NesTiler
                             {
                                 if (palettes[paletteIndex] == null) continue;
                                 double delta = palettes[paletteIndex]!.GetTileDelta(
-                                    image, tilePalX * tilePalWidth, (tilePalY * tilePalHeight) - attributeTableOffset,
-                                    tilePalWidth, tilePalHeight, bgColor.Value);
+                                    image, tilePalX * c.TilePalWidth, (tilePalY * c.TilePalHeight) - attributeTableOffset,
+                                    c.TilePalWidth, c.TilePalHeight, bgColor);
                                 // Find palette with most similar colors
                                 if (delta < minDelta)
                                 {
@@ -546,19 +317,19 @@ namespace com.clusterrr.Famicom.NesTiler
                             paletteIndexes[imageNum][tilePalX, tilePalY] = bestPaletteIndex;
 
                             // Change tile colors to colors from the palette
-                            for (int y = 0; y < tilePalHeight; y++)
+                            for (int y = 0; y < c.TilePalHeight; y++)
                             {
-                                for (int x = 0; x < tilePalWidth; x++)
+                                for (int x = 0; x < c.TilePalWidth; x++)
                                 {
-                                    var cy = (tilePalY * tilePalHeight) + y - attributeTableOffset;
+                                    var cy = (tilePalY * c.TilePalHeight) + y - attributeTableOffset;
                                     if (cy < 0) continue;
-                                    var color = image.GetPixelColor((tilePalX * tilePalWidth) + x, cy);
+                                    var color = image.GetPixelColor((tilePalX * c.TilePalWidth) + x, cy);
                                     var similarColor = FindSimilarColor(Enumerable.Concat(
                                             bestPalette,
-                                            new Color[] { bgColor.Value }
+                                            new Color[] { bgColor }
                                         ), color);
                                     image.SetPixelColor(
-                                        (tilePalX * tilePalWidth) + x,
+                                        (tilePalX * c.TilePalWidth) + x,
                                         cy,
                                         similarColor);
                                 }
@@ -567,22 +338,22 @@ namespace com.clusterrr.Famicom.NesTiler
                     } // tile Y
 
                     // Save preview if required
-                    if (outPreview.ContainsKey(imageNum))
+                    if (c.OutPreview.ContainsKey(imageNum))
                     {
-                        File.WriteAllBytes(outPreview[imageNum], image.Encode(SKEncodedImageFormat.Png, 0));
-                        Trace.WriteLine($"Preview #{imageNum} saved to {outPreview[imageNum]}");
+                        File.WriteAllBytes(c.OutPreview[imageNum], image.Encode(SKEncodedImageFormat.Png, 0));
+                        Trace.WriteLine($"Preview #{imageNum} saved to {c.OutPreview[imageNum]}");
                     }
                 }
 
                 // Generate attribute tables
-                foreach (var imageNum in outAttributeTable.Keys)
+                foreach (var imageNum in c.OutAttributeTable.Keys)
                 {
-                    if (mode != TilesMode.Backgrounds)
+                    if (c.Mode != Config.TilesMode.Backgrounds)
                         throw new InvalidOperationException("Attribute table generation available for backgrounds mode only.");
                     Trace.WriteLine($"Creating attribute table for image #{imageNum}...");
                     var image = images[imageNum];
                     int attributeTableOffset;
-                    attributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                    c.PattributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
                     var attributeTableRaw = new List<byte>();
                     int width = paletteIndexes[imageNum].GetLength(0);
                     int height = paletteIndexes[imageNum].GetLength(1);
@@ -617,10 +388,10 @@ namespace com.clusterrr.Famicom.NesTiler
                     }
 
                     // Save to file
-                    if (outAttributeTable.ContainsKey(imageNum))
+                    if (c.OutAttributeTable.ContainsKey(imageNum))
                     {
-                        File.WriteAllBytes(outAttributeTable[imageNum], attributeTableRaw.ToArray());
-                        Trace.WriteLine($"Attribute table #{imageNum} saved to {outAttributeTable[imageNum]}");
+                        File.WriteAllBytes(c.OutAttributeTable[imageNum], attributeTableRaw.ToArray());
+                        Trace.WriteLine($"Attribute table #{imageNum} saved to {c.OutAttributeTable[imageNum]}");
                     }
                 }
 
@@ -631,34 +402,34 @@ namespace com.clusterrr.Famicom.NesTiler
                     Trace.WriteLine($"Creating pattern table for image #{imageNum}...");
                     var image = images[imageNum];
                     int attributeTableOffset;
-                    attributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
-                    if (!patternTables.ContainsKey(!sharePatternTable ? imageNum : 0)) patternTables[!sharePatternTable ? imageNum : 0] = new Dictionary<Tile, int>();
-                    var patternTable = patternTables[!sharePatternTable ? imageNum : 0];
+                    c.PattributeTableYOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                    if (!patternTables.ContainsKey(!c.SharePatternTable ? imageNum : 0)) patternTables[!c.SharePatternTable ? imageNum : 0] = new Dictionary<Tile, int>();
+                    var patternTable = patternTables[!c.SharePatternTable ? imageNum : 0];
                     if (!nameTables.ContainsKey(imageNum)) nameTables[imageNum] = new List<int>();
                     var nameTable = nameTables[imageNum];
-                    if (!sharePatternTable)
+                    if (!c.SharePatternTable)
                     {
-                        if (!patternTableStartOffsets.ContainsKey(imageNum))
-                            patternTableStartOffsets[imageNum] = 0;
-                        tileID = patternTableStartOffsets[imageNum];
+                        if (!c.PatternTableStartOffsets.ContainsKey(imageNum))
+                            c.PatternTableStartOffsets[imageNum] = 0;
+                        tileID = c.PatternTableStartOffsets[imageNum];
                     }
                     else
                     {
-                        tileID = Math.Max(tileID, patternTableStartOffsetShared);
-                        patternTableStartOffsets[imageNum] = tileID;
+                        tileID = Math.Max(tileID, c.PatternTableStartOffsetShared);
+                        c.PatternTableStartOffsets[imageNum] = tileID;
                     }
 
-                    for (int tileY = 0; tileY < image.Height / tileHeight; tileY++)
+                    for (int tileY = 0; tileY < image.Height / c.TileHeight; tileY++)
                     {
-                        for (int tileX = 0; tileX < image.Width / tileWidth; tileX++)
+                        for (int tileX = 0; tileX < image.Width / c.TileWidth; tileX++)
                         {
-                            var tileData = new byte[tileWidth * tileHeight];
+                            var tileData = new byte[c.TileWidth * c.TileHeight];
                             byte paletteID = 0;
-                            for (int y = 0; y < tileHeight; y++)
-                                for (int x = 0; x < tileWidth; x++)
+                            for (int y = 0; y < c.TileHeight; y++)
+                                for (int x = 0; x < c.TileWidth; x++)
                                 {
-                                    var color = image.GetPixelColor((tileX * tileWidth) + x, (tileY * tileHeight) + y);
-                                    paletteID = paletteIndexes[imageNum][tileX / (tilePalWidth / tileWidth), (tileY + (attributeTableOffset / tileHeight)) / (tilePalHeight / tileHeight)];
+                                    var color = image.GetPixelColor((tileX * c.TileWidth) + x, (tileY * c.TileHeight) + y);
+                                    paletteID = paletteIndexes[imageNum][tileX / (c.TilePalWidth / c.TileWidth), (tileY + (attributeTableOffset / c.TileHeight)) / (c.TilePalHeight / c.TileHeight)];
                                     var palette = palettes[paletteID];
                                     byte colorIndex = 0;
                                     if (color != bgColor)
@@ -666,84 +437,84 @@ namespace com.clusterrr.Famicom.NesTiler
                                         colorIndex = 1;
                                         while (palette![colorIndex] != color) colorIndex++;
                                     }
-                                    tileData[(y * tileWidth) + x] = colorIndex;
+                                    tileData[(y * c.TileWidth) + x] = colorIndex;
                                 }
-                            var tile = new Tile(tileData, tileHeight);
+                            var tile = new Tile(tileData, c.TileHeight);
                             int currentTileID, id;
                             if (patternTable.TryGetValue(tile, out id))
                             {
-                                if (mode == TilesMode.Backgrounds) nameTable.Add(id);
+                                if (c.Mode == Config.TilesMode.Backgrounds) nameTable.Add(id);
                                 currentTileID = id;
                             }
                             else
                             {
                                 patternTable[tile] = tileID;
-                                if (mode == TilesMode.Backgrounds) nameTable.Add(tileID);
+                                if (c.Mode == Config.TilesMode.Backgrounds) nameTable.Add(tileID);
                                 currentTileID = tileID;
                                 tileID++;
                             }
                             currentTileID = ((currentTileID & 0x7F) << 1) | ((currentTileID & 0x80) >> 7);
 
                             // Write CSV if required
-                            outTilesCsvLines?.Add($"{imageNum},{imageFiles[imageNum]},{tileY},{tileX},{tileX * tileWidth},{tileY * tileHeight},{tileWidth},{tileHeight},{currentTileID},{paletteID}");
+                            outTilesCsvLines?.Add($"{imageNum},{c.ImageFiles[imageNum]},{tileY},{tileX},{tileX * c.TileWidth},{tileY * c.TileHeight},{c.TileWidth},{c.TileHeight},{currentTileID},{paletteID}");
                         }
                     }
-                    if (sharePatternTable && tileID > patternTableStartOffsetShared)
-                        Trace.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsetShared}-{tileID - 1}");
-                    else if (tileID > patternTableStartOffsets[imageNum])
-                        Trace.WriteLine($"#{imageNum} tiles range: {patternTableStartOffsets[imageNum]}-{tileID - 1}");
+                    if (c.SharePatternTable && tileID > c.PatternTableStartOffsetShared)
+                        Trace.WriteLine($"#{imageNum} tiles range: {c.PatternTableStartOffsetShared}-{tileID - 1}");
+                    else if (tileID > c.PatternTableStartOffsets[imageNum])
+                        Trace.WriteLine($"#{imageNum} tiles range: {c.PatternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
                         Trace.WriteLine($"Pattern table is empty.");
-                    if (tileID > 256 && !ignoreTilesRange)
+                    if (tileID > 256 && !c.IgnoreTilesRange)
                         throw new ArgumentOutOfRangeException("Tiles out of range.");
 
                     // Save pattern table to file
-                    if (outPatternTable.ContainsKey(imageNum) && !sharePatternTable)
+                    if (c.OutPatternTable.ContainsKey(imageNum) && !c.SharePatternTable)
                     {
                         var patternTableReversed = patternTable.ToDictionary(kv => kv.Value, kv => kv.Key);
                         var patternTableRaw = new List<byte>();
-                        for (int t = patternTableStartOffsets[imageNum]; t < tileID; t++)
+                        for (int t = c.PatternTableStartOffsets[imageNum]; t < tileID; t++)
                         {
                             var raw = patternTableReversed[t].GetAsPatternData();
                             patternTableRaw.AddRange(raw);
                         }
-                        File.WriteAllBytes(outPatternTable[imageNum], patternTableRaw.ToArray());
-                        Trace.WriteLine($"Pattern table #{imageNum} saved to {outPatternTable[imageNum]}");
+                        File.WriteAllBytes(c.OutPatternTable[imageNum], patternTableRaw.ToArray());
+                        Trace.WriteLine($"Pattern table #{imageNum} saved to {c.OutPatternTable[imageNum]}");
                     }
 
                     // Save nametable to file
-                    if (outNameTable.ContainsKey(imageNum))
+                    if (c.OutNameTable.ContainsKey(imageNum))
                     {
-                        if (mode != TilesMode.Backgrounds)
+                        if (c.Mode != Config.TilesMode.Backgrounds)
                             throw new InvalidOperationException("Nametable table generation available for backgrounds mode only.");
-                        File.WriteAllBytes(outNameTable[imageNum], nameTable.Select(i => (byte)i).ToArray());
-                        Trace.WriteLine($"Nametable #{imageNum} saved to {outNameTable[imageNum]}");
+                        File.WriteAllBytes(c.OutNameTable[imageNum], nameTable.Select(i => (byte)i).ToArray());
+                        Trace.WriteLine($"Nametable #{imageNum} saved to {c.OutNameTable[imageNum]}");
                     }
                 }
 
                 // Save shared pattern table to file
-                if (sharePatternTable && outPatternTableShared != null)
+                if (c.SharePatternTable && c.OutPatternTableShared != null)
                 {
                     var patternTableReversed = patternTables[0].ToDictionary(kv => kv.Value, kv => kv.Key);
                     var patternTableRaw = new List<byte>();
-                    for (int t = patternTableStartOffsetShared; t < tileID; t++)
+                    for (int t = c.PatternTableStartOffsetShared; t < tileID; t++)
                     {
                         var raw = patternTableReversed[t].GetAsPatternData();
                         patternTableRaw.AddRange(raw);
                     }
-                    File.WriteAllBytes(outPatternTableShared, patternTableRaw.ToArray());
-                    Trace.WriteLine($"Pattern table saved to {outPatternTableShared}");
+                    File.WriteAllBytes(c.OutPatternTableShared, patternTableRaw.ToArray());
+                    Trace.WriteLine($"Pattern table saved to {c.OutPatternTableShared}");
                 }
 
                 // Save CSV tiles report
-                if (outTilesCsv != null && outTilesCsvLines != null)
+                if (c.OutTilesCsv != null && outTilesCsvLines != null)
                 {
-                    File.WriteAllLines(outTilesCsv, outTilesCsvLines);
+                    File.WriteAllLines(c.OutTilesCsv, outTilesCsvLines);
                 }
                 // Save CSV palettes report
-                if (outPalettesCsv != null && outPalettesCsvLines != null)
+                if (c.OutPalettesCsv != null && outPalettesCsvLines != null)
                 {
-                    File.WriteAllLines(outPalettesCsv, outPalettesCsvLines);
+                    File.WriteAllLines(c.OutPalettesCsv, outPalettesCsvLines);
                 }
 
                 return 0;
@@ -783,7 +554,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 nesColors = new Dictionary<byte, Color>();
                 for (byte c = 0; c < 64; c++)
                 {
-                    var color = Color.FromArgb(data[c * 3], data[c * 3 + 1], data[c * 3 + 2]);
+                    var color = Color.FromArgb(data[c * 3], data[(c * 3) + 1], data[(c * 3) + 2]);
                     nesColors[c] = color;
                 }
             }

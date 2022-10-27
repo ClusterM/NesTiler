@@ -39,7 +39,7 @@ namespace com.clusterrr.Famicom.NesTiler
         };
     }
 
-    internal class ArgIn : IArg
+    class ArgIn : IArg
     {
         public const string S = "i";
         public const string L = "in";
@@ -55,7 +55,7 @@ namespace com.clusterrr.Famicom.NesTiler
         public const string S = "c";
         public const string L = "colors";
         public string? Params { get; } = "<file>";
-        public string Description { get; } = $"JSON or PAL file with the list of available colors\n(default - {Program.DEFAULT_COLORS_FILE})";
+        public string Description { get; } = $"JSON or PAL file with the list of available colors\n(default - {Config.DEFAULT_COLORS_FILE})";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
         public string Long { get; } = L;
