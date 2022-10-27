@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace com.clusterrr.Famicom.NesTiler
+﻿namespace com.clusterrr.Famicom.NesTiler
 {
     interface IArg
     {

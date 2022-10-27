@@ -1,11 +1,7 @@
 ﻿using SkiaSharp;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace com.clusterrr.Famicom.NesTiler
 {
@@ -35,12 +31,12 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public Color GetPixelColor(int x, int y)
         {
-            return colors[y * Width + x];
+            return colors[(y * Width) + x];
         }
 
         public void SetPixelColor(int x, int y, Color color)
         {
-            colors[y * Width + x] = color;
+            colors[(y * Width) + x] = color;
         }
 
         public byte[] Encode(SKEncodedImageFormat format, int v)
@@ -50,7 +46,7 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    var color = colors[y * Width + x];
+                    var color = colors[(y * Width) + x];
                     var skColor = new SKColor(color.R, color.G, color.B);
                     skImage.SetPixel(x, y, skColor);
                 }

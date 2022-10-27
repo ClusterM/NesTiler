@@ -1,5 +1,4 @@
-﻿using SkiaSharp;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -141,7 +140,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public override int GetHashCode()
         {
-            return (this[1]?.R ?? 0) + (this[2]?.R ?? 0) + (this[3]?.R ?? 0)
+            return ((this[1]?.R ?? 0) + (this[2]?.R ?? 0) + (this[3]?.R ?? 0))
                 | (((this[1]?.G ?? 0) + (this[2]?.G ?? 0) + (this[3]?.G ?? 0)) << 10)
                 | (((this[1]?.B ?? 0) + (this[2]?.B ?? 0) + (this[3]?.B ?? 0)) << 20);
         }

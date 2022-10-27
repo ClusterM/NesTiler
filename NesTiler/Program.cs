@@ -77,7 +77,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 int tileID = 0;
 
                 // Loading and parsing palette JSON
-                var nesColors = new ColorsFinder(c.ColorsFile);
+                var nesColors = new ColorFinder(c.ColorsFile);
 
                 // CSV output
                 var outTilesCsvLines = !string.IsNullOrEmpty(c.OutTilesCsv) ? new List<string>() : null;
@@ -625,6 +625,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         }
                     }
                 }
+
                 if (!grouped) break; // Nothing changed, stop iterations
             }
 

@@ -1,14 +1,7 @@
 ﻿using ColorMine.ColorSpaces;
 using ColorMine.ColorSpaces.Comparisons;
-using SkiaSharp;
-using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace com.clusterrr.Famicom.NesTiler
 {
