@@ -14,21 +14,30 @@ namespace com.clusterrr.Famicom.NesTiler
         private readonly Color[] colors;
         private static Dictionary<string, SKBitmap> imagesCache = new Dictionary<string, SKBitmap>();
 
-        private FastBitmap(SKBitmap skBitmap, int verticalOffset = 0, int height = 0)
+        private FastBitmap(SKBitmap skBitmap, int verticalOffset = 0, int height = -1)
         {
             Width = skBitmap.Width;
             Height = height <= 0 ? skBitmap.Height - verticalOffset : height;
-            if (skBitmap.Height - verticalOffset - Height <= 0) throw new InvalidOperationException("Invalid image height.");
+            if (skBitmap.Height - verticalOffset - Height < 0 || Height <= 0) throw new InvalidOperationException("Invalid image height.");
             var pixels = skBitmap.Pixels;
             colors = skBitmap.Pixels.Skip(verticalOffset * Width).Take(Width * Height).Select(p => Color.FromArgb(p.Alpha, p.Red, p.Green, p.Blue)).ToArray();
         }
 
-        public static FastBitmap? Decode(string filename, int verticalOffset = 0, int height = 0)
+        public static FastBitmap? Decode(string filename, int verticalOffset = 0, int height = -1)
         {
-            using var image = SKBitmap.Decode(filename);
-            if (image == null) return null;
-            imagesCache[filename] = image;
-            return new FastBitmap(image, verticalOffset, height);
+            try
+            {
+                using (var image = SKBitmap.Decode(filename))
+                {
+                    if (image == null) return null;
+                    imagesCache[filename] = image;
+                    return new FastBitmap(image, verticalOffset, height);
+                }
+            }
+            finally
+            {
+                GC.Collect();
+            }
         }
 
         public Color GetPixelColor(int x, int y)

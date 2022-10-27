@@ -113,7 +113,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     var heightS = match.Groups["height"].Value;
                     // Crop it if need
                     int offset = 0;
-                    int height = 0;
+                    int height = -1;
                     if (!string.IsNullOrEmpty(offsetS))
                     {
                         offset = int.Parse(offsetS);
