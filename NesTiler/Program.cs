@@ -14,7 +14,7 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     public class Program
     {
-        public const string REPO_PATH = "https://github.com/ClusterM/nestiler";
+        public const string REPO_PATH = "https://github.com/ClusterM/NesTiler";
         public static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
         public const int MAX_BG_COLOR_AUTODETECT_ITERATIONS = 5;
 
