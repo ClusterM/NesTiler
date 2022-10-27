@@ -15,10 +15,10 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     public class Program
     {
-        const string REPO_PATH = "https://github.com/ClusterM/nestiler";
-        const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
-        static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
-        const int MAX_BG_COLOR_AUTODETECT_ITERATIONS = 5;
+        public const string REPO_PATH = "https://github.com/ClusterM/nestiler";
+        public const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
+        public static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
+        public const int MAX_BG_COLOR_AUTODETECT_ITERATIONS = 5;
         static byte[] FORBIDDEN_COLORS = new byte[] { 0x0D, 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F };
 
         enum TilesMode
@@ -44,27 +44,13 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine($"Usage: {Path.GetFileName(Process.GetCurrentProcess()?.MainModule?.FileName)} <options>");
             Console.WriteLine();
             Console.WriteLine("Available options:");
-            // TODO: move options to constants
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-i#,", "--in-<#> <file>[:offset[:height]]", "input file number #, optionally cropped vertically");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-c,",  "--colors <file>", $"JSON or PAL file with the list of available colors (default - {DEFAULT_COLORS_FILE})");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-m,",  "--mode bg|sprites8x8|sprites8x16", "mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-b,",  "--bg-color <color>", "background color in HTML color format (default - autodetected)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-e,",  "--enable-palettes <palettes>", "zero-based comma separated list of palette numbers to use (default - 0,1,2,3)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-p#,", "--palette-<#>", "comma separated list of colors to use in palette number # (default - auto)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-o#,", "--pattern-offset-<#>", "first tile ID for pattern table for file number # (default - 0)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-y#,", "--attribute-table-y-offset-#", "vertical offset for attribute table in pixels");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-s,",  "--share-pattern-table", "use one pattern table for all images");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-r,",  "--ignore-tiles-range", "option to disable tile ID overflow check");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-l,",  "--lossy", "option to ignore palettes loss, produces distorted image if there are too many colors");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-v#,", "--out-preview-<#> <file.png>", "output filename for preview of image number #");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-t#,", "--out-palette-<#> <file>", "output filename for palette number #");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-n#,", "--out-pattern-table-<#> <file>", "output filename for pattern table of image number #");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-a#,", "--out-name-table-<#> <file>", "output filename for nametable of image number #");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-u#,", "--out-attribute-table-<#> <file>", "output filename for attribute table of image number #");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-z,",  "--out-tiles-csv <file.csv>", "output filename for tiles info in CSV format");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-x,",  "--out-palettes-csv <file.csv>", "output filename for palettes info in CSV format");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-g,",  "--out-colors-table <file.png>", "output filename for graphical table of available colors (from \"--colors\" option)");
-            Console.WriteLine("{0,-4} {1,-40}{2}", "-q,",  "--quiet", "suppress console output");
+            foreach (var arg in IArg.Args)
+            {
+                var s = "-" + (arg.HasIndex ? (arg.Short + "<#>") : arg.Short);
+                var l = "--" + (arg.HasIndex ? (arg.Long + "-<#>") : arg.Long) + (arg.Params != null ? " " + arg.Params : "");
+                var description = arg.Description.Replace("\n", "\n" + String.Join("", Enumerable.Repeat(" ", 48)));
+                Console.WriteLine("{0,-5} {1,-42}{2}", s, l, description);
+            }
         }
 
         public static int Main(string[] args)
@@ -110,7 +96,6 @@ namespace com.clusterrr.Famicom.NesTiler
                 string? outTilesCsv = null;
                 string? outPalettesCsv = null;
                 string? outColorsTable = null;
-                var console = (string text) => { if (!quiet) Console.WriteLine(text); };
 
                 // Data
                 var images = new Dictionary<int, FastBitmap>();
@@ -138,20 +123,19 @@ namespace com.clusterrr.Famicom.NesTiler
                     int valueInt;
                     switch (param)
                     {
-                        case "i":
-                        case "in":
-                        case "input":
+                        case ArgIn.S:
+                        case ArgIn.L:
                             imageFiles[indexNum] = value;
                             i++;
                             nothingToDo = false;
                             break;
-                        case "c":
-                        case "colors":
+                        case ArgColors.S:
+                        case ArgColors.L:
                             colorsFile = value;
                             i++;
                             break;
-                        case "m":
-                        case "mode":
+                        case ArgMode.S:
+                        case ArgMode.L:
                             switch (value.ToLower())
                             {
                                 case "sprite":
@@ -185,10 +169,8 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
-                        case "b":
-                        case "bgcolor":
-                        case "bg-color":
-                        case "background-color":
+                        case ArgBgColor.S:
+                        case ArgBgColor.L:
                             if (value != "auto")
                             {
                                 try
@@ -202,8 +184,8 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
-                        case "e":
-                        case "enable-palettes":
+                        case ArgEnablePalettes.S:
+                        case ArgEnablePalettes.L:
                             {
                                 var paletteNumbersStr = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
                                 for (int pal = 0; pal < paletteEnabled.Length; pal++)
@@ -221,16 +203,16 @@ namespace com.clusterrr.Famicom.NesTiler
                             }
                             i++;
                             break;
-                        case "p":
-                        case "palette":
+                        case ArgPalette.S:
+                        case ArgPalette.L:
                             {
                                 var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c => ColorTranslator.FromHtml(c));
                                 fixedPalettes[indexNum] = new Palette(colors);
                             }
                             i++;
                             break;
-                        case "o":
-                        case "pattern-offset":
+                        case ArgPatternOffset.S:
+                        case ArgPatternOffset.L:
                             if (!int.TryParse(value, out valueInt))
                                 throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
                             if (valueInt < 0 || valueInt >= 256)
@@ -239,8 +221,8 @@ namespace com.clusterrr.Famicom.NesTiler
                             patternTableStartOffsetShared = patternTableStartOffsets[indexNum];
                             i++;
                             break;
-                        case "y":
-                        case "attribute-table-y-offset":
+                        case ArgAttributeTableYOffset.S:
+                        case ArgAttributeTableYOffset.L:
                             if (!int.TryParse(value, out valueInt))
                                 throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
                             if (valueInt % 8 != 0)
@@ -250,72 +232,64 @@ namespace com.clusterrr.Famicom.NesTiler
                             attributeTableYOffsets[indexNum] = valueInt;
                             i++;
                             break;
-                        case "s":
-                        case "share-pattern-table":
+                        case ArgSharePatternTable.S:
+                        case ArgSharePatternTable.L:
                             sharePatternTable = true;
                             break;
-                        case "r":
-                        case "ignoretilesrange":
-                        case "ignore-tiles-range":
+                        case ArgIgnoreTilesRange.S:
+                        case ArgIgnoreTilesRange.L:
                             ignoreTilesRange = true;
                             break;
-                        case "l":
-                        case "lossy":
+                        case ArgLossy.S:
+                        case ArgLossy.L:
                             lossy = true;
                             break;
-                        case "v":
-                        case "out-preview":
-                        case "output-preview":
+                        case ArgOutPreview.S:
+                        case ArgOutPreview.L:
                             outPreview[indexNum] = value;
                             i++;
                             break;
-                        case "t":
-                        case "out-palette":
-                        case "output-palette":
+                        case ArgOutPalette.S:
+                        case ArgOutPalette.L:
                             if (indexNum < 0 || indexNum > 3)
                                 throw new ArgumentException($"Palette index must be between 0 and 3.", param);
                             outPalette[indexNum] = value;
                             i++;
                             break;
-                        case "n":
-                        case "out-pattern-table":
-                        case "output-pattern-table":
+                        case ArgOutPatternTable.S:
+                        case ArgOutPatternTable.L:
                             outPatternTable[indexNum] = value;
                             outPatternTableShared = value;
                             i++;
                             break;
-                        case "a":
-                        case "out-name-table":
-                        case "output-name-table":
-                        case "out-nametable":
-                        case "output-nametable":
+                        case ArgOutNameTable.S:
+                        case ArgOutNameTable.L:
                             outNameTable[indexNum] = value;
                             i++;
                             break;
-                        case "u":
-                        case "out-attribute-table":
-                        case "output-attribute-table":
+                        case ArgOutAttributeTable.S:
+                        case ArgOutAttributeTable.L:
                             outAttributeTable[indexNum] = value;
                             i++;
                             break;
-                        case "z":
-                        case "out-tiles-csv":
+                        case ArgOutTilesCsv.S:
+                        case ArgOutTilesCsv.L:
                             outTilesCsv = value;
                             i++;
                             break;
-                        case "x":
-                        case "out-palettes-csv":
+                        case ArgOutPalettesCsv.S:
+                        case ArgOutPalettesCsv.L:
                             outPalettesCsv = value;
                             i++;
                             break;
-                        case "g":
-                        case "out-colors-table":
+                        case ArgOutColorsTable.S:
+                        case ArgOutColorsTable.L:
                             outColorsTable = value;
                             i++;
                             nothingToDo = false;
                             break;
-                        case "q":
-                        case "quiet":
+                        case ArgQuiet.S:
+                        case ArgQuiet.L:
                             quiet = true;
                             break;
                         default:
@@ -332,12 +306,11 @@ namespace com.clusterrr.Famicom.NesTiler
                     return 1;
                 }
 
+                Trace.Listeners.Clear();
                 if (!quiet)
                 {
                     PrintAppInfo();
-                    Trace.Listeners.Clear();
                     Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
-                    Trace.AutoFlush = true;
                 }
 
                 // Some input data checks

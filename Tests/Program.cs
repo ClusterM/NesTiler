@@ -183,7 +183,7 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
-                "--input-0", $"{imagePath}",
+                "--in-0", $"{imagePath}",
                 "--out-pattern-table-0", PatternTablePath(prefix, 0),
                 "--out-name-table-0", NameTablePath(prefix, 0),
                 "--out-attribute-table-0", AttrTablePath(prefix, 0),
@@ -218,8 +218,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             var prefix = Path.GetFileNameWithoutExtension(imagePath1) + "_" + Path.GetFileNameWithoutExtension(imagePath2);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
-                "--input-0", $"{imagePath1}",
-                "--input-1", $"{imagePath2}",
+                "--in-0", $"{imagePath1}",
+                "--in-1", $"{imagePath2}",
                 "--out-pattern-table", PatternTablePath(prefix, 0),
                 "--out-name-table-0", NameTablePath(prefix, 0),
                 "--out-name-table-1", NameTablePath(prefix, 1),
@@ -259,8 +259,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
-                "--input-0", $"{imagePath}:0:128",
-                "--input-1", $"{imagePath}:128:112",
+                "--in-0", $"{imagePath}:0:128",
+                "--in-1", $"{imagePath}:128:112",
                 "--out-pattern-table-0", PatternTablePath(prefix, 0),
                 "--out-pattern-table-1", PatternTablePath(prefix, 1),
                 "--out-name-table-0", NameTablePath(prefix, 0),
@@ -301,8 +301,8 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
-                "--input-0", $"{imagePath}:0:128",
-                "--input-1", $"{imagePath}:128:112",
+                "--in-0", $"{imagePath}:0:128",
+                "--in-1", $"{imagePath}:128:112",
                 "--out-pattern-table-0", PatternTablePath(prefix, 0),
                 "--out-pattern-table-1", PatternTablePath(prefix, 1),
                 "--out-name-table-0", NameTablePath(prefix, 0),
@@ -344,10 +344,10 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
                 "--enable-palettes", "0,1,2,3",
-                "--input-0", $"{imagePath}:0:64",
-                "--input-1", $"{imagePath}:64:64",
-                "--input-2", $"{imagePath}:128:64",
-                "--input-3", $"{imagePath}:192:48",
+                "--in-0", $"{imagePath}:0:64",
+                "--in-1", $"{imagePath}:64:64",
+                "--in-2", $"{imagePath}:128:64",
+                "--in-3", $"{imagePath}:192:48",
                 "--out-pattern-table-0", PatternTablePath(prefix, 0),
                 "--out-pattern-table-1", PatternTablePath(prefix, 1),
                 "--out-pattern-table-2", PatternTablePath(prefix, 2),
