@@ -77,11 +77,11 @@ namespace com.clusterrr.Famicom.NesTiler
                 var nameTables = new Dictionary<int, List<int>>();
                 int tileID = 0;
 
-                // Misc
-                var nesColorsCache = new Dictionary<Color, byte>();
-
                 // Loading and parsing palette JSON
                 var nesColors = LoadColors(c.ColorsFile);
+                var colorsFinder = new ColorsFinder(nesColors);
+
+                // CSV output
                 var outTilesCsvLines = !string.IsNullOrEmpty(c.OutTilesCsv) ? new List<string>() : null;
                 var outPalettesCsvLines = !string.IsNullOrEmpty(c.OutPalettesCsv) ? new List<string>() : null;
 
@@ -100,7 +100,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (c.FixedPalettes[i] == null) continue;
                     var colorsInPalette = c.FixedPalettes[i]!.ToArray();
                     for (int j = 0; j < colorsInPalette.Length; j++)
-                        colorsInPalette[j] = nesColors[FindSimilarColor(nesColors, colorsInPalette[j], nesColorsCache)];
+                        colorsInPalette[j] = nesColors[colorsFinder.FindSimilarColor(colorsInPalette[j])];
                     c.FixedPalettes[i] = new Palette(colorsInPalette);
                 }
 
@@ -143,7 +143,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             var color = image.GetPixelColor(x, y);
                             if (color.A >= 0x80 || c.Mode == Config.TilesMode.Backgrounds)
                             {
-                                var similarColor = nesColors[FindSimilarColor(nesColors, color, nesColorsCache)];
+                                var similarColor = nesColors[colorsFinder.FindSimilarColor(color)];
                                 image.SetPixelColor(x, y, similarColor);
                             }
                             else
@@ -163,7 +163,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 if (c.BgColor.HasValue)
                 {
                     // Manually
-                    bgColor = nesColors[FindSimilarColor(nesColors, c.BgColor.Value, nesColorsCache)];
+                    bgColor = nesColors[colorsFinder.FindSimilarColor(c.BgColor.Value)];
                     calculatedPalettes = CalculatePalettes(images,
                                                            c.PaletteEnabled,
                                                            c.FixedPalettes,
@@ -264,7 +264,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
 
                 // Calculate palette as color indices and save them to files
-                var bgColorIndex = FindSimilarColor(nesColors, bgColor, nesColorsCache);
+                var bgColorIndex = colorsFinder.FindSimilarColor(bgColor);
                 for (int p = 0; p < palettes.Length; p++)
                 {
                     if (c.PaletteEnabled[p] && c.OutPalette.ContainsKey(p))
@@ -276,7 +276,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             if (palettes[p] == null)
                                 paletteRaw[colorIndex] = 0;
                             else if (palettes[p]![colorIndex].HasValue)
-                                paletteRaw[colorIndex] = FindSimilarColor(nesColors, palettes[p]![colorIndex]!.Value, nesColorsCache);
+                                paletteRaw[colorIndex] = colorsFinder.FindSimilarColor(palettes[p]![colorIndex]!.Value);
                         }
                         File.WriteAllBytes(c.OutPalette[p], paletteRaw);
                         Trace.WriteLine($"Palette #{p} saved to {c.OutPalette[p]}");
@@ -324,7 +324,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                     var cy = (tilePalY * c.TilePalHeight) + y - attributeTableOffset;
                                     if (cy < 0) continue;
                                     var color = image.GetPixelColor((tilePalX * c.TilePalWidth) + x, cy);
-                                    var similarColor = FindSimilarColor(Enumerable.Concat(
+                                    var similarColor = colorsFinder.FindSimilarColor(Enumerable.Concat(
                                             bestPalette,
                                             new Color[] { bgColor }
                                         ), color);
@@ -748,49 +748,6 @@ namespace com.clusterrr.Famicom.NesTiler
             // Sort them again
             result = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
 
-            return result;
-        }
-
-        static byte FindSimilarColor(Dictionary<byte, Color> colors, Color color, Dictionary<Color, byte>? cache = null)
-        {
-            if (cache != null)
-            {
-                if (cache.ContainsKey(color))
-                    return cache[color];
-            }
-            byte result = byte.MaxValue;
-            double minDelta = double.MaxValue;
-            Color c = Color.Transparent;
-            foreach (var index in colors.Keys)
-            {
-                var delta = color.GetDelta(colors[index]);
-                if (delta < minDelta)
-                {
-                    minDelta = delta;
-                    result = index;
-                    c = colors[index];
-                }
-            }
-            if (result == byte.MaxValue)
-                throw new KeyNotFoundException($"Invalid color: {color}.");
-            if (cache != null)
-                cache[color] = result;
-            return result;
-        }
-
-        static Color FindSimilarColor(IEnumerable<Color> colors, Color color)
-        {
-            Color result = Color.Black;
-            double minDelta = double.MaxValue;
-            foreach (var c in colors)
-            {
-                var delta = color.GetDelta(c);
-                if (delta < minDelta)
-                {
-                    minDelta = delta;
-                    result = c;
-                }
-            }
             return result;
         }
     }
