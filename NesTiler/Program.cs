@@ -225,7 +225,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 if (calculatedPalettes.Count > maxCalculatedPaletteCount && !c.Lossy)
                 {
-                    throw new ArgumentOutOfRangeException($"Can't fit {calculatedPalettes.Count} palettes, {maxCalculatedPaletteCount} is maximum.");
+                    throw new InvalidOperationException($"Can't fit {calculatedPalettes.Count} palettes, {maxCalculatedPaletteCount} is maximum.");
                 }
 
                 // Select palettes

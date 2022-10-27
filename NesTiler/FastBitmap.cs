@@ -1,4 +1,5 @@
 ﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace com.clusterrr.Famicom.NesTiler
         {
             Width = skBitmap.Width;
             Height = height <= 0 ? skBitmap.Height - verticalOffset : height;
+            if (skBitmap.Height - verticalOffset - Height <= 0) throw new InvalidOperationException("Invalid image height.");
             var pixels = skBitmap.Pixels;
             colors = skBitmap.Pixels.Skip(verticalOffset * Width).Take(Width * Height).Select(p => Color.FromArgb(p.Alpha, p.Red, p.Green, p.Blue)).ToArray();
         }
