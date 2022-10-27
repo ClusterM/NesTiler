@@ -27,7 +27,7 @@ Same as **nrom_split** but with сomplicated image that doesn't fit NES colors l
 
 
 ## mmc3_split4
-This example uses single image splitted into four horizontally. Each part uses it's own pattern table, <256 tiles each. MMC3 IRQs and bankswitching used to switch pattern tables on the respective lines, so it's possible to remove 256 tiles limitation at all.
+This example uses single image splitted into four horizontally. Each part uses it's own pattern table, <256 tiles each. MMC3 IRQs and bankswitching used to switch pattern tables on the respective lines, so it's possible to remove 256 tiles limitation at all. This example contains tricky code to avoid visual artefacts.
 
 ![Image](../TestImages/Images/myatej.gif)
 
