@@ -136,7 +136,7 @@
         public const string S = "l";
         public const string L = "lossy";
         public string? Params { get; } = "<level>";
-        public string Description { get; } = "lossy level 0-3, defines how many color distortion is allowed\nwithout throwing an error (default - 2)";
+        public string Description { get; } = "lossy level: 0-3, defines how many color distortion is allowed\nwithout throwing an error (default - 2)";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
         public string Long { get; } = L;
