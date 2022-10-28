@@ -102,8 +102,8 @@
     {
         public const string S = "o";
         public const string L = "pattern-offset";
-        public string? Params { get; } = "<tile_id>";
-        public string Description { get; } = "first tile ID for pattern table for file number # (default - 0)";
+        public string? Params { get; } = "<tile_index>";
+        public string Description { get; } = "first tile index for pattern table for file number # (default - 0)";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
         public string Long { get; } = L;
