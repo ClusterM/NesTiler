@@ -37,7 +37,7 @@
         public const string S = "i";
         public const string L = "in";
         public string? Params { get; } = "<file>[:offset[:height]]";
-        public string Description { get; } = "input file number #, optionally cropped vertically";
+        public string Description { get; } = "input filename number #, optionally cropped vertically";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
         public string Long { get; } = L;
