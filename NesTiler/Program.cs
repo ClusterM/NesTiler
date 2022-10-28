@@ -174,7 +174,10 @@ namespace com.clusterrr.Famicom.NesTiler
                                                            c.TilePalHeight,
                                                            c.BgColor.Value);
                     if ((c.LossyLevel <= 1) && (lossyInfo != null))
-                        throw new InvalidDataException($"Image #{lossyInfo?.ImageNum}, tile at X={lossyInfo?.TileX} Y={lossyInfo?.TileY} has {lossyInfo?.ColorCount + 1} colors while only 4 is possible.");
+                        throw new InvalidDataException($"Image #{lossyInfo?.ImageNum}, " +
+                            $"tile at ({lossyInfo?.TileX},{lossyInfo?.TileY})-" +
+                            $"({lossyInfo?.TileX + lossyInfo?.TileWidth},{lossyInfo?.TileY + lossyInfo?.TileHeight}) has {lossyInfo?.Colors?.Length} " +
+                            $"colors ({string.Join(", ", lossyInfo?.Colors?.Select(c => c.ToHtml())!)}) while only 4 possible.");
                 }
                 else
                 {
@@ -237,7 +240,10 @@ namespace com.clusterrr.Famicom.NesTiler
                         var kvLossy = calcResults.OrderBy(kv => kv.Value.Palettes.Length).First();
                         lossyInfo = kvLossy.Value.LossyInfo;
                         if (c.LossyLevel <= 1)
-                            throw new InvalidDataException($"Image #{lossyInfo?.ImageNum}, tile at X={lossyInfo?.TileX} Y={lossyInfo?.TileY} has {lossyInfo?.ColorCount + 1} colors while only 4 is possible.");
+                            throw new InvalidDataException($"Image #{lossyInfo?.ImageNum}, " +
+                                $"tile at ({lossyInfo?.TileX},{lossyInfo?.TileY})-" +
+                                $"({lossyInfo?.TileX + lossyInfo?.TileWidth},{lossyInfo?.TileY + lossyInfo?.TileHeight}) has {lossyInfo?.Colors?.Length} " +
+                                $"colors ({string.Join(", ", lossyInfo?.Colors?.Select(c => c.ToHtml())!)}) while only 4 possible.");
                         (bgColor, calculatedPalettes) = (kvLossy.Key, kvLossy.Value.Palettes);
                     }
                     Trace.WriteLine(bgColor.ToHtml());

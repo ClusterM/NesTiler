@@ -14,11 +14,11 @@ namespace com.clusterrr.Famicom.NesTiler
         public struct LossyInfo
         {
             public int ImageNum { get; init; }
-            public int ColorCount { get; init; }
             public int TileX { get; init; }
             public int TileY { get; init; }
             public int TileWidth { get; init; }
             public int TileHeight { get; init; }
+            public SKColor[] Colors { get; init; }
         }
 
         private SKColor[] colors;
@@ -51,16 +51,15 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
             }
 
-            // TODO: one more lossy level?
             var colorsCandidates = colorCounter.OrderByDescending(kv => kv.Value);
             if (colorsCandidates.Count() > 3) ColorLossy = new()
             {
                 ImageNum = imageNum,
-                ColorCount = colorsCandidates.Count(),
                 TileX = tileX,
                 TileY = tileY,
                 TileWidth = tileWidth,
-                TileHeight = tileHeight
+                TileHeight = tileHeight,
+                Colors = Enumerable.Concat(new SKColor[] { bgColor }, colorsCandidates.Select(kv => kv.Key)).ToArray()
             };
             colors = colorsCandidates.Take(3).OrderBy(kv => kv.Key.ToArgb()).Select(kv => kv.Key).ToArray();
         }
