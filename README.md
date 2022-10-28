@@ -7,20 +7,21 @@ When developing applications and games for NES, to display images, you need to s
 The sequence of actions is as follows:
 * Load available NES colors from JSON or PAL file
 * Load images, crop them if need
-* Change every pixel of each image, so it's matches most similar color from available colors
-* Calculate desired number of palettes to fit every image or at least trying to do this
+* Change every pixel of each image, so it's matches most similar color from available NES colors
+* Calculate desired number of palettes to fit every image or at least trying to do it
 * Generate attribute table for each image, assign palette index for each tiles set
 * Change colors of every tile to match assigned palette index (if need)
-* Create set of tiles, trying to them into 256, grouping same tiles into one
+* Create set of tiles, trying to fit them into 256, grouping same tiles into one
 * Generate pattern table and nametable for each image
 
 ## How to use
 
 ```
-Usage: nestiler.exe <options>
+Available options:
+Usage: nestiler <options>
 
 Available options:
--i<#> --in-<#> <file>[:offset[:height]]         input file number #, optionally cropped vertically
+-i<#> --in-<#> <file>[:offset[:height]]         input filename number #, optionally cropped vertically
 -c    --colors <file>                           JSON or PAL file with the list of available colors
                                                 (default - nestiler-colors.json)
 -m    --mode bg|sprites8x8|sprites8x16          mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)
@@ -32,9 +33,8 @@ Available options:
 -o<#> --pattern-offset-<#> <tile_id>            first tile ID for pattern table for file number # (default - 0)
 -y<#> --attribute-table-y-offset-<#> <pixels>   vertical offset for attribute table in pixels (default - 0)
 -s    --share-pattern-table                     vertical offset for attribute table in pixels (default - 0)
--r    --ignore-tiles-range                      option to disable tile ID overflow check
--l    --lossy                                   option to ignore palettes loss, produces distorted image
-                                                if there are too many colors
+-l    --lossy <level>                           lossy level: 0-3, defines how many color distortion is allowed
+                                                without throwing an error (default - 2)
 -v<#> --out-preview-<#> <file.png>              output filename for preview of image number #
 -t<#> --out-palette-<#> <file>                  output filename for palette number #
 -n<#> --out-pattern-table-<#> <file>            output filename for pattern table of image number #
@@ -48,7 +48,9 @@ Available options:
 ```
 
 ### Option -i<#>, --in-<#> \<file\>[:offset[:height]]
-Option to specify input images. You need to add image index (any number) after option name, so you can specify multiple images. Index will be used to identify output filenames. Examples:
+Option to specify input images filenames. You need to replace __#__ with image index (any number), so you can specify multiple images. Index will be used to identify output filenames.
+
+Examples:
 * nestiler -i0 image1.png -i1 image2.png -i2 image3.png ...
 * nestiler --in-0 image1.png --in-1 image2.png --in-2 image3.png ...
  
@@ -58,7 +60,6 @@ Also, you can load image partically - split them horizontally, just add offset a
 It's usefull if you need to show single image on screen but you want to split it into two 256-tiles pattern tables and switch them on specific line in the middle of rendering process.
 
 ### Option -c, --colors \<file\>
-
 Option to specify file with available colors and indexes. This file can be in JSON format (see nestiler-colors.json) or binary PAL format (used by emulators).
 
 Examples:
@@ -67,6 +68,64 @@ Examples:
 
 ### Option -m, --mode bg|sprites8x8|sprites8x16
 Option to specify processing mode: backgrounds, 8x8 sprites or 8x16 sprites. Default is backgrounds mode.
+
 Examples:
 * nestiler -m bg ...
 * nestiler --mode sprites8x8 ...
+
+### Option -b, --bg-color \<color\>
+Background color in HTML format. Optional for background mode (will be set automatically) and required for sprite modes.
+
+Examples:
+* nestiler -b #C4C4C4 ...
+* nestiler --bg-color #000000 ...
+
+### Option -e, --enable-palettes \<palettes\>
+List of palette numbers (4-color combinations) to use, zero-based, comma separated: from 0 to 3. Useful when you need to fit image into limited amount of palettes (when lossy level = 3) or get error if you can't fit in them (when lossy level < 2, see below). Default value is all - 0,1,2,3.
+
+Examples:
+* nestiler -e 0,1,2,3 ...
+* nestiler --enable-palettes 0,1 ...
+
+### Option -p<#>, --palette-<#> \<colors\>
+Comma separated list of colors to use in palette number __#__ (0-3). Using this option you can manually specify palettes to use (three color sets), HTML format, comma separated. Three colors instead of four because background color shared between all palettes. Useful if you need fixed palette for other purposes, it can be shared with your image.
+
+Examples:
+* nestiler -p0 #747474,#A40000,#004400 -p2 #8000F0,#D82800,#FCFCFC ...
+* nestiler --palette-0 #5C94FC,#FC7460,#FC9838 --palette-1 #80D010,#58F898,#787878 ...
+
+Please note that index here is palette number, not input fule number.
+
+### Option -o<#> --pattern-offset-<#> \<tile_id\>
+Using this option you can set first tile index to use with image number __#__. Useful if you need to reserve some space in the begining of pattern table. Default valus is 0.
+
+Examples:
+* nestiler -o1 32 ...
+* nestiler --pattern-offset-5 100 ...
+
+__#__ number is ignored when the --share-pattern-table option is used (see below).
+
+### Option -y<#> --attribute-table-y-offset-<#> \<pixels\>
+One attribute table byte stores four palette indices for 16 tiles (4x4 square). It can cause problems if your image should be displayed on lines whose numbers are not divisible by 32. Using this option you can set vertical image offset for image number __#__ - amount of pixels divisible by 8. Default value is 0. Please note that you need to care about unused bites manually.
+
+Examples:
+* nestiler -y1 32 ...
+* nestiler --attribute-table-y-offset-0 16 ...
+
+### Option -s, --share-pattern-table
+Use this option if you need to share single pattern table between all input images. Useful if you need to scroll screen horizontally.
+
+Examples:
+* nestiler -s ...
+* nestiler --share-pattern-table ...
+
+### Option -l, --lossy <level>
+Lossy level: 0-3, defines how many color distortion is allowed without throwing an error.
+
+* 0 - throw error even if any pixel of any input image is not from NES colors (from file specified by __--colors__ option)
+* 1 - ignore errors from level 0 by replacing every pixel color with most similar NES color, but throw error if any input image contains tile with more than four colors
+* 2 - ignore errors from levels 0 and 1 by replacing unwanted colors with most similar available, but throw error if there are more than 4 (or less if __--enable-palettes__ option is used)
+* 3 - ignore all color ploblems by replacing unwanted colors with most similar available
+  
+Default value is 2.
+  
