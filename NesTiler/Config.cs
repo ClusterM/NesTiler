@@ -30,8 +30,7 @@ namespace com.clusterrr.Famicom.NesTiler
         public int TilePalWidth { get; private set; } = 16;
         public int TilePalHeight { get; private set; } = 16;
         public bool SharePatternTable { get; private set; } = false;
-        public bool IgnoreTilesRange { get; private set; } = false;
-        public bool Lossy { get; private set; } = false;
+        public int LossyLevel { get; private set; } = 2;
         public int PatternTableStartOffsetShared { get; private set; } = 0;
         public Dictionary<int, int> PatternTableStartOffsets { get; private set; } = new Dictionary<int, int>();
         public Dictionary<int, int> PattributeTableYOffsets { get; private set; } = new Dictionary<int, int>();
@@ -157,7 +156,17 @@ namespace com.clusterrr.Famicom.NesTiler
                     case ArgPalette.S:
                     case ArgPalette.L:
                         {
-                            var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c => ColorTranslator.FromHtml(c).ToSKColor());
+                            var colors = value.Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(c =>
+                            {
+                                try
+                                {
+                                    return ColorTranslator.FromHtml(c).ToSKColor();
+                                }
+                                catch (FormatException)
+                                {
+                                    throw new ArgumentException($"{c} - invalid color.", param);
+                                }
+                            });
                             config.FixedPalettes[indexNum] = new Palette(colors);
                         }
                         i++;
@@ -165,7 +174,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     case ArgPatternOffset.S:
                     case ArgPatternOffset.L:
                         if (!int.TryParse(value, out valueInt))
-                            throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
+                            throw new ArgumentException($"\"{value}\" is not valid integer value.", param);
                         if (valueInt < 0 || valueInt >= 256)
                             throw new ArgumentException($"Value ({valueInt}) must be between 0 and 255.", param);
                         config.PatternTableStartOffsets[indexNum] = valueInt;
@@ -175,7 +184,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     case ArgAttributeTableYOffset.S:
                     case ArgAttributeTableYOffset.L:
                         if (!int.TryParse(value, out valueInt))
-                            throw new ArgumentException($"\"{valueInt}\" is not valid integer value.", param);
+                            throw new ArgumentException($"\"{value}\" is not valid integer value.", param);
                         if (valueInt % 8 != 0)
                             throw new ArgumentException($"Value ({valueInt}) must be divisible by 8.", param);
                         if (valueInt < 0 || valueInt >= 256)
@@ -187,13 +196,14 @@ namespace com.clusterrr.Famicom.NesTiler
                     case ArgSharePatternTable.L:
                         config.SharePatternTable = true;
                         break;
-                    case ArgIgnoreTilesRange.S:
-                    case ArgIgnoreTilesRange.L:
-                        config.IgnoreTilesRange = true;
-                        break;
                     case ArgLossy.S:
                     case ArgLossy.L:
-                        config.Lossy = true;
+                        if (!int.TryParse(value, out valueInt))
+                            throw new ArgumentException($"\"{value}\" is not valid integer value.", param);
+                        if (valueInt < 0 || valueInt > 3)
+                            throw new ArgumentException($"Value ({valueInt}) must be between 0 and 3.", param);
+                        config.LossyLevel = valueInt;
+                        i++;
                         break;
                     case ArgOutPreview.S:
                     case ArgOutPreview.L:

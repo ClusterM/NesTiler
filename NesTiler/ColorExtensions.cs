@@ -28,6 +28,10 @@ namespace com.clusterrr.Famicom.NesTiler
         public static uint ToArgb(this SKColor color)
             => (uint)((color.Alpha << 24) | (color.Red << 16) | (color.Green << 8) | color.Blue);
 
+        public static string ToHtml(this Color color) => ColorTranslator.ToHtml(color);
+
+        public static string ToHtml(this SKColor color) => color.ToColor().ToHtml();
+
         public static double GetDelta(this SKColor color1, SKColor color2)
         {
             var pair = new ColorPair()
@@ -35,8 +39,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 Color1 = color1,
                 Color2 = color2
             };
-            if (cache.ContainsKey(pair))
-                return cache[pair];
+            if (cache.ContainsKey(pair)) return cache[pair];
             var a = new Rgb { R = color1.Red, G = color1.Green, B = color1.Blue };
             var b = new Rgb { R = color2.Red, G = color2.Green, B = color2.Blue };
             var delta = a.Compare(b, comparer);

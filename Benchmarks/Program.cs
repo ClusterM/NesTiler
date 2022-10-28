@@ -283,7 +283,7 @@ namespace com.clusterrr.Famicom.NesTiler.Benchmarks
                 "--out-palette-1", PalettePath(prefix, 1),
                 "--out-palette-2", PalettePath(prefix, 2),
                 "--out-palette-3", PalettePath(prefix, 3),
-                "--lossy",
+                "--lossy", "3",
                 "--out-tiles-csv", TilesCsvPath(prefix),
                 "--out-palettes-csv", PalettesCsvPath(prefix),
                 "--quiet",

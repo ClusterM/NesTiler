@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using Color = System.Drawing.Color;
 
@@ -10,8 +11,19 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     class Palette : IEquatable<Palette>, IEnumerable<SKColor>
     {
+        public struct LossyInfo
+        {
+            public int ImageNum { get; init; }
+            public int ColorCount { get; init; }
+            public int TileX { get; init; }
+            public int TileY { get; init; }
+            public int TileWidth { get; init; }
+            public int TileHeight { get; init; }
+        }
+
         private SKColor[] colors;
         private Dictionary<ColorPair, (SKColor color, double delta)> deltaCache = new();
+        public LossyInfo? ColorLossy { get; init; } = null;
 
         public SKColor? this[int i]
         {
@@ -24,13 +36,13 @@ namespace com.clusterrr.Famicom.NesTiler
         }
         public int Count => colors.Length;
 
-        public Palette(FastBitmap image, int leftX, int topY, int width, int height, SKColor bgColor)
+        public Palette(int imageNum, FastBitmap image, int tileX, int tileY, int tileWidth, int tileHeight, SKColor bgColor)
         {
             Dictionary<SKColor, int> colorCounter = new();
-            for (int y = topY; y < topY + height; y++)
+            for (int y = tileY; y < tileY + tileHeight; y++)
             {
                 if (y < 0) continue;
-                for (int x = leftX; x < leftX + width; x++)
+                for (int x = tileX; x < tileX + tileWidth; x++)
                 {
                     var color = image.GetPixelColor(x, y);
                     if (color == bgColor) continue;
@@ -40,7 +52,17 @@ namespace com.clusterrr.Famicom.NesTiler
             }
 
             // TODO: one more lossy level?
-            colors = colorCounter.OrderByDescending(kv => kv.Value).Take(3).OrderBy(kv => kv.Key.ToArgb()).Select(kv => kv.Key).ToArray();
+            var colorsCandidates = colorCounter.OrderByDescending(kv => kv.Value);
+            if (colorsCandidates.Count() > 3) ColorLossy = new()
+            {
+                ImageNum = imageNum,
+                ColorCount = colorsCandidates.Count(),
+                TileX = tileX,
+                TileY = tileY,
+                TileWidth = tileWidth,
+                TileHeight = tileHeight
+            };
+            colors = colorsCandidates.Take(3).OrderBy(kv => kv.Key.ToArgb()).Select(kv => kv.Key).ToArray();
         }
 
         public Palette(IEnumerable<SKColor> colors)

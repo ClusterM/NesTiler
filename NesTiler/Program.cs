@@ -141,8 +141,10 @@ namespace com.clusterrr.Famicom.NesTiler
                             var color = image.GetPixelColor(x, y);
                             if (color.Alpha >= 0x80 || c.Mode == Config.TilesMode.Backgrounds)
                             {
-                                // TODO: more lossy levels?
                                 var similarColor = nesColors.FindSimilarColor(color);
+                                if (c.LossyLevel <= 0 && similarColor != color)
+                                    throw new InvalidDataException($"Image #{imageNum}, pixel X={x} Y={y} has color {color.ToHtml()} " +
+                                        $"but most similar NES color is {similarColor.ToHtml()}.");
                                 image.SetPixelColor(x, y, similarColor);
                             }
                             else
@@ -154,22 +156,25 @@ namespace com.clusterrr.Famicom.NesTiler
                     }
                 }
 
-                List<Palette> calculatedPalettes;
+                Palette[] calculatedPalettes;
                 var maxCalculatedPaletteCount = Enumerable.Range(0, 4)
                     .Select(i => c.PaletteEnabled[i] && c.FixedPalettes[i] == null).Count();
                 SKColor bgColor;
+                Palette.LossyInfo? lossyInfo;
                 // Detect background color
                 if (c.BgColor.HasValue)
                 {
                     // Manually
                     bgColor = nesColors.FindSimilarColor(c.BgColor.Value);
-                    calculatedPalettes = CalculatePalettes(images,
+                    (calculatedPalettes, lossyInfo) = CalculatePalettes(images,
                                                            c.PaletteEnabled,
                                                            c.FixedPalettes,
                                                            c.PattributeTableYOffsets,
                                                            c.TilePalWidth,
                                                            c.TilePalHeight,
-                                                           c.BgColor.Value).ToList();
+                                                           c.BgColor.Value);
+                    if ((c.LossyLevel <= 1) && (lossyInfo != null))
+                        throw new InvalidDataException($"Image #{lossyInfo?.ImageNum}, tile at X={lossyInfo?.TileX} Y={lossyInfo?.TileY} has {lossyInfo?.ColorCount + 1} colors while only 4 is possible.");
                 }
                 else
                 {
@@ -207,7 +212,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Most used colors
                     var candidates = colorPerTileCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
                     // Try to calculate palettes for every background color
-                    var calcResults = new Dictionary<SKColor, Palette[]>();
+                    var calcResults = new Dictionary<SKColor, (Palette[] Palettes, Palette.LossyInfo? LossyInfo)>();
                     for (int i = 0; i < Math.Min(candidates.Length, MAX_BG_COLOR_AUTODETECT_ITERATIONS); i++)
                     {
                         calcResults[candidates[i]] = CalculatePalettes(images,
@@ -219,19 +224,37 @@ namespace com.clusterrr.Famicom.NesTiler
                                                                        candidates[i]);
                     }
                     // Select background color which uses minimum palettes
-                    var kv = calcResults.OrderBy(kv => kv.Value.Length).First();
-                    (bgColor, calculatedPalettes) = (kv.Key, kv.Value.ToList());
-                    Trace.WriteLine(ColorTranslator.ToHtml(bgColor.ToColor()));
+                    // TODO: less palettes != best solution? Take in account tile count.
+                    var kvAllLossless = calcResults.Where(kv => kv.Value.LossyInfo == null).OrderBy(kv => kv.Value.Palettes.Length);
+                    if (kvAllLossless.Any())
+                    {
+                        // Lossless combinations found, get best
+                        var kv = kvAllLossless.First();
+                        (bgColor, calculatedPalettes) = (kv.Key, kv.Value.Palettes);
+                    } else
+                    {
+                        // Lossy combinations found
+                        var kvLossy = calcResults.OrderBy(kv => kv.Value.Palettes.Length).First();
+                        lossyInfo = kvLossy.Value.LossyInfo;
+                        if (c.LossyLevel <= 1)
+                            throw new InvalidDataException($"Image #{lossyInfo?.ImageNum}, tile at X={lossyInfo?.TileX} Y={lossyInfo?.TileY} has {lossyInfo?.ColorCount + 1} colors while only 4 is possible.");
+                        (bgColor, calculatedPalettes) = (kvLossy.Key, kvLossy.Value.Palettes);
+                    }
+                    Trace.WriteLine(bgColor.ToHtml());
                 }
 
-                if (calculatedPalettes.Count > maxCalculatedPaletteCount && !c.Lossy)
+                if (calculatedPalettes.Length > maxCalculatedPaletteCount)
                 {
-                    throw new InvalidOperationException($"Can't fit {calculatedPalettes.Count} palettes, {maxCalculatedPaletteCount} is maximum.");
+                    // Check lossy and throw error in case it's too low
+                    if (c.LossyLevel <= 2) throw new InvalidDataException($"Can't fit {calculatedPalettes.Length} palettes, {maxCalculatedPaletteCount} is maximum.");
+                    // Just warning
+                    Trace.WriteLine($"WARNING! Can't fit {calculatedPalettes.Length} palettes, {maxCalculatedPaletteCount} is maximum. {calculatedPalettes.Length - maxCalculatedPaletteCount} will be discarded.");
                 }
 
                 // Select palettes
                 var palettes = new Palette?[4] { null, null, null, null };
                 outPalettesCsvLines?.Add("palette_id,color0,color1,color2,color3");
+                var calculatedPalettesList = new List<Palette>(calculatedPalettes);
                 for (var i = 0; i < palettes.Length; i++)
                 {
                     if (c.PaletteEnabled[i])
@@ -240,20 +263,21 @@ namespace com.clusterrr.Famicom.NesTiler
                         {
                             palettes[i] = c.FixedPalettes[i];
                         }
-                        else if (calculatedPalettes.Any())
+                        else if (calculatedPalettesList.Any())
                         {
-                            palettes[i] = calculatedPalettes.First();
-                            calculatedPalettes.RemoveAt(0);
+                            palettes[i] = calculatedPalettesList.First();
+                            calculatedPalettesList.RemoveAt(0);
                         }
 
                         if (palettes[i] != null)
                         {
-                            Trace.WriteLine($"Palette #{i}: {ColorTranslator.ToHtml(bgColor.ToColor())}(BG) {string.Join(" ", palettes[i]!.Select(p => ColorTranslator.ToHtml(p.ToColor())))}");
+                            Trace.WriteLine($"Palette #{i}: {bgColor.ToHtml()}(BG) {string.Join(" ", palettes[i]!.Select(p => p.ToHtml()))}");
                             // Write CSV if required
-                            outPalettesCsvLines?.Add($"{i},{ColorTranslator.ToHtml(bgColor.ToColor())},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i]![c] != null ? ColorTranslator.ToHtml(palettes[i]![c]!.Value.ToColor()) : "")))}");
+                            outPalettesCsvLines?.Add($"{i},{bgColor.ToHtml()},{string.Join(",", Enumerable.Range(1, 3).Select(c => (palettes[i]![c] != null ? palettes[i]![c]!.Value.ToHtml() : "")))}");
                         }
                     }
                 }
+                calculatedPalettes = calculatedPalettesList.ToArray();
 
                 // Calculate palette as color indices and save them to files
                 var bgColorIndex = nesColors.FindSimilarColorIndex(bgColor);
@@ -325,8 +349,8 @@ namespace com.clusterrr.Famicom.NesTiler
                                         similarColor);
                                 }
                             }
-                        } // tile X
-                    } // tile Y
+                        } // tile palette X
+                    } // tile palette Y
 
                     // Save preview if required
                     if (c.OutPreview.ContainsKey(imageNum))
@@ -454,8 +478,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         Trace.WriteLine($"#{imageNum} tiles range: {c.PatternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
                         Trace.WriteLine($"Pattern table is empty.");
-                    if (tileID > 256 && !c.IgnoreTilesRange)
-                        throw new ArgumentOutOfRangeException("Tiles out of range.");
+                    if (tileID > 256) throw new InvalidDataException("Tiles out of range.");
 
                     // Save pattern table to file
                     if (c.OutPatternTable.ContainsKey(imageNum) && !c.SharePatternTable)
@@ -530,11 +553,12 @@ namespace com.clusterrr.Famicom.NesTiler
             }
         }
 
-        static Palette[] CalculatePalettes(Dictionary<int, FastBitmap> images, bool[] paletteEnabled, Palette?[] fixedPalettes, Dictionary<int, int> attributeTableOffsets, int tilePalWidth, int tilePalHeight, SKColor bgColor)
+        static (Palette[] palettes, Palette.LossyInfo? lossyInfo) CalculatePalettes(Dictionary<int, FastBitmap> images, bool[] paletteEnabled, Palette?[] fixedPalettes, Dictionary<int, int> attributeTableOffsets, int tilePalWidth, int tilePalHeight, SKColor bgColor)
         {
             var required = Enumerable.Range(0, 4).Select(i => paletteEnabled[i] && fixedPalettes[i] == null);
             // Creating and counting the palettes
             var paletteCounter = new Dictionary<Palette, int>();
+            Palette.LossyInfo? lossyInfo = null;
             foreach (var imageNum in images.Keys)
             {
                 var image = images[imageNum];
@@ -546,8 +570,9 @@ namespace com.clusterrr.Famicom.NesTiler
                     {
                         // Create palette using up to three most used colors
                         var palette = new Palette(
-                            image, tileX * tilePalWidth, (tileY * tilePalHeight) - attributeTableOffset,
+                            imageNum, image, tileX * tilePalWidth, (tileY * tilePalHeight) - attributeTableOffset,
                             tilePalWidth, tilePalHeight, bgColor);
+                        lossyInfo ??= palette.ColorLossy;
 
                         // Skip tiles with only background color
                         if (!palette.Any()) continue;
@@ -565,18 +590,18 @@ namespace com.clusterrr.Famicom.NesTiler
             }
 
             // Group palettes
-            var result = new Palette[0];
+            var resultPalettes = new Palette[0];
             // Multiple iterations
             while (true)
             {
                 // Remove unused palettes
                 paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
                 // Sort by usage
-                result = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+                resultPalettes = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
 
                 // Some palettes can contain all colors from other palettes, so we need to combine them
-                foreach (var palette2 in result)
-                    foreach (var palette1 in result)
+                foreach (var palette2 in resultPalettes)
+                    foreach (var palette1 in resultPalettes)
                     {
                         if ((palette2 != palette1) && (palette2.Count >= palette1.Count) && palette2.Contains(palette1))
                         {
@@ -589,17 +614,17 @@ namespace com.clusterrr.Famicom.NesTiler
                 // Remove unused palettes
                 paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
                 // Sort them again
-                result = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+                resultPalettes = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
 
                 // Get most used palettes
-                var top = result.Take(required.Count()).ToList();
+                var top = resultPalettes.Take(required.Count()).ToList();
                 // Use free colors in palettes to store less popular palettes
                 bool grouped = false;
                 foreach (var t in top)
                 {
                     if (paletteCounter[t] > 0 && t.Count < 3)
                     {
-                        foreach (var p in result)
+                        foreach (var p in resultPalettes)
                         {
                             var newColors = p.Where(c => !t.Contains(c));
                             if ((p != t) && (paletteCounter[p] > 0) && (newColors.Count() + t.Count <= 3))
@@ -622,9 +647,9 @@ namespace com.clusterrr.Famicom.NesTiler
             // Remove unused palettes
             paletteCounter = paletteCounter.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
             // Sort them again
-            result = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
+            resultPalettes = paletteCounter.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToArray();
 
-            return result;
+            return (resultPalettes, lossyInfo);
         }
     }
 }

@@ -19,7 +19,6 @@
             new ArgPatternOffset(),
             new ArgAttributeTableYOffset(),
             new ArgSharePatternTable(),
-            new ArgIgnoreTilesRange(),
             new ArgLossy(),
             new ArgOutPreview(),
             new ArgOutPalette(),
@@ -132,23 +131,12 @@
         public string Long { get; } = L;
     }
 
-    class ArgIgnoreTilesRange : IArg
-    {
-        public const string S = "r";
-        public const string L = "ignore-tiles-range";
-        public string? Params { get; } = null;
-        public string Description { get; } = "option to disable tile ID overflow check";
-        public bool HasIndex { get; } = false;
-        public string Short { get; } = S;
-        public string Long { get; } = L;
-    }
-
     class ArgLossy : IArg
     {
         public const string S = "l";
         public const string L = "lossy";
-        public string? Params { get; } = null;
-        public string Description { get; } = "option to ignore palettes loss, produces distorted image\nif there are too many colors";
+        public string? Params { get; } = "<level>";
+        public string Description { get; } = "lossy level 0-3, defines how many color distortion is allowed\nwithout throwing an error (default - 2)";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
         public string Long { get; } = L;
