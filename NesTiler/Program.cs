@@ -141,6 +141,7 @@ namespace com.clusterrr.Famicom.NesTiler
                             var color = image.GetPixelColor(x, y);
                             if (color.Alpha >= 0x80 || c.Mode == Config.TilesMode.Backgrounds)
                             {
+                                // TODO: more lossy levels?
                                 var similarColor = nesColors.FindSimilarColor(color);
                                 image.SetPixelColor(x, y, similarColor);
                             }
@@ -241,15 +242,8 @@ namespace com.clusterrr.Famicom.NesTiler
                         }
                         else if (calculatedPalettes.Any())
                         {
-                            if (calculatedPalettes.Any())
-                            {
-                                palettes[i] = calculatedPalettes.First();
-                                calculatedPalettes.RemoveAt(0);
-                            }
-                            else
-                            {
-                                palettes[i] = new Palette();
-                            }
+                            palettes[i] = calculatedPalettes.First();
+                            calculatedPalettes.RemoveAt(0);
                         }
 
                         if (palettes[i] != null)
@@ -544,8 +538,7 @@ namespace com.clusterrr.Famicom.NesTiler
             foreach (var imageNum in images.Keys)
             {
                 var image = images[imageNum];
-                int attributeTableOffset;
-                attributeTableOffsets.TryGetValue(imageNum, out attributeTableOffset);
+                attributeTableOffsets.TryGetValue(imageNum, out int attributeTableOffset);
                 // For each tile/sprite
                 for (int tileY = 0; tileY < (image.Height + attributeTableOffset) / tilePalHeight; tileY++)
                 {
@@ -604,19 +597,19 @@ namespace com.clusterrr.Famicom.NesTiler
                 bool grouped = false;
                 foreach (var t in top)
                 {
-                    if (t.Count < 3)
+                    if (paletteCounter[t] > 0 && t.Count < 3)
                     {
                         foreach (var p in result)
                         {
                             var newColors = p.Where(c => !t.Contains(c));
-                            if (p != t && (newColors.Count() + t.Count <= 3))
+                            if ((p != t) && (paletteCounter[p] > 0) && (newColors.Count() + t.Count <= 3))
                             {
                                 var count1 = paletteCounter[t];
                                 var count2 = paletteCounter[p];
                                 paletteCounter[t] = 0;
                                 paletteCounter[p] = 0;
-                                foreach (var c in newColors) t.Add(c);
-                                paletteCounter[t] = count1 + count2;
+                                var newPalette = new Palette(Enumerable.Concat(t, p).Distinct());
+                                paletteCounter[newPalette] = count1 + count2;
                                 grouped = true;
                             }
                         }

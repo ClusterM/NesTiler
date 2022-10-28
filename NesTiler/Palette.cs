@@ -10,28 +10,19 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     class Palette : IEquatable<Palette>, IEnumerable<SKColor>
     {
-        private SKColor?[] colors = new SKColor?[3];
+        private SKColor[] colors;
         private Dictionary<ColorPair, (SKColor color, double delta)> deltaCache = new();
 
         public SKColor? this[int i]
         {
             get
             {
-                if (i < 1 || i > 3) throw new IndexOutOfRangeException("Color index must be between 1 and 3");
+                if (i > colors.Length) return null;
+                if (i <= 0) throw new ArgumentOutOfRangeException("Invalid color index");
                 return colors[i - 1];
             }
-            set
-            {
-                if (i < 1 || i > 3) throw new IndexOutOfRangeException("Color index must be between 1 and 3");
-                colors[i - 1] = value;
-            }
         }
-        public int Count { get => colors.Where(c => c.HasValue).Count(); }
-
-        public Palette()
-        {
-            // Empty palette
-        }
+        public int Count => colors.Length;
 
         public Palette(FastBitmap image, int leftX, int topY, int width, int height, SKColor bgColor)
         {
@@ -48,25 +39,13 @@ namespace com.clusterrr.Famicom.NesTiler
                 }
             }
 
-            var sortedColors = colorCounter
-                .OrderByDescending(kv => kv.Value).ToArray();
-            for (int i = 0; i < 3; i++)
-                if (sortedColors.Length > i)
-                    this[i + 1] = sortedColors[i].Key;
-        }
-
-        public void Add(SKColor color)
-        {
-            if (Count >= 3) throw new IndexOutOfRangeException();
-            this[Count + 1] = color;
-            deltaCache.Clear();
+            // TODO: one more lossy level?
+            colors = colorCounter.OrderByDescending(kv => kv.Value).Take(3).OrderBy(kv => kv.Key.ToArgb()).Select(kv => kv.Key).ToArray();
         }
 
         public Palette(IEnumerable<SKColor> colors)
         {
-            var colorsList = colors.ToList();
-            for (int i = 0; i < 3; i++)
-                if (colorsList.Count > i) this[i + 1] = colorsList[i];
+            this.colors = colors.OrderBy(c => c.ToArgb()).Take(3).ToArray();
         }
 
         public double GetTileDelta(FastBitmap image, int leftX, int topY, int width, int height, SKColor bgColor)
@@ -92,7 +71,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 Color2 = bgColor
             };
             if (deltaCache.ContainsKey(pair)) return deltaCache[pair];
-            var ac = Enumerable.Concat(colors.Where(c => c.HasValue).Select(c => c!.Value), new SKColor[] { bgColor });
+            var ac = Enumerable.Concat(colors, new SKColor[] { bgColor });
             var result = ac.OrderBy(c => c.GetDelta(color)).First();
             var r = (result, result.GetDelta(color));
             deltaCache[pair] = r;
@@ -102,27 +81,15 @@ namespace com.clusterrr.Famicom.NesTiler
         public bool Equals(Palette? other)
         {
             if (other == null) return false;
-            var colors1 = colors.Where(c => c.HasValue)
-                .Select(c => c!.Value.ToArgb())
-                .OrderBy(c => c)
-                .ToArray();
-            var colors2 = new SKColor?[] { other[1], other[2], other[3] }
-                .Where(c => c.HasValue)
-                .Select(c => c!.Value.ToArgb())
-                .OrderBy(c => c)
-                .ToArray();
-            var r = Enumerable.SequenceEqual(colors1, colors2);
+            var r = Enumerable.SequenceEqual(this, other);
             return r;
         }
 
         public bool Contains(Palette other)
         {
-            var thisColors = colors.Where(c => c.HasValue);
-            var otherColors = new SKColor?[] { other[1], other[2], other[3] }.Where(c => c.HasValue).Select(c => c!.Value);
-
-            foreach (var color in otherColors)
+            foreach (var color in other)
             {
-                if (!thisColors.Contains(color))
+                if (!this.Contains(color))
                     return false;
             }
             return true;
@@ -130,7 +97,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
         public IEnumerator<SKColor> GetEnumerator()
         {
-            return colors.Where(c => c.HasValue).Select(c => c!.Value).GetEnumerator();
+            return colors.Select(c => c).GetEnumerator(); // wtf?
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -138,7 +105,7 @@ namespace com.clusterrr.Famicom.NesTiler
             return GetEnumerator();
         }
 
-        public override string ToString() => string.Join(", ", colors.Where(c => c.HasValue).Select(c => ColorTranslator.ToHtml(c!.Value.ToColor())).OrderBy(c => c));
+        public override string ToString() => string.Join(", ", colors.Select(c => ColorTranslator.ToHtml(c.ToColor())).OrderBy(c => c));
 
         public override int GetHashCode() => (int)((this[1]?.ToArgb() ?? 0) + ((this[2]?.ToArgb() ?? 0) << 4) + ((this[3]?.ToArgb() ?? 0) << 8));
     }
