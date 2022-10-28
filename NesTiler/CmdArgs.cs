@@ -36,7 +36,7 @@
     {
         public const string S = "i";
         public const string L = "in";
-        public string? Params { get; } = "<file>[:offset[:height]]";
+        public string? Params { get; } = "<filename>[:offset[:height]]";
         public string Description { get; } = "input filename number #, optionally cropped vertically";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
@@ -47,7 +47,7 @@
     {
         public const string S = "c";
         public const string L = "colors";
-        public string? Params { get; } = "<file>";
+        public string? Params { get; } = "<filename>";
         public string Description { get; } = $"JSON or PAL file with the list of available colors\n(default - {Config.DEFAULT_COLORS_FILE})";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
@@ -146,7 +146,7 @@
     {
         public const string S = "v";
         public const string L = "out-preview";
-        public string? Params { get; } = "<file.png>";
+        public string? Params { get; } = "<filename.png>";
         public string Description { get; } = "output filename for preview of image number #";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
@@ -157,7 +157,7 @@
     {
         public const string S = "t";
         public const string L = "out-palette";
-        public string? Params { get; } = "<file>";
+        public string? Params { get; } = "<filename>";
         public string Description { get; } = "output filename for palette number #";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
@@ -168,7 +168,7 @@
     {
         public const string S = "n";
         public const string L = "out-pattern-table";
-        public string? Params { get; } = "<file>";
+        public string? Params { get; } = "<filename>";
         public string Description { get; } = "output filename for pattern table of image number #";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
@@ -179,7 +179,7 @@
     {
         public const string S = "a";
         public const string L = "out-name-table";
-        public string? Params { get; } = "<file>";
+        public string? Params { get; } = "<filename>";
         public string Description { get; } = "output filename for nametable of image number #";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
@@ -190,7 +190,7 @@
     {
         public const string S = "u";
         public const string L = "out-attribute-table";
-        public string? Params { get; } = "<file>";
+        public string? Params { get; } = "<filename>";
         public string Description { get; } = "output filename for attribute table of image number #";
         public bool HasIndex { get; } = true;
         public string Short { get; } = S;
@@ -201,7 +201,7 @@
     {
         public const string S = "z";
         public const string L = "out-tiles-csv";
-        public string? Params { get; } = "<file.csv>";
+        public string? Params { get; } = "<filename.csv>";
         public string Description { get; } = "output filename for tiles info in CSV format";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
@@ -212,7 +212,7 @@
     {
         public const string S = "x";
         public const string L = "out-palettes-csv";
-        public string? Params { get; } = "<file.csv>";
+        public string? Params { get; } = "<filename.csv>";
         public string Description { get; } = "output filename for palettes info in CSV format";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
@@ -223,7 +223,7 @@
     {
         public const string S = "g";
         public const string L = "out-colors-table";
-        public string? Params { get; } = "<file.png>";
+        public string? Params { get; } = "<filename.png>";
         public string Description { get; } = "output filename for graphical table of available colors\n(from \"--colors\" option)";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
