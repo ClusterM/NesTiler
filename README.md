@@ -21,8 +21,8 @@ Available options:
 Usage: nestiler <options>
 
 Available options:
--i<#> --in-<#> <file>[:offset[:height]]         input filename number #, optionally cropped vertically
--c    --colors <file>                           JSON or PAL file with the list of available colors
+-i<#> --in-<#> <filename>[:offset[:height]]     input filename number #, optionally cropped vertically
+-c    --colors <filename>                       JSON or PAL file with the list of available colors
                                                 (default - nestiler-colors.json)
 -m    --mode bg|sprites8x8|sprites8x16          mode: backgrounds, 8x8 sprites or 8x16 sprites (default - bg)
 -b    --bg-color <color>                        background color in HTML color format (default - auto)
@@ -35,14 +35,14 @@ Available options:
 -s    --share-pattern-table                     vertical offset for attribute table in pixels (default - 0)
 -l    --lossy <level>                           lossy level: 0-3, defines how many color distortion is allowed
                                                 without throwing an error (default - 2)
--v<#> --out-preview-<#> <file.png>              output filename for preview of image number #
--t<#> --out-palette-<#> <file>                  output filename for palette number #
--n<#> --out-pattern-table-<#> <file>            output filename for pattern table of image number #
--a<#> --out-name-table-<#> <file>               output filename for nametable of image number #
--u<#> --out-attribute-table-<#> <file>          output filename for attribute table of image number #
--z    --out-tiles-csv <file.csv>                output filename for tiles info in CSV format
--x    --out-palettes-csv <file.csv>             output filename for palettes info in CSV format
--g    --out-colors-table <file.png>             output filename for graphical table of available colors
+-v<#> --out-preview-<#> <filename.png>          output filename for preview of image number #
+-t<#> --out-palette-<#> <filename>              output filename for palette number #
+-n<#> --out-pattern-table-<#> <filename>        output filename for pattern table of image number #
+-a<#> --out-name-table-<#> <filename>           output filename for nametable of image number #
+-u<#> --out-attribute-table-<#> <filename>      output filename for attribute table of image number #
+-z    --out-tiles-csv <filename.csv>            output filename for tiles info in CSV format
+-x    --out-palettes-csv <filename.csv>         output filename for palettes info in CSV format
+-g    --out-colors-table <filename.png>         output filename for graphical table of available colors
                                                 (from "--colors" option)
 -q    --quiet                                   suppress console output
 ```
@@ -60,7 +60,7 @@ Also, you can load image partically - split them horizontally, just add offset a
 It's usefull if you need to show single image on screen but you want to split it into two 256-tiles pattern tables and switch them on specific line in the middle of rendering process.
 
 ### Option -c, --colors \<file\>
-Option to specify file with available colors and indexes. This file can be in JSON format (see nestiler-colors.json) or binary PAL format (used by emulators).
+Option to specify file with available colors and indices. This file can be in JSON format (see nestiler-colors.json) or binary PAL format (used by emulators).
 
 Examples:
 * nestiler -c nestiler-colors.json ...
@@ -94,9 +94,9 @@ Examples:
 * nestiler -p0 #747474,#A40000,#004400 -p2 #8000F0,#D82800,#FCFCFC ...
 * nestiler --palette-0 #5C94FC,#FC7460,#FC9838 --palette-1 #80D010,#58F898,#787878 ...
 
-Please note that index here is palette number, not input fule number.
+Please note that index here is palette number, not input file number.
 
-### Option -o<#> --pattern-offset-<#> \<tile_id\>
+### Option -o<#>, --pattern-offset-<#> \<tile_id\>
 Using this option you can set first tile index to use with image number __#__. Useful if you need to reserve some space in the begining of pattern table. Default valus is 0.
 
 Examples:
@@ -105,7 +105,7 @@ Examples:
 
 __#__ number is ignored when the --share-pattern-table option is used (see below).
 
-### Option -y<#> --attribute-table-y-offset-<#> \<pixels\>
+### Option -y<#>, --attribute-table-y-offset-<#> \<pixels\>
 One attribute table byte stores four palette indices for 16 tiles (4x4 square). It can cause problems if your image should be displayed on lines whose numbers are not divisible by 32. Using this option you can set vertical image offset for image number __#__ - amount of pixels divisible by 8. Default value is 0. Please note that you need to care about unused bites manually.
 
 Examples:
@@ -119,7 +119,7 @@ Examples:
 * nestiler -s ...
 * nestiler --share-pattern-table ...
 
-### Option -l, --lossy <level>
+### Option -l, --lossy \<level\>
 Lossy level: 0-3, defines how many color distortion is allowed without throwing an error.
 
 * 0 - throw error even if any pixel of any input image is not from NES colors (from file specified by __--colors__ option)
@@ -128,4 +128,72 @@ Lossy level: 0-3, defines how many color distortion is allowed without throwing 
 * 3 - ignore all color ploblems by replacing unwanted colors with most similar available
   
 Default value is 2.
+
+Examples:
+* nestiler -l 0 ...
+* nestiler --lossy 3 ...
   
+### Option -v<#>, --out-preview-<#> \<file.png\>
+Option to save preview for input image number __#__. Stored as PNG file. Useful if you need to preview result without compiling ROM. Preview is not saved if option is not specified.
+
+Examples:
+* nestiler -v0 preview.png ...
+* nestiler --out-preview-1 image.png ...
+
+### Option -t<#>, --out-palette-<#> \<filename\>
+Option to save generated palette number __#__. Just four bytes with color indices. Not saved if option is not specified.
+
+Examples:
+* nestiler -t0 palette0.bin ...
+* nestiler --out-palette-1 palette1.bin ...
+
+Please note that index here is palette number, not input file number.
+
+### Option -n<#>, --out-pattern-table-<#> \<filename\>
+Option to save generated pattern table for image number __#__. 16 bytes per tile, 960 bytes per full screen image. Not saved if option is not specified.
+
+Examples:
+* nestiler -n0 pattern0.bin ...
+* nestiler --out-pattern-table-2 out.bin ...
+
+### Option -a<#>, --out-name-table-<#> \<filename\>           
+Option to save generated nametable for image number __#__. 16 bytes per tile, 960 bytes per full screen image. Not saved if option is not specified.
+
+Examples:
+* nestiler -a2 nt2.bin ...
+* nestiler --out-name-table-1 nametable.bin ...
+
+### Option -u<#>, --out-attribute-table-<#> \<filename\>
+Option to save generated attribute table for image number __#__. 1 byte per 16 tiles. 64 bytes per full screen image. Not saved if option is not specified. Can't be used in sprite modes.
+
+Examples:
+* nestiler -u0 attr.bin ...
+* nestiler --out-attribute-table-1 attrtable1.bin ...
+
+### Option -z, --out-tiles-csv \<filename.csv\>
+Option to save CSV file with tiles information for all input images: indices, used palettes, etc. Not saved if option is not specified.
+
+Examples:
+* nestiler -z tiles.csv ...
+* nestiler --out-tiles-csv tiles.csv ...
+
+### Option -x, --out-palettes-csv \<filename.csv\>
+Option to save CSV file with palettes data: indices and colors.
+
+Examples:
+* nestiler -x palettes.csv ...
+* nestiler --out-palettes-csv palettes.csv ...
+
+### Option -g, --out-colors-table \<filename.png\>
+Option to generate PNG file with table of available NES colors (from __--colors__ option). Useful for reference when drawing. This option can be used without any input images.
+
+Examples:
+* nestiler -g colors.png
+* nestiler --out-colors-table colors.png
+
+### Option -q, --quiet
+Just option to suppress console output.
+
+Examples:
+* nestiler -q
+* nestiler -quiet ...
