@@ -56,7 +56,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 var c = Config.Parse(args);
                 Trace.Listeners.Clear();
-                if (!c.quiet)
+                if (!c.Quiet)
                 {
                     PrintAppInfo();
                     Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
@@ -227,7 +227,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                                                        candidates[i]);
                     }
                     // Select background color which uses minimum palettes
-                    // TODO: less palettes != best solution? Take in account tile count.
+                    // TODO: less palettes != best solution? Take tile count into account.
                     var kvAllLossless = calcResults.Where(kv => kv.Value.LossyInfo == null).OrderBy(kv => kv.Value.Palettes.Length);
                     if (kvAllLossless.Any())
                     {

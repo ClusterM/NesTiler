@@ -34,7 +34,7 @@ namespace com.clusterrr.Famicom.NesTiler
         public int PatternTableStartOffsetShared { get; private set; } = 0;
         public Dictionary<int, int> PatternTableStartOffsets { get; private set; } = new Dictionary<int, int>();
         public Dictionary<int, int> PattributeTableYOffsets { get; private set; } = new Dictionary<int, int>();
-        public bool quiet { get; private set; } = false;
+        public bool Quiet { get; private set; } = false;
 
         // Filenames
         public Dictionary<int, string> OutPreview { get; private set; } = new Dictionary<int, string>();
@@ -250,7 +250,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         break;
                     case ArgQuiet.S:
                     case ArgQuiet.L:
-                        config.quiet = true;
+                        config.Quiet = true;
                         break;
                     default:
                         throw new ArgumentException($"Unknown argument.", args[i]);
@@ -262,10 +262,14 @@ namespace com.clusterrr.Famicom.NesTiler
             {
                 case TilesMode.Sprites8x8:
                 case TilesMode.Sprites8x16:
-                    if (!config.BgColor.HasValue) throw new InvalidDataException("You must specify background color for sprites.");
+                    if (!config.BgColor.HasValue) throw new InvalidDataException("You must specify background color for sprites mode.");
                     break;
             }
-            // TODO: more input checks
+            // Check output files
+            foreach (var c in new Dictionary<int, string>[] { config.OutPreview, config.OutPatternTable, config.OutNameTable, config.OutAttributeTable })
+                foreach (var f in c)
+                    if (!config.ImageFiles.ContainsKey(f.Key))
+                        throw new ArgumentException($"Can't write {f.Value} - there is no input image with index {f.Key}.");
 
             return config;
         }
