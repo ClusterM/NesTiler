@@ -89,6 +89,8 @@ Examples:
 * nestiler -c nestiler-colors.json ...
 * nestiler --colors nestiler-colors.json ...
 
+Please note that some colors are forbidden on nes: 0x0D ("blacker than black"), 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F. These colors will be ignored.
+
 ### Option -m, --mode bg|sprites8x8|sprites8x16
 Option to specify processing mode: backgrounds, 8x8 sprites or 8x16 sprites. Default is backgrounds mode.
 
