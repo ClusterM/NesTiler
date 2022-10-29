@@ -34,7 +34,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         if ((Pixels[(y * Width) + x] & 2) != 0) // check bit 1
                             data[(y / 8 * 16) + (y % 8) + 8] |= (byte)(1 << bit);
                         pixel++;
-                        bit = (byte)((byte)(bit - 1) % 8); // decrease bit number, wrap around if need
+                        bit = unchecked((byte)((byte)(bit - 1) % 8)); // decrease bit number, wrap around if need
                     }
                 }
             }

@@ -59,7 +59,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 TileY = tileY,
                 TileWidth = tileWidth,
                 TileHeight = tileHeight,
-                Colors = Enumerable.Concat(new SKColor[] { bgColor }, colorsCandidates.Select(kv => kv.Key)).ToArray()
+                Colors = Enumerable.Concat(new[] { bgColor }, colorsCandidates.Select(kv => kv.Key)).ToArray()
             };
             colors = colorsCandidates.Take(3).OrderBy(kv => kv.Key.ToArgb()).Select(kv => kv.Key).ToArray();
         }
@@ -92,7 +92,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 Color2 = bgColor
             };
             if (deltaCache.ContainsKey(pair)) return deltaCache[pair];
-            var ac = Enumerable.Concat(colors, new SKColor[] { bgColor });
+            var ac = Enumerable.Concat(colors, new[] { bgColor });
             var result = ac.OrderBy(c => c.GetDelta(color)).First();
             var r = (result, result.GetDelta(color));
             deltaCache[pair] = r;

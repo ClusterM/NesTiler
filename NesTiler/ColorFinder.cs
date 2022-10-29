@@ -11,7 +11,7 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     class ColorFinder
     {
-        static byte[] FORBIDDEN_COLORS = new byte[] { 0x0D, 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F };
+        static byte[] FORBIDDEN_COLORS = { 0x0D, 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F };
 
         public readonly Dictionary<byte, SKColor> Colors;
         private readonly Dictionary<SKColor, byte> cache = new();

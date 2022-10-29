@@ -347,7 +347,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                     var color = image.GetPixelColor((tilePalX * c.TilePalWidth) + x, cy);
                                     var similarColor = nesColors.FindSimilarColor(Enumerable.Concat(
                                             bestPalette,
-                                            new SKColor[] { bgColor }
+                                            new[] { bgColor }
                                         ), color);
                                     image.SetPixelColor(
                                         (tilePalX * c.TilePalWidth) + x,
