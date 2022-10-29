@@ -85,7 +85,7 @@ namespace com.clusterrr.Famicom.NesTiler
 
                 if (c.OutColorsTable != null)
                 {
-                    Trace.WriteLine($"Writing color tables to {c.OutColorsTable}...");
+                    Trace.WriteLine($"Writing color table to {c.OutColorsTable}...");
                     nesColors.WriteColorsTable(c.OutColorsTable);
                 }
 
