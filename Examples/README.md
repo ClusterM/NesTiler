@@ -21,7 +21,7 @@ This example uses single image splitted in two horizontally, each part uses it's
 ![Image](../TestImages/Images/jurassic.png)
 
 ## nrom_split_lossy
-Same as **nrom_split** but with сomplicated image that doesn't fit NES colors limitations, so NesTiler tries to optimize it and dismiss some palettes and colors (**--lossy** option).
+Same as **nrom_split** but with сomplicated image that doesn't fit NES colors limitations, so NesTiler tries to optimize it and dismiss some palettes and colors (**--lossy 3** option).
 
 ![Image](../TestImages/Images/me.png) -> ![Image](https://user-images.githubusercontent.com/4236181/197870408-4472a362-2829-4c74-baaf-1c27c082d070.png)
 
