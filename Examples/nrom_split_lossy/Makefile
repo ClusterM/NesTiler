@@ -4,7 +4,6 @@ TILER?=nestiler
 SOURCE=main.asm
 EXECUTABLE=nrom_split_lossy.nes
 HEIGHT1=128
-HEIGHT2=112
 
 IMAGE?=../../TestImages/Images/me.png
 
@@ -26,7 +25,7 @@ build: $(EXECUTABLE)
 all: $(EXECUTABLE)
 
 clean:
-	rm -f *.nes *.lst *.nl *.bin
+	rm -f *.nes *.lst *.nl *.bin preview*.png
 
 run: $(EXECUTABLE)
 	$(EMU) $(EXECUTABLE)
@@ -45,10 +44,10 @@ $(PALETTE_0_BIN) $(PALETTE_1_BIN) \
 $(PALETTE_2_BIN) $(PALETTE_3_BIN) \
 $(PREVIEW_1) $(PREVIEW_2): $(IMAGE)
 	$(TILER) --mode bg --enable-palettes 0,1,2,3 \
-	--in-0 $(IMAGE):0:$(HEIGHT1) --in-1 $(IMAGE):$(HEIGHT1):$(HEIGHT2) \
+	--in-0 $(IMAGE):0:$(HEIGHT1) --in-1 $(IMAGE):$(HEIGHT1) \
 	--out-pattern-table-0 $(PATTERN_0_BIN) --out-pattern-table-1 $(PATTERN_1_BIN) \
 	--out-name-table-0 $(NAME_TABLE_0_BIN) --out-name-table-1 $(NAME_TABLE_1_BIN) \
 	--out-attribute-table-0 $(ATTR_TABLE_0_BIN) --out-attribute-table-1 $(ATTR_TABLE_1_BIN) \
 	--out-palette-0 $(PALETTE_0_BIN) --out-palette-1 $(PALETTE_1_BIN) \
 	--out-palette-2 $(PALETTE_2_BIN) --out-palette-3 $(PALETTE_3_BIN) \
-    --lossy --out-preview-0 $(PREVIEW_1) --out-preview-1 $(PREVIEW_2)
+    --lossy 3 --out-preview-0 $(PREVIEW_1) --out-preview-1 $(PREVIEW_2)
