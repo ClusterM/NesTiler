@@ -2,17 +2,40 @@
 Tool for converting pictures into NES format: pattern tables, nametables, attribute tables and palettes.
 
 ## What does it do
-When developing applications and games for NES, to display images, you need to split each image into tiles, combine tiles into nametables, select colors so that they do not go beyond the limits of the NES, and then convert all this into a format understandable for the NES. This tool at least partly helps to automate this process. The application can accept multiple images as input, the main point is to use single set of palettes (and tiles if required) for all of them, so it's possible to switch CHR banks and base nametable on a certain line, in the middle of rendering process. You can't change palettes while image renders, so palette set must be the same for all images.
+When developing applications and games for NES, to display images, you need to split each image into tiles, combine tiles into nametables, select colors so that they do not go beyond the limits of the NES, and then convert all this into a format understandable for the NES. This tool at least partly helps to automate this process. The application can accept multiple images as input, the main point is to use single set of palettes (and tiles if required) for all of them, so it's possible to switch CHR banks and base nametable on a certain line, in the middle of rendering process. You can't change palettes while image renders, so palette set must be the same for all images. Of course, the ideal result will be achieved only in the case of properly prepared images that do not go beyond the limitations of NES. But it's possible to do lossy conversion. Check [Examples](https://github.com/ClusterM/NesTiler/tree/master/Examples) directory for examples.
 
 The sequence of actions is as follows:
-* Load available NES colors from JSON or PAL file
-* Load images, crop them if need
+* Load available NES colors from JSON or PAL file and their indices.
+
+![NES colors](https://user-images.githubusercontent.com/4236181/198836117-35c87207-0f39-40cd-90f0-b38a24c648f7.png)
+
+* Load images, crop/split them if need
+
+![Loading images](https://user-images.githubusercontent.com/4236181/198837161-6e514f3b-9512-4501-8f44-846b20b6ea3c.png)
+
 * Change every pixel of each image, so it's matches most similar color from available NES colors
+
+![Recolor image](https://user-images.githubusercontent.com/4236181/198837207-8e45433a-60eb-4c80-9b6b-1dd8a12e285b.png)
+
 * Calculate desired number of palettes to fit every image or at least trying to do it
+
+![Palettes](https://user-images.githubusercontent.com/4236181/198837449-35a6c26c-5bd7-4aa3-8076-2ca498e0c1aa.png)
+
 * Generate attribute table for each image, assign palette index for each tiles set
+
+![Attribute tables](https://user-images.githubusercontent.com/4236181/198837666-b67b1a82-1b18-4fee-b33c-fa833df18b63.png)
+
 * Change colors of every tile to match assigned palette index (if need)
+
+![Recolor tiles](https://user-images.githubusercontent.com/4236181/198837858-e38bc6af-1d18-46c5-83fc-c8348dbc130f.png)
+
 * Create set of tiles, trying to fit them into 256, grouping same tiles into one
-* Generate pattern table and nametable for each image
+
+![Tiles](https://user-images.githubusercontent.com/4236181/198838408-660c252e-ec75-408b-9fbd-36d7a77f97b0.png)
+
+* Save pattern table and nametable of each image to file, so it's easy to include them to NES ROM and show the image
+
+![Result](https://user-images.githubusercontent.com/4236181/198838556-1ff947ba-9879-49f1-a74d-3b8df7067051.png)
 
 ## How to use
 
