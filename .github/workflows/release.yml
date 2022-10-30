@@ -46,7 +46,7 @@ jobs:
       OUTPUT_DIR: output
       CONFIGURATION: Release
       OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
-      OUTPUT_FILE: ${{ APP_NAME }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.sc == 'self-contained' && '-self-contained' || '' }}.${{ matrix.os == 'win' && 'zip' || 'tar.gz' }}
+      OUTPUT_FILE: nestiler-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.sc == 'self-contained' && '-self-contained' || '' }}.${{ matrix.os == 'win' && 'zip' || 'tar.gz' }}
     steps:
     - name: Fix line endings
       run: git config --global core.autocrlf false
