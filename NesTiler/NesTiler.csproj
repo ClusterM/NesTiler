@@ -4,6 +4,9 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>com.clusterrr.Famicom.NesTiler</RootNamespace>
     <AssemblyName>nestiler</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
