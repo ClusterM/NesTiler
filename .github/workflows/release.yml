@@ -12,7 +12,7 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag_name: ${{ github.head_ref || github.ref_name }} 
+        tag: ${{ github.head_ref || github.ref_name }} 
         commit: master
         name: Release ${{ github.head_ref || github.ref_name }} 
         draft: true
