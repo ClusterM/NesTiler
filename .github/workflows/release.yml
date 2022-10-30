@@ -12,9 +12,9 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.event.repository.updated_at}}        
+        tag: ${{ github.head_ref || github.ref_name }} 
         commit: master
-        name: Release ${{ github.event.repository.updated_at}}
+        name: Release ${{ github.head_ref || github.ref_name }} 
         draft: true
     - name: Output Release URL File
       run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
@@ -72,7 +72,7 @@ jobs:
     - name: Get Release File Name & Upload URL
       id: get_release_info
       env:
-        TAG_REF_NAME: ${{ github.ref }}
+        TAG_REF_NAME: ${{ github.head_ref || github.ref_name }}
         REPOSITORY_NAME: ${{ github.repository }}
       run: |
         echo file_name=${REPOSITORY_NAME##*/}-${TAG_REF_NAME##*/v} >> $GITHUB_OUTPUT
