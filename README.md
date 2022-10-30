@@ -2,7 +2,13 @@
 Tool for converting pictures into NES format: pattern tables, nametables, attribute tables and palettes.
 
 ## What does it do
-When developing applications and games for NES, to display images, you need to split each image into tiles, combine tiles into nametables, select colors so that they do not go beyond the limits of the NES, and then convert all this into a format understandable for the NES. This tool at least partly helps to automate this process. This application can accept multiple images as input, the main point is to use single set of palettes (and tiles if required) for all of them, so it's possible to switch CHR banks and base nametable on a certain line, in the middle of rendering process. You can't change palettes while image renders, so palette set must be the same for all images. Of course, the ideal result will be achieved only in the case of properly prepared images that do not go beyond the limitations of NES. But it's possible to do lossy conversion too. Check [Examples](https://github.com/ClusterM/NesTiler/tree/master/Examples) directory for examples.
+When developing applications and games for NES you have to perform a lot of routine. To display images you need to split each image into tiles, combine tiles into nametables, select colors so that they do not go beyond the limits of the NES, and then convert all this into a format understandable for NES. This tool at least partially helps to automate this process. 
+
+This application can accept multiple images as input, the main point is to use single set of palettes (and tiles if required) for all of them, so it's possible to switch CHR banks and base nametable on a certain line, in the middle of rendering process. You can't change palettes while image renders, so palette set must be the same for all images. 
+
+Of course, the ideal result will be achieved only in the case of properly prepared images that do not go beyond the limitations of NES. But it's possible to do lossy conversion too. 
+
+Check [Examples](https://github.com/ClusterM/NesTiler/tree/master/Examples) directory for examples.
 
 The sequence of actions is as follows:
 * Load available NES colors from JSON or PAL file and their indices.
@@ -33,7 +39,7 @@ The sequence of actions is as follows:
 
 ![Tiles](https://user-images.githubusercontent.com/4236181/198838408-660c252e-ec75-408b-9fbd-36d7a77f97b0.png)
 
-* Save pattern table and nametable of each image to file, so it's easy to include them to NES ROM and show the image
+* Save pattern table and nametable of each image to file, so it's easy to include them to NES ROM and show the image (NES has non-square pixels, so image is stretched)
 
 ![Result](https://user-images.githubusercontent.com/4236181/198838556-1ff947ba-9879-49f1-a74d-3b8df7067051.png)
 
@@ -77,7 +83,7 @@ Examples:
 * nestiler -i0 image1.png -i1 image2.png -i2 image3.png ...
 * nestiler --in-0 image1.png --in-1 image2.png --in-2 image3.png ...
  
-Also, you can load image partically - split them horizontally, just add offset and height after colon. So if you need to split 256x240 image into two images:
+Also, you can load image partially - split them horizontally, just add offset and height after colon. So if you need to split 256x240 image into two images:
 * nestiler -i0 image.png:0:128 -i1 image.png:128:112
 
 It's usefull if you need to show single image on screen but you want to split it into two 256-tiles pattern tables and switch them on specific line in the middle of rendering process.
@@ -222,3 +228,8 @@ Just option to suppress console output.
 Examples:
 * nestiler -q
 * nestiler -quiet ...
+
+## Donate
+https://www.donationalerts.com/r/clustermeerkat
+
+https://boosty.to/cluster
