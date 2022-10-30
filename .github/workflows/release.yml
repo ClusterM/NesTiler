@@ -28,13 +28,6 @@ jobs:
   publish:
     needs: create-release
     runs-on: ubuntu-latest
-    env:
-      APP_NAME: nestiler
-      PROJECT_PATH: NesTiler
-      OUTPUT_DIR: output
-      CONFIGURATION: Release
-      OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
-      OUTPUT_FILE: nestiler-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.sc == 'self-contained' && '-self-contained' || '' }}.${{ matrix.os == 'win' && 'zip' || 'tar.gz' }}
     strategy:
       matrix:
         os: [win, linux, osx]
@@ -47,6 +40,13 @@ jobs:
             arch: x86
           - os: osx
             arch: arm          
+    env:
+      APP_NAME: nestiler
+      PROJECT_PATH: NesTiler
+      OUTPUT_DIR: output
+      CONFIGURATION: Release
+      OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
+      OUTPUT_FILE: ${{ APP_NAME }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.sc == 'self-contained' && '-self-contained' || '' }}.${{ matrix.os == 'win' && 'zip' || 'tar.gz' }}
     steps:
     - name: Fix line endings
       run: git config --global core.autocrlf false
@@ -55,10 +55,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
     - name: Build
       env:
-        SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=True' || '--no-self-contained' }}
+        SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true -p:PublishTrimmed=False' || '--no-self-contained' }}
       run: dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true ${{ env.SC_OPS }} -o ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}/${{ env.APP_NAME }} -p:IncludeAllContentForSelfExtract=true
     - name: Archive
       working-directory: ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}
@@ -76,7 +76,7 @@ jobs:
         TAG_REF_NAME: ${{ github.ref }}
         REPOSITORY_NAME: ${{ github.repository }}
       run: |
-        echo ::set-output name=file_name::${REPOSITORY_NAME##*/}-${TAG_REF_NAME##*/v} # RepositoryName-v1.0.0
+        echo ::set-output name=file_name::${REPOSITORY_NAME##*/}-${TAG_REF_NAME##*/v}
         value=`cat release_url/release_url.txt`
         echo ::set-output name=upload_url::$value
     - name: Upload
