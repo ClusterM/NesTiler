@@ -3,7 +3,7 @@
 [**nesasm CE**](https://github.com/ClusterM/nesasm) and **make** are required to compile those examples.
 
 ## nrom_simple
-Very simple example with only one full screen image. Demo image is very simple and uses <256 tiles, so there are no need for any bankswitching.
+Very simple example with only one full screen image. Demo image is very simple and uses <256 tiles, so there is no need for any bankswitching.
 
 ![Image](../TestImages/Images/blaster_master_right.png)
 
@@ -24,7 +24,6 @@ This example uses single image splitted in two horizontally, each part uses it's
 Same as **nrom_split** but with сomplicated image that doesn't fit NES colors limitations, so NesTiler tries to optimize it and dismiss some palettes and colors (**--lossy 3** option).
 
 ![Image](../TestImages/Images/me.png) -> ![Image](https://user-images.githubusercontent.com/4236181/197870408-4472a362-2829-4c74-baaf-1c27c082d070.png)
-
 
 ## mmc3_split4
 This example uses single image splitted into four horizontally. Each part uses it's own pattern table, <256 tiles each. MMC3 IRQs and bankswitching used to switch pattern tables on the respective lines, so it's possible to remove 256 tiles limitation at all. This example contains tricky code to avoid visual artefacts.
