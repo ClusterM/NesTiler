@@ -9,14 +9,12 @@ jobs:
     steps:
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: ${{ github.event.repository.updated_at}}
-        release_name: Release ${{ github.event.repository.updated_at}}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.event.repository.updated_at}}        
+        name: Release ${{ github.event.repository.updated_at}}
         draft: true
-        prerelease: false
     - name: Output Release URL File
       run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
     - name: Save Release URL File for publish
