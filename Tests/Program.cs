@@ -167,7 +167,7 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
         public void Sprites8x16()
         {
             var imagePath = Path.Combine(ImagesPath, "sprites2.png");
-            DoTestSprites8x8(imagePath);
+            DoTestSprites8x16(imagePath);
         }
 
         private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
@@ -420,7 +420,7 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
         {
             var prefix = Path.GetFileNameWithoutExtension(imagePath);
             var args = new string[] {
-                "--mode", "sprites8x8",
+                "--mode", "sprites8x16",
                 "--enable-palettes", "0",
                 "--in-0", imagePath,
                 "--out-pattern-table-0", PatternTablePath(prefix, 0),
