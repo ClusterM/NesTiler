@@ -61,9 +61,9 @@
   </ItemGroup>
   <PropertyGroup>
     <DebugType>embedded</DebugType>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Version>1.0.0</Version>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <FileVersion>1.1.0</FileVersion>
+    <Version>1.1.0</Version>
     <RepositoryUrl>https://github.com/ClusterM/nestiler</RepositoryUrl>
     <Description>Tool for converting pictures into NES format: generating pattern tables, palettes, name tables</Description>
     <Company>Alexey "Cluster" Avdyukhin</Company>

@@ -99,7 +99,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     var colorsInPalette = c.FixedPalettes[i]!.ToArray();
                     for (int j = 0; j < colorsInPalette.Length; j++)
                         colorsInPalette[j] = nesColors.FindSimilarColor(colorsInPalette[j]);
-                    c.FixedPalettes[i] = new Palette(colorsInPalette);
+                    c.FixedPalettes[i] = new Palette(colorsInPalette, nosort: true);
                 }
 
                 // Loading images

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace com.clusterrr.Famicom.NesTiler
 {
-    class Config
+    internal class Config
     {
         public const string DEFAULT_COLORS_FILE = @"nestiler-colors.json";
 
@@ -167,7 +167,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                     throw new ArgumentException($"{c} - invalid color.", param);
                                 }
                             });
-                            config.FixedPalettes[indexNum] = new Palette(colors);
+                            config.FixedPalettes[indexNum] = new Palette(colors, nosort: true);
                         }
                         i++;
                         break;

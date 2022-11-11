@@ -64,9 +64,12 @@ namespace com.clusterrr.Famicom.NesTiler
             colors = colorsCandidates.Take(3).OrderBy(kv => kv.Key.ToArgb()).Select(kv => kv.Key).ToArray();
         }
 
-        public Palette(IEnumerable<SKColor> colors)
+        public Palette(IEnumerable<SKColor> colors, bool nosort = false)
         {
-            this.colors = colors.OrderBy(c => c.ToArgb()).Take(3).ToArray();
+            if (!nosort)
+                this.colors = colors.OrderBy(c => c.ToArgb()).Take(3).ToArray();
+            else
+                this.colors = colors.Take(3).ToArray();
         }
 
         public double GetTileDelta(FastBitmap image, int leftX, int topY, int width, int height, SKColor bgColor)
@@ -126,7 +129,7 @@ namespace com.clusterrr.Famicom.NesTiler
             return GetEnumerator();
         }
 
-        public override string ToString() => string.Join(", ", colors.Select(c => ColorTranslator.ToHtml(c.ToColor())).OrderBy(c => c));
+        public override string ToString() => string.Join(", ", colors.Select(c => ColorTranslator.ToHtml(c.ToColor())));
 
         public override int GetHashCode() => (int)((this[1]?.ToArgb() ?? 0) + ((this[2]?.ToArgb() ?? 0) << 4) + ((this[3]?.ToArgb() ?? 0) << 8));
     }
