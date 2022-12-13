@@ -1,4 +1,6 @@
 # NesTiler
+[![Build, test, upload](https://github.com/ClusterM/NesTiler/actions/workflows/build-test.yml/badge.svg)](https://github.com/ClusterM/NesTiler/actions/workflows/build-test.yml)
+
 Tool for converting pictures into NES format: pattern tables, nametables, attribute tables and palettes.
 
 ## What does it do
