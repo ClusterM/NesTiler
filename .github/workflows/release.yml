@@ -4,7 +4,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  tests:
+    needs: build
+    strategy:
+      matrix:
+        host: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.host }}
+    env:
+      TESTS_PATH: ./Tests
+      TESTS_CONFIGURATION: Debug
+    steps:
+    - name: Fix line endings
+      run: git config --global core.autocrlf false
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Tests
+      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }}
+
   create-release: 
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - name: Create Release

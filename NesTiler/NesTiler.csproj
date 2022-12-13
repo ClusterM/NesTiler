@@ -9,6 +9,7 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>

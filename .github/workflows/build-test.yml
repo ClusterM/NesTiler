@@ -69,7 +69,6 @@ jobs:
     runs-on: ${{ matrix.host }}
     env:
       TESTS_PATH: ./Tests
-      CONFIGURATION: Release
       TESTS_CONFIGURATION: Debug
     steps:
     - name: Fix line endings
@@ -81,7 +80,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Tests
-      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }} -p:PublishSingleFile=true
+      run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }}
 
   upload-to-pages:
     needs: tests
