@@ -48,7 +48,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     {
                         try
                         {
-                            var index = kv.Key.ToLower().StartsWith("0x") ? Convert.ToByte(kv.Key.Substring(2), 16) : byte.Parse(kv.Key);
+                            var index = kv.Key.ToLower().StartsWith("0x") ? Convert.ToByte(kv.Key[2..], 16) : byte.Parse(kv.Key);
                             if (FORBIDDEN_COLORS.Contains(index))
                                 Trace.WriteLine($"WARNING! color #{kv.Key} is forbidden color, it will be ignored.");
                             if (index > 0x3F) throw new ArgumentException($"{kv.Key} - invalid color index.", filename);
