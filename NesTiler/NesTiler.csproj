@@ -12,15 +12,12 @@
     <SelfContained>false</SelfContained>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
     <DebugType>full</DebugType>
-    <WarningLevel>7</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
-    <WarningLevel>7</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".git" />
