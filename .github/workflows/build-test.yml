@@ -33,7 +33,7 @@ jobs:
       APP_NAME: nestiler
       PROJECT_PATH: ./NesTiler
       OUTPUT_DIR: output
-      CONFIGURATION: Release
+      CONFIGURATION: Debug
       OUTPUT_SUBDIR: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.sc }}
       OUTPUT_FILE: nestiler-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.sc == 'self-contained' && '-self-contained' || '' }}.${{ matrix.os == 'win' && 'zip' || 'tar.gz' }}
     steps:
@@ -48,7 +48,7 @@ jobs:
     - name: Build
       env:
         SC_OPS: ${{ matrix.sc == 'self-contained' && '--self-contained true' || '--no-self-contained' }}
-      run: dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true ${{ env.SC_OPS }} -o ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}/${{ env.APP_NAME }} -p:IncludeAllContentForSelfExtract=true
+      run: dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.CONFIGURATION }} -r ${{ matrix.os }}-${{ matrix.arch }} -p:PublishSingleFile=true ${{ env.SC_OPS }} -o ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}/${{ env.APP_NAME }}
     - name: Archive
       working-directory: ${{ env.OUTPUT_DIR }}/${{ env.OUTPUT_SUBDIR }}
       env:

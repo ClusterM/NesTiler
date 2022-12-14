@@ -21,8 +21,8 @@ namespace com.clusterrr.Famicom.NesTiler
         static void PrintAppInfo()
         {
             Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly()?.GetName()?.Version?.Major}.{Assembly.GetExecutingAssembly()?.GetName()?.Version?.Minor}");
-            Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
 #if DEBUG
+            Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
             Console.WriteLine($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
 #endif
             Console.WriteLine("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");

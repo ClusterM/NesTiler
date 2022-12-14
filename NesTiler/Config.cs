@@ -50,9 +50,9 @@ namespace com.clusterrr.Famicom.NesTiler
 
         private Config()
         {
-            ColorsFile = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName)!, DEFAULT_COLORS_FILE);
+            ColorsFile = Path.Combine(AppContext.BaseDirectory, DEFAULT_COLORS_FILE);
             if (!File.Exists(ColorsFile))
-                ColorsFile = Path.Combine(AppContext.BaseDirectory, DEFAULT_COLORS_FILE);
+                ColorsFile = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName)!, DEFAULT_COLORS_FILE);
             if (!File.Exists(ColorsFile) && !OperatingSystem.IsWindows())
                 ColorsFile = Path.Combine("/etc", DEFAULT_COLORS_FILE);
         }
