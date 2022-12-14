@@ -62,7 +62,6 @@ jobs:
         path: ${{ env.OUTPUT_FILE }}
 
   tests:
-    needs: build
     strategy:
       matrix:
         host: [windows-latest, ubuntu-latest, macos-latest]
@@ -83,7 +82,7 @@ jobs:
       run: dotnet test ${{ env.TESTS_PATH }} -c ${{ env.TESTS_CONFIGURATION }}
 
   upload-to-pages:
-    needs: tests
+    needs: [build, tests]
     runs-on: ubuntu-latest
     steps:
     - name: Download artifacts
