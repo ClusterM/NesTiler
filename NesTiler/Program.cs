@@ -14,16 +14,28 @@ namespace com.clusterrr.Famicom.NesTiler
 {
     public class Program
     {
+        public const string APP_NAME = "NesTiler";
         public const string REPO_PATH = "https://github.com/ClusterM/NesTiler";
         public static DateTime BUILD_TIME = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(long.Parse(Properties.Resources.buildtime.Trim()));
         public const int MAX_BG_COLOR_AUTODETECT_ITERATIONS = 5;
 
         static void PrintAppInfo()
         {
-            Console.WriteLine($"NesTiler v{Assembly.GetExecutingAssembly()?.GetName()?.Version?.Major}.{Assembly.GetExecutingAssembly()?.GetName()?.Version?.Minor}");
+            var version = Assembly.GetExecutingAssembly()?.GetName()?.Version;
+            var versionStr = $"{version?.Major}.{version?.Minor}{((version?.Build ?? 0) > 0 ? $"{(char)((byte)'a' + version!.Build)}" : "")}";
+            Console.WriteLine($"{APP_NAME} " +
+#if !INTERIM
+                $"v{versionStr}"
+#else
+                    "intrerim version"
+#endif
 #if DEBUG
-            Console.WriteLine($"  Commit {Properties.Resources.gitCommit} @ {REPO_PATH}");
-            Console.WriteLine($"  Debug version, build time: {BUILD_TIME.ToLocalTime()}");
+                + " (debug)"
+#endif
+            );
+#if INTERIM || DEBUG
+            Console.WriteLine($"  Commit: {Properties.Resources.gitCommit} @ {REPO_PATH}");
+            Console.WriteLine($"  Build time: {BUILD_TIME.ToLocalTime()}");
 #endif
             Console.WriteLine("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");
             Console.WriteLine("");
