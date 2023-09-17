@@ -125,7 +125,7 @@
         public const string S = "s";
         public const string L = "share-pattern-table";
         public string? Params { get; } = null;
-        public string Description { get; } = "vertical offset for attribute table in pixels (default - 0)";
+        public string Description { get; } = "share pattern table between input images";
         public bool HasIndex { get; } = false;
         public string Short { get; } = S;
         public string Long { get; } = L;

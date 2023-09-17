@@ -27,7 +27,7 @@ namespace com.clusterrr.Famicom.NesTiler
 #if !INTERIM
                 $"v{versionStr}"
 #else
-                    "intrerim version"
+                "intrerim version"
 #endif
 #if DEBUG
                 + " (debug)"
@@ -136,9 +136,8 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (image == null) throw new InvalidDataException($"Can't load {filename}.");
                     images[imageFile.Key] = image;
 
-                    if (c.Mode == Config.TilesMode.Backgrounds && image.Width != 256) throw new ArgumentException("Image width must be 256 for backgrounds mode.", filename);
-                    if (image.Width % c.TileWidth != 0) throw new ArgumentException($"Image width must be divisible by {c.TileWidth}.", filename);
-                    if (image.Height % c.TileHeight != 0) throw new ArgumentException($"Image height must be divisible by {c.TileHeight}.", filename);
+                    if (image.Width % c.TilePalWidth != 0) throw new ArgumentException($"Image width must be divisible by {c.TilePalWidth}.", filename);
+                    if (image.Height % c.TilePalHeight != 0) throw new ArgumentException($"Image height must be divisible by {c.TilePalHeight}.", filename);
                 }
 
                 // Change all colors in the images to colors from the NES palette
@@ -151,7 +150,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         for (int x = 0; x < image.Width; x++)
                         {
                             var color = image.GetPixelColor(x, y);
-                            if (color.Alpha >= 0x80 || c.Mode == Config.TilesMode.Backgrounds)
+                            if (color.Alpha >= 0x80)
                             {
                                 var similarColor = nesColors.FindSimilarColor(color);
                                 if (c.LossyLevel <= 0 && similarColor != color)
@@ -246,7 +245,8 @@ namespace com.clusterrr.Famicom.NesTiler
                         // Lossless combinations found, get best
                         var kv = kvAllLossless.First();
                         (bgColor, calculatedPalettes) = (kv.Key, kv.Value.Palettes);
-                    } else
+                    }
+                    else
                     {
                         // Lossy combinations found
                         var kvLossy = calcResults.OrderBy(kv => kv.Value.Palettes.Length).First();
