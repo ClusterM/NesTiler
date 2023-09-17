@@ -234,7 +234,7 @@ Examples:
 ## Download
 You can always download latest version at [https://github.com/ClusterM/NesTiler/releases](https://github.com/ClusterM/NesTiler/releases).
 
-Also, you can download automatic nightly builds: [http://clusterm.github.io/NesTiler/](http://clusterm.github.io/NesTiler/).
+Also, you can download automatic interim builds: [http://clusterm.github.io/NesTiler/](http://clusterm.github.io/NesTiler/).
 
 ## Donate
 * [Donation Alerts](https://www.donationalerts.com/r/clustermeerkat)

@@ -27,7 +27,7 @@ namespace com.clusterrr.Famicom.NesTiler
 #if !INTERIM
                 $"v{versionStr}"
 #else
-                "intrerim version"
+                 "interim version"
 #endif
 #if DEBUG
                 + " (debug)"
