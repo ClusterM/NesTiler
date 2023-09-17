@@ -45,9 +45,15 @@ namespace com.clusterrr.Famicom.NesTiler
             }
         }
 
-        public SKColor GetPixelColor(int x, int y)
+        public SKColor GetPixelColor(int x, int y, SKColor? defaultColor = null)
         {
-            return pixels[((y + verticalOffset) * Width) + x];
+            var index = ((y + verticalOffset) * Width) + x;
+            if (index >= pixels.Length)
+            {
+                if (defaultColor.HasValue) return defaultColor.Value;
+                throw new IndexOutOfRangeException($"Pixel {x}x{y} is out of range");
+            }
+            return pixels[index];
         }
 
         public void SetPixelColor(int x, int y, SKColor color)

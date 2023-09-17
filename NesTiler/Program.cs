@@ -136,8 +136,8 @@ namespace com.clusterrr.Famicom.NesTiler
                     if (image == null) throw new InvalidDataException($"Can't load {filename}.");
                     images[imageFile.Key] = image;
 
-                    if (image.Width % c.TilePalWidth != 0) throw new ArgumentException($"Image width must be divisible by {c.TilePalWidth}.", filename);
-                    if (image.Height % c.TilePalHeight != 0) throw new ArgumentException($"Image height must be divisible by {c.TilePalHeight}.", filename);
+                    if (image.Width % c.TileWidth != 0) throw new ArgumentException($"Image width must be divisible by {c.TileWidth}.", filename);
+                    if (image.Height % c.TileHeight != 0) throw new ArgumentException($"Image height must be divisible by {c.TileHeight}.", filename);
                 }
 
                 // Change all colors in the images to colors from the NES palette
@@ -356,15 +356,17 @@ namespace com.clusterrr.Famicom.NesTiler
                                 {
                                     var cy = (tilePalY * c.TilePalHeight) + y - attributeTableOffset;
                                     if (cy < 0) continue;
-                                    var color = image.GetPixelColor((tilePalX * c.TilePalWidth) + x, cy);
+                                    var color = image.GetPixelColor((tilePalX * c.TilePalWidth) + x, cy, bgColor);
                                     var similarColor = nesColors.FindSimilarColor(Enumerable.Concat(
                                             bestPalette,
                                             new[] { bgColor }
                                         ), color);
-                                    image.SetPixelColor(
-                                        (tilePalX * c.TilePalWidth) + x,
-                                        cy,
-                                        similarColor);
+                                    var pixX = (tilePalX * c.TilePalWidth) + x;
+                                    if (pixX < image.Width && cy < image.Height)
+                                        image.SetPixelColor(
+                                            pixX,
+                                            cy,
+                                            similarColor);
                                 }
                             }
                         } // tile palette X

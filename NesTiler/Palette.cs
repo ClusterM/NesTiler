@@ -80,7 +80,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 if (y < 0) continue;
                 for (int x = leftX; x < leftX + width; x++)
                 {
-                    var color = image.GetPixelColor(x, y);
+                    var color = image.GetPixelColor(x, y, bgColor);
                     delta += GetMinDelta(color, bgColor).delta;
                 }
             }
