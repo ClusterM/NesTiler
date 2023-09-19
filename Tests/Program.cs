@@ -177,13 +177,13 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             DoTestSprites8x16(imagePath);
         }
 
-        private string PatternTablePath(string prefix, int number) => $"E:\\tiles\\{prefix}_pattern_{number}.bin";
-        private string NameTablePath(string prefix, int number) => $"E:\\tiles\\{prefix}_name_table_{number}.bin";
-        private string AttrTablePath(string prefix, int number) => $"E:\\tiles\\{prefix}_attr_table_{number}.bin";
-        private string PalettePath(string prefix, int number) => $"E:\\tiles\\{prefix}_palette_{number}.bin";
-        private string TilesCsvPath(string prefix) => $"E:\\tiles\\{prefix}_tiles.csv";
-        private string PalettesCsvPath(string prefix) => $"E:\\tiles\\{prefix}_palettes.csv";
-        private string SpritesCsvPath(string prefix) => $"E:\\tiles\\{prefix}_sprites.csv";
+        private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
+        private string NameTablePath(string prefix, int number) => $"{prefix}_name_table_{number}.bin";
+        private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
+        private string PalettePath(string prefix, int number) => $"{prefix}_palette_{number}.bin";
+        private string TilesCsvPath(string prefix) => $"{prefix}_tiles.csv";
+        private string PalettesCsvPath(string prefix) => $"{prefix}_palettes.csv";
+        private string SpritesCsvPath(string prefix) => $"{prefix}_sprites.csv";
 
         public void DoTestNoSplit(string imagePath)
         {
