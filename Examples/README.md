@@ -33,6 +33,9 @@ This example uses single image splitted into four horizontally. Each part uses i
 ## mmc3_split2_animation 
 Full screen animation. Two images splitted into two parts horizontally. MMC3 IRQs and bankswitching used to switch pattern tables on the respective lines.
 
+## ascii
+This example uses **--no-group-tiles** option to keep ASCII symbols order.
+
 ## sprites8x8
 Simple 8x8 sprites example. Also, this example shows how sprites with different colors combined into single palette.
 
