@@ -150,6 +150,13 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
         }
 
         [Test]
+        public void AsciiNoGroup()
+        {
+            var imagePath = Path.Combine(ImagesPath, "ascii.png");
+            DoTestAsciiNoGroup(imagePath);
+        }
+
+        [Test]
         public void MeLossy()
         {
             var imagePath = Path.Combine(ImagesPath, "me.png");
@@ -170,13 +177,13 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             DoTestSprites8x16(imagePath);
         }
 
-        private string PatternTablePath(string prefix, int number) => $"{prefix}_pattern_{number}.bin";
-        private string NameTablePath(string prefix, int number) => $"{prefix}_name_table_{number}.bin";
-        private string AttrTablePath(string prefix, int number) => $"{prefix}_attr_table_{number}.bin";
-        private string PalettePath(string prefix, int number) => $"{prefix}_palette_{number}.bin";
-        private string TilesCsvPath(string prefix) => $"{prefix}_tiles.csv";
-        private string PalettesCsvPath(string prefix) => $"{prefix}_palettes.csv";
-        private string SpritesCsvPath(string prefix) => $"{prefix}_sprites.csv";
+        private string PatternTablePath(string prefix, int number) => $"E:\\tiles\\{prefix}_pattern_{number}.bin";
+        private string NameTablePath(string prefix, int number) => $"E:\\tiles\\{prefix}_name_table_{number}.bin";
+        private string AttrTablePath(string prefix, int number) => $"E:\\tiles\\{prefix}_attr_table_{number}.bin";
+        private string PalettePath(string prefix, int number) => $"E:\\tiles\\{prefix}_palette_{number}.bin";
+        private string TilesCsvPath(string prefix) => $"E:\\tiles\\{prefix}_tiles.csv";
+        private string PalettesCsvPath(string prefix) => $"E:\\tiles\\{prefix}_palettes.csv";
+        private string SpritesCsvPath(string prefix) => $"E:\\tiles\\{prefix}_sprites.csv";
 
         public void DoTestNoSplit(string imagePath)
         {
@@ -250,6 +257,33 @@ namespace com.clusterrr.Famicom.NesTiler.Tests
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 2)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 2)))), "palette 2");
             Assert.That(File.ReadAllBytes(PalettePath(prefix, 3)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 3)))), "palette 3");
 
+            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
+            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
+        }
+
+        public void DoTestAsciiNoGroup(string imagePath)
+        {
+            var prefix = Path.GetFileNameWithoutExtension(imagePath);
+            var args = new string[] {
+                "--enable-palettes", "0",
+                "--in-0", $"{imagePath}",
+                "--out-pattern-table-0", PatternTablePath(prefix, 0),
+                "--out-palette-0", PalettePath(prefix, 0),
+                "--out-tiles-csv", TilesCsvPath(prefix),
+                "--out-palettes-csv", PalettesCsvPath(prefix),
+                "--no-group-tiles-0",
+                "--quiet",
+            };
+            var r = Program.Main(args);
+            if (r != 0) throw new InvalidOperationException($"Return code: {r}");
+            
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))), "pattern table");
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))), "palette 0");
+            Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
+            Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
+
+            Assert.That(File.ReadAllBytes(PatternTablePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PatternTablePath(prefix, 0)))), "pattern table");
+            Assert.That(File.ReadAllBytes(PalettePath(prefix, 0)), Is.EqualTo(File.ReadAllBytes(Path.Combine(ReferencesDir, PalettePath(prefix, 0)))), "palette 0");
             Assert.That(File.ReadAllLines(TilesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, TilesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "tiles CSV");
             Assert.That(File.ReadAllLines(PalettesCsvPath(prefix)).Select(l => l.Replace('/', '\\')), Is.EqualTo(File.ReadAllLines(Path.Combine(ReferencesDir, PalettesCsvPath(prefix))).Select(l => l.Replace('/', '\\'))), "palette CSV");
         }
