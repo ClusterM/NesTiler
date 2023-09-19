@@ -498,8 +498,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                 currentTileID = tileID;
                                 tileID++;
                             }
-                            // TODO: fix it
-                            //if (c.Mode == Config.TilesMode.Sprites8x16)
+                            if (c.Mode == Config.TilesMode.Sprites8x16)
                                 currentTileID = ((currentTileID & 0x7F) << 1) | ((currentTileID & 0x80) >> 7);
                             // Write CSV if required
                             outTilesCsvLines?.Add($"{imageNum},{c.ImageFiles[imageNum]},{tileY},{tileX},{tileX * c.TileWidth},{tileY * c.TileHeight},{c.TileWidth},{c.TileHeight},{currentTileID},{paletteID}");
