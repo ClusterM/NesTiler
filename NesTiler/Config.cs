@@ -21,7 +21,7 @@ namespace com.clusterrr.Famicom.NesTiler
         }
 
         public string ColorsFile { get; private set; }
-        public Dictionary<int, string> ImageFiles { get; private set; } = new Dictionary<int, string>();
+        public Dictionary<int, string> ImageFiles { get; private set; } = new();
         public SKColor? BgColor { get; private set; } = null;
         public bool[] PaletteEnabled { get; private set; } = new bool[4] { true, true, true, true };
         public Palette?[] FixedPalettes { get; private set; } = new Palette?[4] { null, null, null, null };
@@ -31,18 +31,19 @@ namespace com.clusterrr.Famicom.NesTiler
         public int TilePalWidth { get; private set; } = 16;
         public int TilePalHeight { get; private set; } = 16;
         public bool SharePatternTable { get; private set; } = false;
+        public HashSet<int> DoNotGroupTiles { get; private set; } = new();
         public int LossyLevel { get; private set; } = 2;
         public int PatternTableStartOffsetShared { get; private set; } = 0;
-        public Dictionary<int, int> PatternTableStartOffsets { get; private set; } = new Dictionary<int, int>();
-        public Dictionary<int, int> PattributeTableYOffsets { get; private set; } = new Dictionary<int, int>();
+        public Dictionary<int, int> PatternTableStartOffsets { get; private set; } = new();
+        public Dictionary<int, int> AttributeTableYOffsets { get; private set; } = new();
         public bool Quiet { get; private set; } = false;
 
         // Filenames
-        public Dictionary<int, string> OutPreview { get; private set; } = new Dictionary<int, string>();
-        public Dictionary<int, string> OutPalette { get; private set; } = new Dictionary<int, string>();
-        public Dictionary<int, string> OutPatternTable { get; private set; } = new Dictionary<int, string>();
-        public Dictionary<int, string> OutNameTable { get; private set; } = new Dictionary<int, string>();
-        public Dictionary<int, string> OutAttributeTable { get; private set; } = new Dictionary<int, string>();
+        public Dictionary<int, string> OutPreview { get; private set; } = new();
+        public Dictionary<int, string> OutPalette { get; private set; } = new();
+        public Dictionary<int, string> OutPatternTable { get; private set; } = new();
+        public Dictionary<int, string> OutNameTable { get; private set; } = new();
+        public Dictionary<int, string> OutAttributeTable { get; private set; } = new();
         public string? OutPatternTableShared { get; private set; } = null;
         public string? OutTilesCsv { get; private set; } = null;
         public string? OutPalettesCsv { get; private set; } = null;
@@ -190,12 +191,16 @@ namespace com.clusterrr.Famicom.NesTiler
                             throw new ArgumentException($"Value ({valueInt}) must be divisible by 8.", param);
                         if (valueInt < 0 || valueInt >= 256)
                             throw new ArgumentException($"Value ({valueInt}) must be between 0 and 255.", param);
-                        config.PattributeTableYOffsets[indexNum] = valueInt;
+                        config.AttributeTableYOffsets[indexNum] = valueInt;
                         i++;
                         break;
                     case ArgSharePatternTable.S:
                     case ArgSharePatternTable.L:
                         config.SharePatternTable = true;
+                        break;
+                    case ArgDoNotGroupTiles.S:
+                    case ArgDoNotGroupTiles.L:
+                        config.DoNotGroupTiles.Add(indexNum);
                         break;
                     case ArgLossy.S:
                     case ArgLossy.L:

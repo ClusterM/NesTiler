@@ -19,6 +19,7 @@
             new ArgPatternOffset(),
             new ArgAttributeTableYOffset(),
             new ArgSharePatternTable(),
+            new ArgDoNotGroupTiles(),
             new ArgLossy(),
             new ArgOutPreview(),
             new ArgOutPalette(),
@@ -127,6 +128,17 @@
         public string? Params { get; } = null;
         public string Description { get; } = "share pattern table between input images";
         public bool HasIndex { get; } = false;
+        public string Short { get; } = S;
+        public string Long { get; } = L;
+    }
+
+    class ArgDoNotGroupTiles : IArg
+    {
+        public const string S = "r";
+        public const string L = "no-group-tiles";
+        public string? Params { get; } = null;
+        public string Description { get; } = $"do not group similar tiles in pattern table";
+        public bool HasIndex { get; } = true;
         public string Short { get; } = S;
         public string Long { get; } = L;
     }
@@ -240,4 +252,5 @@
         public string Short { get; } = S;
         public string Long { get; } = L;
     }
+
 }

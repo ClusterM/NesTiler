@@ -85,6 +85,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 var images = new Dictionary<int, FastBitmap>();
                 var paletteIndexes = new Dictionary<int, byte[,]>();
                 var patternTables = new Dictionary<int, Dictionary<Tile, int>>();
+                var patternTablesReversed = new Dictionary<int, Dictionary<int, Tile>>();
                 var nameTables = new Dictionary<int, List<int>>();
                 int tileID = 0;
 
@@ -180,7 +181,7 @@ namespace com.clusterrr.Famicom.NesTiler
                     (calculatedPalettes, lossyInfo) = CalculatePalettes(images,
                                                            c.PaletteEnabled,
                                                            c.FixedPalettes,
-                                                           c.PattributeTableYOffsets,
+                                                           c.AttributeTableYOffsets,
                                                            c.TilePalWidth,
                                                            c.TilePalHeight,
                                                            c.BgColor.Value);
@@ -232,7 +233,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         calcResults[candidates[i]] = CalculatePalettes(images,
                                                                        c.PaletteEnabled,
                                                                        c.FixedPalettes,
-                                                                       c.PattributeTableYOffsets,
+                                                                       c.AttributeTableYOffsets,
                                                                        c.TilePalWidth,
                                                                        c.TilePalHeight,
                                                                        candidates[i]);
@@ -322,7 +323,7 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     Trace.WriteLine($"Mapping palettes for image #{imageNum}...");
                     var image = images[imageNum];
-                    c.PattributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
+                    c.AttributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
                     paletteIndexes[imageNum] = new byte[image.Width / c.TilePalWidth, (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)c.TilePalHeight)];
                     // For each tile/sprite
                     for (int tilePalY = 0; tilePalY < (int)Math.Ceiling((image.Height + attributeTableOffset) / (float)c.TilePalHeight); tilePalY++)
@@ -387,7 +388,7 @@ namespace com.clusterrr.Famicom.NesTiler
                         throw new InvalidOperationException("Attribute table generation available for backgrounds mode only.");
                     Trace.WriteLine($"Creating attribute table for image #{imageNum}...");
                     var image = images[imageNum];
-                    c.PattributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
+                    c.AttributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
                     var attributeTableRaw = new List<byte>();
                     int width = paletteIndexes[imageNum].GetLength(0);
                     int height = paletteIndexes[imageNum].GetLength(1);
@@ -435,11 +436,14 @@ namespace com.clusterrr.Famicom.NesTiler
                 {
                     Trace.WriteLine($"Creating pattern table for image #{imageNum}...");
                     var image = images[imageNum];
-                    c.PattributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
-                    if (!patternTables.ContainsKey(!c.SharePatternTable ? imageNum : 0)) patternTables[!c.SharePatternTable ? imageNum : 0] = new Dictionary<Tile, int>();
+                    c.AttributeTableYOffsets.TryGetValue(imageNum, out int attributeTableOffset);
+                    if (!patternTables.ContainsKey(!c.SharePatternTable ? imageNum : 0)) patternTables[!c.SharePatternTable ? imageNum : 0] = new();
                     var patternTable = patternTables[!c.SharePatternTable ? imageNum : 0];
+                    if (!patternTablesReversed.ContainsKey(!c.SharePatternTable ? imageNum : 0)) patternTablesReversed[!c.SharePatternTable ? imageNum : 0] = new();
+                    var patternTableReversed = patternTablesReversed[!c.SharePatternTable ? imageNum : 0];
                     if (!nameTables.ContainsKey(imageNum)) nameTables[imageNum] = new List<int>();
                     var nameTable = nameTables[imageNum];
+                    var noGroup = !c.SharePatternTable ? c.DoNotGroupTiles.Contains(imageNum) : c.DoNotGroupTiles.Any();
                     if (!c.SharePatternTable)
                     {
                         if (!c.PatternTableStartOffsets.ContainsKey(imageNum))
@@ -474,7 +478,15 @@ namespace com.clusterrr.Famicom.NesTiler
                                 }
                             var tile = new Tile(tileData, c.TileHeight);
                             int currentTileID;
-                            if (patternTable.TryGetValue(tile, out int id))
+
+                            if (noGroup)
+                            {
+                                patternTableReversed[tileID] = tile;
+                                if (c.Mode == Config.TilesMode.Backgrounds) nameTable.Add(tileID);
+                                currentTileID = tileID;
+                                tileID++;
+                            }
+                            else if (patternTable.TryGetValue(tile, out int id))
                             {
                                 if (c.Mode == Config.TilesMode.Backgrounds) nameTable.Add(id);
                                 currentTileID = id;
@@ -486,15 +498,14 @@ namespace com.clusterrr.Famicom.NesTiler
                                 currentTileID = tileID;
                                 tileID++;
                             }
-                            currentTileID = ((currentTileID & 0x7F) << 1) | ((currentTileID & 0x80) >> 7);
-
+                            // TODO: fix it
+                            //if (c.Mode == Config.TilesMode.Sprites8x16)
+                                currentTileID = ((currentTileID & 0x7F) << 1) | ((currentTileID & 0x80) >> 7);
                             // Write CSV if required
                             outTilesCsvLines?.Add($"{imageNum},{c.ImageFiles[imageNum]},{tileY},{tileX},{tileX * c.TileWidth},{tileY * c.TileHeight},{c.TileWidth},{c.TileHeight},{currentTileID},{paletteID}");
                         }
                     }
-                    if (c.SharePatternTable && tileID > c.PatternTableStartOffsetShared)
-                        Trace.WriteLine($"#{imageNum} tiles range: {c.PatternTableStartOffsetShared}-{tileID - 1}");
-                    else if (tileID > c.PatternTableStartOffsets[imageNum])
+                    if (tileID > c.PatternTableStartOffsets[imageNum])
                         Trace.WriteLine($"#{imageNum} tiles range: {c.PatternTableStartOffsets[imageNum]}-{tileID - 1}");
                     else
                         Trace.WriteLine($"Pattern table is empty.");
@@ -503,7 +514,8 @@ namespace com.clusterrr.Famicom.NesTiler
                     // Save pattern table to file
                     if (c.OutPatternTable.ContainsKey(imageNum) && !c.SharePatternTable)
                     {
-                        var patternTableReversed = patternTable.ToDictionary(kv => kv.Value, kv => kv.Key);
+                        if (!noGroup)
+                            patternTableReversed = patternTable.ToDictionary(kv => kv.Value, kv => kv.Key);
                         var patternTableRaw = new List<byte>();
                         for (int t = c.PatternTableStartOffsets[imageNum]; t < tileID; t++)
                         {
@@ -527,7 +539,9 @@ namespace com.clusterrr.Famicom.NesTiler
                 // Save shared pattern table to file
                 if (c.SharePatternTable && c.OutPatternTableShared != null)
                 {
-                    var patternTableReversed = patternTables[0].ToDictionary(kv => kv.Value, kv => kv.Key);
+                    var patternTableReversed = !c.DoNotGroupTiles.Any()
+                        ? patternTables[0].ToDictionary(kv => kv.Value, kv => kv.Key)
+                        : patternTablesReversed[0];
                     var patternTableRaw = new List<byte>();
                     for (int t = c.PatternTableStartOffsetShared; t < tileID; t++)
                     {
