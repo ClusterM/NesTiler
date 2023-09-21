@@ -34,7 +34,9 @@ This example uses single image splitted into four horizontally. Each part uses i
 Full screen animation. Two images splitted into two parts horizontally. MMC3 IRQs and bankswitching used to switch pattern tables on the respective lines.
 
 ## ascii
-This example uses **--no-group-tiles** option to keep ASCII symbols order.
+This example uses **--no-group-tiles** option to disable similar tiles grouping and keep ASCII symbols order.
+
+![image](https://github.com/ClusterM/NesTiler/assets/4236181/7b06f805-5f99-4c5f-881a-841310f76520) -> ![image](https://github.com/ClusterM/NesTiler/assets/4236181/213e7408-cfd0-46ff-b862-fdbdaf14a2f2)
 
 ## sprites8x8
 Simple 8x8 sprites example. Also, this example shows how sprites with different colors combined into single palette.
