@@ -48,8 +48,7 @@ The sequence of actions is as follows:
 ## How to use
 
 ```
-Available options:
-Usage: nestiler <options>
+Usage: nestiler.exe <options>
 
 Available options:
 -i<#> --in-<#> <filename>[:offset[:height]]     input filename number #, optionally cropped vertically
@@ -61,9 +60,10 @@ Available options:
                                                 (default - 0,1,2,3)
 -p<#> --palette-<#> <colors>                    comma separated list of colors to use in palette number #
                                                 (default - auto)
--o<#> --pattern-offset-<#> <tile_id>            first tile ID for pattern table for file number # (default - 0)
+-o<#> --pattern-offset-<#> <tile_index>         first tile index for pattern table for file number # (default - 0)
 -y<#> --attribute-table-y-offset-<#> <pixels>   vertical offset for attribute table in pixels (default - 0)
--s    --share-pattern-table                     vertical offset for attribute table in pixels (default - 0)
+-s    --share-pattern-table                     share pattern table between input images
+-r<#> --no-group-tiles-<#>                      do not group similar tiles in pattern table
 -l    --lossy <level>                           lossy level: 0-3, defines how many color distortion is allowed
                                                 without throwing an error (default - 2)
 -v<#> --out-preview-<#> <filename.png>          output filename for preview of image number #
@@ -82,8 +82,8 @@ Available options:
 Option to specify input images filenames. You need to replace __#__ with image index (any number), so you can specify multiple images. Index will be used to identify output filenames.
 
 Examples:
-* nestiler -i0 image1.png -i1 image2.png -i2 image3.png ...
-* nestiler --in-0 image1.png --in-1 image2.png --in-2 image3.png ...
+* `nestiler -i0 image1.png -i1 image2.png -i2 image3.png ...`
+* `nestiler --in-0 image1.png --in-1 image2.png --in-2 image3.png ...`
  
 Also, you can load image partially - split them horizontally, just add offset and height after colon. So if you need to split 256x240 image into two images:
 * nestiler -i0 image.png:0:128 -i1 image.png:128:112
@@ -94,8 +94,8 @@ It's usefull if you need to show single image on screen but you want to split it
 Option to specify file with available colors and indices. This file can be in JSON format (see nestiler-colors.json) or binary PAL format (used by emulators).
 
 Examples:
-* nestiler -c nestiler-colors.json ...
-* nestiler --colors nestiler-colors.json ...
+* `nestiler -c nestiler-colors.json ...`
+* `nestiler --colors nestiler-colors.json ...`
 
 Please note that some colors are forbidden on nes: 0x0D ("blacker than black"), 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F. These colors will be ignored.
 
@@ -103,29 +103,29 @@ Please note that some colors are forbidden on nes: 0x0D ("blacker than black"), 
 Option to specify processing mode: backgrounds, 8x8 sprites or 8x16 sprites. Default is backgrounds mode.
 
 Examples:
-* nestiler -m bg ...
-* nestiler --mode sprites8x8 ...
+* `nestiler -m bg ...`
+* `nestiler --mode sprites8x8 ...`
 
 ### Option -b, --bg-color \<color\>
 Background color in HTML format. Optional for background mode (will be set automatically) and required for sprite modes.
 
 Examples:
-* nestiler -b #C4C4C4 ...
-* nestiler --bg-color #000000 ...
+* `nestiler -b #C4C4C4 ...`
+* `nestiler --bg-color #000000 ...`
 
 ### Option -e, --enable-palettes \<palettes\>
 List of palette numbers (4-color combinations) to use, zero-based, comma separated: from 0 to 3. Useful when you need to fit image into limited amount of palettes (when lossy level = 3) or get error if you can't fit in them (when lossy level < 2, see below). Default value is all - 0,1,2,3.
 
 Examples:
-* nestiler -e 0,1,2,3 ...
-* nestiler --enable-palettes 0,1 ...
+* `nestiler -e 0,1,2,3 ...`
+* `nestiler --enable-palettes 0,1 ...`
 
 ### Option -p<#>, --palette-<#> \<colors\>
 Comma separated list of colors to use in palette number __#__ (0-3). Using this option you can manually specify palettes to use (three color sets), HTML format, comma separated. Three colors instead of four because background color shared between all palettes. Useful if you need fixed palette for other purposes, it can be shared with your image.
 
 Examples:
-* nestiler -p0 #747474,#A40000,#004400 -p2 #8000F0,#D82800,#FCFCFC ...
-* nestiler --palette-0 #5C94FC,#FC7460,#FC9838 --palette-1 #80D010,#58F898,#787878 ...
+* `nestiler -p0 #747474,#A40000,#004400 -p2 #8000F0,#D82800,#FCFCFC ...`
+* `nestiler --palette-0 #5C94FC,#FC7460,#FC9838 --palette-1 #80D010,#58F898,#787878 ...`
 
 Please note that index here is palette number, not input file number.
 
@@ -133,24 +133,31 @@ Please note that index here is palette number, not input file number.
 Using this option you can set first tile index to use with image number __#__. Useful if you need to reserve some space in the begining of pattern table. Default valus is 0.
 
 Examples:
-* nestiler -o1 32 ...
-* nestiler --pattern-offset-5 100 ...
+* `nestiler -o1 32 ...`
+* `nestiler --pattern-offset-5 100 ...`
 
-__#__ number is ignored when the --share-pattern-table option is used (see below).
+__#__ number is ignored when the "__--share-pattern-table__" option is used (see below), you can write just "__--pattern-offset__".
 
 ### Option -y<#>, --attribute-table-y-offset-<#> \<pixels\>
-One attribute table byte stores four palette indices for 16 tiles (4x4 square). It can cause problems if your image should be displayed on lines whose numbers are not divisible by 32. Using this option you can set vertical image offset for image number __#__ - amount of pixels divisible by 8. Default value is 0. Please note that you need to care about unused bites manually.
+One attribute table byte stores four palette indices for 16 tiles (4x4 square). It can cause problems if your image should be displayed on lines whose numbers are not divisible by 32. Using this option you can set vertical image offset for image number __#__ - amount of pixels divisible by 8. Default value is 0. Please note that you need to care about unused bits manually.
 
 Examples:
-* nestiler -y1 32 ...
-* nestiler --attribute-table-y-offset-0 16 ...
+* `nestiler -y1 32 ...`
+* `nestiler --attribute-table-y-offset-0 16 ...`
 
 ### Option -s, --share-pattern-table
 Use this option if you need to share single pattern table between all input images. Useful if you need to scroll screen horizontally.
 
 Examples:
-* nestiler -s ...
-* nestiler --share-pattern-table ...
+* `nestiler -s ...`
+* `nestiler --share-pattern-table ...`
+
+### Option -r, --no-group-tiles-<#>
+By default, NesTiles groups the same tiles into one. You can use this option to disable this behavior. It's useful, especially when you need to keep the order of tiles. This is particularly important for tiles with characters such as letters or digits, for example.
+
+Examples:
+* `nestiler -r1 ...`
+* `nestiler --no-group-tiles-0 ...`
 
 ### Option -l, --lossy \<level\>
 Lossy level: 0-3, defines how many color distortion is allowed without throwing an error.
@@ -163,73 +170,75 @@ Lossy level: 0-3, defines how many color distortion is allowed without throwing 
 Default value is 2.
 
 Examples:
-* nestiler -l 0 ...
-* nestiler --lossy 3 ...
+* `nestiler -l 0 ...`
+* `nestiler --lossy 3 ...`
   
 ### Option -v<#>, --out-preview-<#> \<file.png\>
 Option to save preview for input image number __#__. Stored as PNG file. Useful if you need to preview result without compiling ROM. Preview is not saved if option is not specified.
 
 Examples:
-* nestiler -v0 preview.png -v1 preview2.png ...
-* nestiler --out-preview-1 image.png --out-preview-2 image2.png ...
+* `nestiler -v0 preview.png -v1 preview2.png ...`
+* `nestiler --out-preview-1 image.png --out-preview-2 image2.png ...`
 
 ### Option -t<#>, --out-palette-<#> \<filename\>
 Option to save generated palette number __#__. Just four bytes with color indices. Not saved if option is not specified.
 
 Examples:
-* nestiler -t0 palette0.bin -t0 palette2.bin ...
-* nestiler --out-palette-1 palette1.bin --out-palette-2 palette2.bin ...
+* `nestiler -t0 palette0.bin -t0 palette2.bin ...`
+* `nestiler --out-palette-1 palette1.bin --out-palette-2 palette2.bin ...`
 
 Please note that index here is palette number, not input file number.
 
 ### Option -n<#>, --out-pattern-table-<#> \<filename\>
 Option to save generated pattern table for image number __#__. 16 bytes per tile, 960 bytes per full screen image. Not saved if option is not specified.
 
+__#__ number is ignored when the "__--share-pattern-table__" option is used (see below), you can write just "__--out-pattern-table__".
+
 Examples:
-* nestiler -n0 pattern0.bin -n1 pattern1.bin ...
-* nestiler --out-pattern-table-2 out.bin --out-pattern-table-3 out2.bin ...
+* `nestiler -n0 pattern0.bin -n1 pattern1.bin ...`
+* `nestiler --out-pattern-table-2 out.bin --out-pattern-table-3 out2.bin ...`
 
 ### Option -a<#>, --out-name-table-<#> \<filename\>           
 Option to save generated nametable for image number __#__. 16 bytes per tile, 960 bytes per full screen image. Not saved if option is not specified.
 
 Examples:
-* nestiler -a2 nt2.bin -a3 nt3.bin ...
-* nestiler --out-name-table-1 nametable.bin --out-name-table-2 nametable2.bin ...
+* `nestiler -a2 nt2.bin -a3 nt3.bin ...`
+* `nestiler --out-name-table-1 nametable.bin --out-name-table-2 nametable2.bin ...`
 
 ### Option -u<#>, --out-attribute-table-<#> \<filename\>
 Option to save generated attribute table for image number __#__. 1 byte per 16 tiles. 64 bytes per full screen image. Not saved if option is not specified. Can't be used in sprite modes.
 
 Examples:
-* nestiler -u0 attr_a.bin -u1 attr_b.bin ...
-* nestiler --out-attribute-table-1 attrtable1.bin --out-attribute-table-2 attrtable2.bin ...
+* `nestiler -u0 attr_a.bin -u1 attr_b.bin ...`
+* `nestiler --out-attribute-table-1 attrtable1.bin --out-attribute-table-2 attrtable2.bin ...`
 
 ### Option -z, --out-tiles-csv \<filename.csv\>
 Option to save CSV file with tiles information for all input images: indices, used palettes, etc. Not saved if option is not specified.
 
 Examples:
-* nestiler -z tiles.csv ...
-* nestiler --out-tiles-csv tiles.csv ...
+* `nestiler -z tiles.csv ...`
+* `nestiler --out-tiles-csv tiles.csv ...`
 
 ### Option -x, --out-palettes-csv \<filename.csv\>
 Option to save CSV file with palettes data: indices and colors.
 
 Examples:
-* nestiler -x palettes.csv ...
-* nestiler --out-palettes-csv palettes.csv ...
+* `nestiler -x palettes.csv ...`
+* `nestiler --out-palettes-csv palettes.csv ...`
 
 ### Option -g, --out-colors-table \<filename.png\>
 Option to generate PNG file with table of available NES colors (from __--colors__ option). Useful for reference when drawing. This option can be used without any input images.
 
 Examples:
-* nestiler -g colors.png
-* nestiler --out-colors-table colors.png
+* `nestiler -g colors.png`
+* `nestiler --out-colors-table colors.png`
 
 ### Option -q, --quiet
 Just option to suppress console output.
 
 Examples:
-* nestiler -q
-* nestiler -quiet ...
+* `nestiler -q`
+* `nestiler -quiet ...`
 
 ## Download
 You can always download latest version at [https://github.com/ClusterM/NesTiler/releases](https://github.com/ClusterM/NesTiler/releases).
@@ -237,5 +246,8 @@ You can always download latest version at [https://github.com/ClusterM/NesTiler/
 Also, you can download automatic interim builds: [http://clusterm.github.io/NesTiler/](http://clusterm.github.io/NesTiler/).
 
 ## Donate
+* [Buy Me A Coffee](https://www.buymeacoffee.com/cluster)
 * [Donation Alerts](https://www.donationalerts.com/r/clustermeerkat)
 * [Boosty](https://boosty.to/cluster)
+* BTC: 1MBYsGczwCypXhMBocoDQWxx7KZT2iiwzJ
+* PayPal is not available in Armenia :(
