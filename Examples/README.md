@@ -36,7 +36,7 @@ Full screen animation. Two images splitted into two parts horizontally. MMC3 IRQ
 ## ascii
 This example uses **--no-group-tiles** option to disable similar tiles grouping and keep ASCII symbols order.
 
-![image](https://github.com/ClusterM/NesTiler/assets/4236181/7b06f805-5f99-4c5f-881a-841310f76520) -> ![image](https://github.com/ClusterM/NesTiler/assets/4236181/213e7408-cfd0-46ff-b862-fdbdaf14a2f2)
+![image](https://github.com/ClusterM/NesTiler/assets/4236181/66ebf675-3d22-4293-86eb-5586dd89dda7) -> ![image](https://github.com/ClusterM/NesTiler/assets/4236181/213e7408-cfd0-46ff-b862-fdbdaf14a2f2)
 
 ## sprites8x8
 Simple 8x8 sprites example. Also, this example shows how sprites with different colors combined into single palette.
