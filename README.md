@@ -88,7 +88,7 @@ Examples:
 Also, you can load image partially - split them horizontally, just add offset and height after colon. So if you need to split 256x240 image into two images:
 * nestiler -i0 image.png:0:128 -i1 image.png:128:112
 
-It's usefull if you need to show single image on screen but you want to split it into two 256-tiles pattern tables and switch them on specific line in the middle of rendering process.
+It's useful if you need to show single image on screen but you want to split it into two 256-tiles pattern tables and switch them on specific line in the middle of rendering process.
 
 ### Option -c, --colors \<file\>
 Option to specify file with available colors and indices. This file can be in JSON format (see nestiler-colors.json) or binary PAL format (used by emulators).
@@ -97,7 +97,8 @@ Examples:
 * `nestiler -c nestiler-colors.json ...`
 * `nestiler --colors nestiler-colors.json ...`
 
-Please note that some colors are forbidden on nes: 0x0D ("blacker than black"), 0x0E, 0x0F, 0x1E, 0x1F, 0x2E, 0x2F, 0x3E, 0x3F. These colors will be ignored.
+Please note that some colors have caveats surrounding their usage on NES. 0x0D ("blacker than black") is forbidden and will be ignored.
+Also be aware that 0x1D (black) is affected by emphasis bits when other black colors 0xXE-0xXF are not.
 
 ### Option -m, --mode bg|sprites8x8|sprites8x16
 Option to specify processing mode: backgrounds, 8x8 sprites or 8x16 sprites. Default is backgrounds mode.
