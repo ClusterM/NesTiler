@@ -37,7 +37,7 @@ namespace com.clusterrr.Famicom.NesTiler
             Console.WriteLine($"  Commit: {Properties.Resources.gitCommit} @ {REPO_PATH}");
             Console.WriteLine($"  Build time: {BUILD_TIME.ToLocalTime()}");
 #endif
-            Console.WriteLine("  (c) Alexey 'Cluster' Avdyukhin / https://clusterrr.com / clusterrr@clusterrr.com");
+            Console.WriteLine("  (c) Alexey Cluster / https://cluster.wtf / cluster@cluster.wtf");
             Console.WriteLine("");
         }
 
