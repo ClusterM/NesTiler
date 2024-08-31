@@ -346,7 +346,7 @@ namespace com.clusterrr.Famicom.NesTiler
                                     bestPaletteIndex = paletteIndex;
                                 }
                             }
-                            Palette bestPalette = palettes[bestPaletteIndex]!; // at least one palette enabled, so can't be null here
+                            Palette? bestPalette = palettes[bestPaletteIndex];
                             // Remember palette index
                             paletteIndexes[imageNum][tilePalX, tilePalY] = bestPaletteIndex;
 
@@ -358,10 +358,16 @@ namespace com.clusterrr.Famicom.NesTiler
                                     var cy = (tilePalY * c.TilePalHeight) + y - attributeTableOffset;
                                     if (cy < 0) continue;
                                     var color = image.GetPixelColor((tilePalX * c.TilePalWidth) + x, cy, bgColor);
-                                    var similarColor = nesColors.FindSimilarColor(Enumerable.Concat(
-                                            bestPalette,
-                                            new[] { bgColor }
-                                        ), color);
+                                    SKColor similarColor;
+                                    if (bestPalette != null)
+                                    {
+                                        similarColor = nesColors.FindSimilarColor(Enumerable.Concat(
+                                                bestPalette,
+                                                new[] { bgColor }
+                                            ), color);
+                                    } else {
+                                        similarColor = bgColor;
+                                    }
                                     var pixX = (tilePalX * c.TilePalWidth) + x;
                                     if (pixX < image.Width && cy < image.Height)
                                         image.SetPixelColor(
